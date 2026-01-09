@@ -2,15 +2,15 @@
 
 > A **UK-based mobile-first tutor marketplace** connecting students with local tutors for Music, Sports, and Education.
 
-[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/)
 [![React Native](https://img.shields.io/badge/React_Native-Expo-000020)](https://expo.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PostGIS-336791)](https://www.postgresql.org/)
+[![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC2927)](https://www.microsoft.com/en-gb/sql-server/)
 
 ---
 
 ## 🎯 Vision
 
-Make finding and booking a trusted local tutor as easy as ordering a coffee. Bold, friendly, and built for mobile-first UK users.
+Make finding and booking a trusted local tutor as easy as ordering a coffee. Bold, friendly, and built for mobile-first UK users with a premium, focused web-optimized experience.
 
 ---
 
@@ -20,7 +20,7 @@ Make finding and booking a trusted local tutor as easy as ordering a coffee. Bol
 |---------|-------------|
 | **Auth** | Email/password registration with Student or Tutor role |
 | **Tutor Onboarding** | Multi-step wizard: profile, subjects, location, availability, verification badges |
-| **Discovery** | Search tutors by GPS or UK postcode + radius with map/list toggle |
+| **Discovery** | Search tutors by GPS or UK postcode + radius with a world-class UI |
 | **Filters** | Category, subject, price range, rating, availability, teaching mode |
 | **Booking Requests** | Student sends request → Tutor accepts/declines → Simple messaging thread |
 | **Reviews** | Students can review tutors after accepted bookings |
@@ -32,30 +32,26 @@ Make finding and booking a trusted local tutor as easy as ordering a coffee. Bol
 
 ```
 /
-├── backend/                    # .NET 8 Web API (Clean Architecture)
+├── backend/                    # .NET 10 Web API (Clean Architecture)
 │   ├── src/
-│   │   ├── TutorFinder.Api/
-│   │   ├── TutorFinder.Application/
-│   │   ├── TutorFinder.Domain/
-│   │   └── TutorFinder.Infrastructure/
+│   │   ├── TutorFinder.Api/              # API Endpoints, Auth, Controllers
+│   │   ├── TutorFinder.Application/      # Use Cases, DTOs, Logic
+│   │   ├── TutorFinder.Domain/           # Entities, Enums
+│   │   └── TutorFinder.Infrastructure/   # SQL Server, Repositories, Seeding
 │   └── tests/
 │       ├── TutorFinder.UnitTests/
 │       └── TutorFinder.IntegrationTests/
 │
-├── mobile/                     # React Native (Expo) TypeScript
+├── mobile/                     # React Native (Expo) - Web Optimized
 │   └── src/
-│       ├── app/                # Navigation + screens
-│       ├── components/         # UI components
-│       ├── features/           # Auth, Discovery, Bookings, etc.
-│       ├── api/                # API client
-│       ├── store/              # Zustand state
-│       └── design/             # Theme tokens
+│       ├── app/                # File-based routing (Expo Router)
+│       ├── components/         # Shared Premium UI components
+│       ├── hooks/              # API Query hooks (TanStack Query)
+│       ├── lib/                # Theme, Storage utilities
+│       ├── store/              # Auth & Global state (Zustand)
+│       └── types/              # TypeScript definitions
 │
-├── docs/                       # Architecture & design docs (this folder)
-│
-├── AGENTS.md                   # AI agent coding instructions
-├── CODESTYLE.md                # Code conventions
-└── README.md                   # This file
+├── docs/                       # Architecture & design docs
 ```
 
 ---
@@ -64,13 +60,12 @@ Make finding and booking a trusted local tutor as easy as ordering a coffee. Bol
 
 | Layer | Technology |
 |-------|------------|
-| **Backend** | .NET 8 Web API, EF Core 8, PostgreSQL 16 + PostGIS |
-| **Auth** | JWT Bearer tokens (refresh tokens in Phase 2) |
-| **Mobile** | React Native (Expo SDK 52), TypeScript 5.x |
-| **State** | TanStack Query (server), Zustand (client) |
-| **Maps** | react-native-maps (Google Maps API) |
-| **Geocoding** | postcodes.io (free UK postcode API) or Google Geocoding |
-| **Email** | SendGrid (MVP), SMTP fallback |
+| **Backend** | .NET 10 Web API, EF Core 9, SQL Server 2022 |
+| **Auth** | JWT Bearer tokens with custom middleware |
+| **Mobile** | React Native (Expo SDK 54), TypeScript 5.9 |
+| **State** | TanStack Query v5 (server), Zustand (client) |
+| **Web Dev** | Optimized for Web with Mobile-focused width (480px) |
+| **Storage** | Cross-platform utility (SecureStore + LocalStorage fallback) |
 
 ---
 
@@ -78,57 +73,55 @@ Make finding and booking a trusted local tutor as easy as ordering a coffee. Bol
 
 ### Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - Node.js 20+ / npm 10+
-- PostgreSQL 16 with PostGIS extension
+- SQL Server (LocalDB or Express) with Spatial support
 - Expo CLI: `npm install -g expo-cli`
-- Docker (optional, for local PostgreSQL)
 
 ### Backend Setup
 
 ```bash
 cd backend
 dotnet restore
-dotnet ef database update --project src/TutorFinder.Infrastructure
-dotnet run --project src/TutorFinder.Api
+dotnet build
+# Run migrations (SQL Server)
+dotnet ef database update --project src/TutorFinder.Infrastructure --startup-project src/TutorFinder.Api
+# Seed test data (optional)
+# 1. Run the API (see below)
+# 2. POST to http://localhost:5270/api/v1/system/seed (via Swagger)
+dotnet run --project src/TutorFinder.Api --launch-profile http
 ```
 
-API runs at: `https://localhost:5001/swagger`
+- **HTTP**: `http://localhost:5270/swagger` (Recommended for local dev)
+- **HTTPS**: `https://localhost:7287/swagger`
 
 ### Mobile Setup
 
 ```bash
 cd mobile
 npm install
-npx expo start
+npm start
+# Press 'w' to run in browser (recommended for world-class UI preview)
 ```
-
-Scan QR with Expo Go app (iOS/Android).
 
 ### Environment Variables
 
-Create `.env` files based on `.env.example` in each project folder. Required:
-
-**Backend (`backend/src/TutorFinder.Api/appsettings.Development.json`):**
+**Backend (`backend/src/TutorFinder.Api/appsettings.json`):**
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=tutorfinder;Username=postgres;Password=yourpassword"
+    "DefaultConnection": "Server=localhost;Database=TutorFinder;User Id=sa;Password=yourpassword;TrustServerCertificate=True"
   },
   "Jwt": {
-    "Secret": "your-256-bit-secret-key-here-min-32-chars",
+    "Secret": "ReplaceWithAStrongSecretKeyAtLeast32CharactersLong",
     "Issuer": "TutorFinder",
-    "Audience": "TutorFinderMobile",
-    "ExpiryMinutes": 60
+    "Audience": "TutorFinderMobile"
   }
 }
 ```
 
-**Mobile (`mobile/.env`):**
-```
-API_BASE_URL=http://localhost:5001/api/v1
-GOOGLE_MAPS_API_KEY=your-key
-```
+**Mobile API Configuration (`mobile/src/api/client.ts`):**
+Defaults to `http://localhost:5270/api/v1` for easy local development.
 
 ---
 

@@ -15,7 +15,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString,
+            options.UseSqlServer(connectionString,
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<DbSeeder>();
         
         services.AddHttpClient<IGeocodingService, GeocodingService>();
 

@@ -30,10 +30,9 @@ public class TutorProfileConfiguration : IEntityTypeConfiguration<TutorProfile>
 
         // Geo Configuration
         builder.Property(t => t.Location)
-            .HasColumnType("geography(Point, 4326)");
+            .HasColumnType("geography");
 
-        builder.HasIndex(t => t.Location)
-            .HasMethod("GIST");
+        // builder.HasSpatialIndex(t => t.Location);
 
         // Relationships
         builder.HasOne(t => t.User)

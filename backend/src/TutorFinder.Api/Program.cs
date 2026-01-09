@@ -24,6 +24,9 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
+
+builder.Services.AddCors();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -84,21 +87,27 @@ builder.Services.AddAuthorization(options =>
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 var app = builder.Build();
 
-// Middleware
+// Middleware - CORS must be first to handle OPTIONS requests correctly
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TutorFinder API V1");
+    c.RoutePrefix = "swagger"; // This ensures it's at /swagger
+});
 
-app.UseHttpsRedirection();
+// UseHttpsRedirection is removed to prevent CORS preflight redirect issues on localhost
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -126,6 +135,7 @@ app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
 });
 
 app.MapControllers();
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 try
 {

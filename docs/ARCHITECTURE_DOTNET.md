@@ -1,4 +1,4 @@
-# .NET Backend Architecture — Clean Architecture (.NET 8)
+# .NET Backend Architecture — Clean Architecture (.NET 10)
 
 > Scalable, testable, maintainable API for TutorFinder UK.
 
@@ -7,9 +7,9 @@
 ## Goals
 - Clean separation of concerns (Domain/Application/Infrastructure/API)
 - Testable business logic (no framework dependencies in Domain)
-- Stable REST API contract for mobile now, web later
-- Performant geo-search with UK postcode support
-- Secure by default (JWT, RBAC, validation)
+- Stable REST API contract for mobile and web
+- Performant geo-search with UK postcode support via SQL Server Geography
+- Secure by default (JWT, RBAC, Validation, CORS)
 
 ---
 
@@ -132,14 +132,21 @@ builder.Services.AddInfrastructure();   // Extension method
 
 ```csharp
 // JWT Configuration
-{
   "Jwt": {
-    "Secret": "min-32-character-secret-key-here",
+    "Secret": "ReplaceWithAStrongSecretKeyAtLeast32CharactersLong",
     "Issuer": "TutorFinder",
-    "Audience": "TutorFinderMobile",
-    "ExpiryMinutes": 60
+    "Audience": "TutorFinderMobile"
   }
 }
+```
+
+### CORS Policies
+
+```csharp
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 ```
 
 **Token Response:**
@@ -311,49 +318,28 @@ public record PagedResponse<T>
 
 ## Geo Strategy (UK)
 
-### Storage
-- Store coordinates as `decimal(9,6)` (precision: ~0.1m)
-- UK bounds: Lat 49.9-60.9, Lng -8.6 to 1.8
+### Technology: SQL Server Spatial
+- **Type:** `geography` (not `geometry`)
+- **SRID:** 4326 (WGS 84 - standard for GPS)
 
-### PostGIS (Recommended)
-
-```sql
--- Add PostGIS extension
-CREATE EXTENSION IF NOT EXISTS postgis;
-
--- Add geography column
-ALTER TABLE "TutorProfiles" 
-ADD COLUMN "Location" geography(Point, 4326);
-
--- Create spatial index
-CREATE INDEX idx_tutor_location 
-ON "TutorProfiles" USING GIST("Location");
-
--- Query within radius (meters)
-SELECT * FROM "TutorProfiles"
-WHERE ST_DWithin(
-    "Location",
-    ST_MakePoint(@lng, @lat)::geography,
-    @radiusMeters
-);
-```
-
-### Fallback (Bounding Box + Haversine)
-
-If PostGIS unavailable:
+### Query Implementation
 
 ```csharp
-// 1. Bounding box filter (fast, uses indexes)
-var latDelta = radiusMiles / 69.0;
-var lngDelta = radiusMiles / (69.0 * Math.Cos(lat * Math.PI / 180));
+// Using EF Core + NetTopologySuite
+var searchPoint = geometryFactory.CreatePoint(new Coordinate(lng, lat));
+double radiusMeters = radiusMiles * 1609.34;
 
-var tutors = await dbContext.TutorProfiles
-    .Where(t => t.BaseLatitude >= lat - latDelta && t.BaseLatitude <= lat + latDelta)
-    .Where(t => t.BaseLongitude >= lng - lngDelta && t.BaseLongitude <= lng + lngDelta)
+var tutors = await context.TutorProfiles
+    .Where(t => t.Location.Distance(searchPoint) <= radiusMeters)
+    .OrderBy(t => t.Location.Distance(searchPoint))
     .ToListAsync();
+```
 
-// 2. Haversine refinement (accurate)
-tutors = tutors.Where(t => Haversine(lat, lng, t.BaseLatitude, t.BaseLongitude) <= radiusMiles);
+### Spatial Indexing
+Spatial indexes must be explicitly created in migrations for performance:
+
+```csharp
+builder.HasSpatialIndex(t => t.Location);
 ```
 
 ### Geocoding Service
@@ -479,33 +465,9 @@ tests/TutorFinder.UnitTests/
 **Tools:** xUnit, FluentAssertions, NSubstitute
 
 ### Integration Tests (API + Database)
+Integration tests run against a real SQL Server instance (LocalDB or Docker).
 
-```
-tests/TutorFinder.IntegrationTests/
-├── Api/
-│   ├── AuthControllerTests.cs
-│   ├── TutorsControllerTests.cs
-│   └── BookingsControllerTests.cs
-└── Fixtures/
-    ├── WebAppFactory.cs
-    └── DatabaseFixture.cs
-```
-
-**Tools:** Testcontainers (PostgreSQL), WebApplicationFactory
-
-```csharp
-public class DatabaseFixture : IAsyncLifetime
-{
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgis/postgis:16-3.4")
-        .Build();
-
-    public string ConnectionString => _postgres.GetConnectionString();
-    
-    public Task InitializeAsync() => _postgres.StartAsync();
-    public Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
-}
-```
+**Tools:** WebApplicationFactory, Respawn (for database cleanup)
 
 ---
 

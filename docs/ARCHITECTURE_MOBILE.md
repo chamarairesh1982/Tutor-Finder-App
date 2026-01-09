@@ -18,17 +18,13 @@
 
 | Category | Choice | Notes |
 |----------|--------|-------|
-| Framework | React Native 0.74+ | Via Expo SDK 52 |
-| Build | Expo managed | EAS Build for production |
-| Language | TypeScript 5.x | Strict mode |
-| Navigation | React Navigation 6 | Bottom tabs + stack |
+| Framework | Expo SDK 54 | Based on React Native 0.76+ |
+| Routing | Expo Router | File-based navigation |
+| Language | TypeScript 5.9 | Full strict mode |
 | Server State | TanStack Query 5 | Caching, refetching |
-| Client State | Zustand 4 | Auth, preferences |
-| Forms | React Hook Form + Zod | Validation |
-| Maps | react-native-maps | Google Maps provider |
+| Client State | Zustand 5 | Auth, global state |
 | HTTP | Axios | Interceptors for auth |
-| Storage | expo-secure-store | Tokens |
-| Storage | MMKV | Preferences, cache |
+| Storage | SecureStore + LocalStorage | Cross-platform persistence |
 
 ---
 
@@ -36,115 +32,25 @@
 
 ```
 mobile/
-├── app.json
-├── package.json
-├── tsconfig.json
-├── src/
-│   ├── app/                      # Navigation
-│   │   ├── RootNavigator.tsx
-│   │   ├── AuthNavigator.tsx
-│   │   ├── MainTabNavigator.tsx
-│   │   └── screens/
-│   │       ├── DiscoverScreen.tsx
-│   │       ├── SearchFiltersScreen.tsx
-│   │       ├── TutorProfileScreen.tsx
-│   │       ├── BookingsScreen.tsx
-│   │       ├── BookingDetailScreen.tsx
-│   │       ├── ProfileScreen.tsx
-│   │       ├── LoginScreen.tsx
-│   │       ├── RegisterScreen.tsx
-│   │       └── TutorOnboardingScreen.tsx
-│   │
-│   ├── components/               # Reusable UI
-│   │   ├── TutorCard.tsx
-│   │   ├── FilterChips.tsx
-│   │   ├── MapView.tsx
-│   │   ├── RatingStars.tsx
-│   │   ├── Button.tsx
-│   │   ├── Input.tsx
-│   │   ├── BottomSheet.tsx
-│   │   ├── EmptyState.tsx
-│   │   ├── Skeleton.tsx
-│   │   └── Avatar.tsx
-│   │
-│   ├── design/                   # Theme tokens
-│   │   ├── colors.ts
-│   │   ├── typography.ts
-│   │   ├── spacing.ts
-│   │   ├── shadows.ts
-│   │   └── ThemeProvider.tsx
-│   │
-│   ├── features/                 # Feature modules
-│   │   ├── auth/
-│   │   │   ├── hooks/
-│   │   │   │   ├── useLogin.ts
-│   │   │   │   └── useRegister.ts
-│   │   │   ├── components/
-│   │   │   └── schemas/
-│   │   │       └── loginSchema.ts
-│   │   │
-│   │   ├── discovery/
-│   │   │   ├── hooks/
-│   │   │   │   ├── useSearchTutors.ts
-│   │   │   │   ├── useFilters.ts
-│   │   │   │   └── useLocation.ts
-│   │   │   └── components/
-│   │   │       ├── TutorList.tsx
-│   │   │       └── TutorMap.tsx
-│   │   │
-│   │   ├── tutorProfile/
-│   │   │   ├── hooks/
-│   │   │   │   ├── useTutorProfile.ts
-│   │   │   │   └── useTutorReviews.ts
-│   │   │   └── components/
-│   │   │
-│   │   ├── bookings/
-│   │   │   ├── hooks/
-│   │   │   │   ├── useBookings.ts
-│   │   │   │   ├── useCreateBooking.ts
-│   │   │   │   └── useRespondBooking.ts
-│   │   │   └── components/
-│   │   │       ├── BookingCard.tsx
-│   │   │       └── BookingRequestSheet.tsx
-│   │   │
-│   │   └── reviews/
-│   │       ├── hooks/
-│   │       │   └── useCreateReview.ts
-│   │       └── components/
-│   │           └── ReviewForm.tsx
-│   │
-│   ├── api/                      # API client
-│   │   ├── client.ts             # Axios instance
-│   │   ├── endpoints/
-│   │   │   ├── auth.ts
-│   │   │   ├── tutors.ts
-│   │   │   ├── bookings.ts
-│   │   │   └── reviews.ts
-│   │   └── types/
-│   │       ├── api.ts            # Shared response types
-│   │       ├── tutor.ts
-│   │       ├── booking.ts
-│   │       └── user.ts
-│   │
-│   ├── store/                    # Zustand stores
-│   │   ├── authStore.ts
-│   │   ├── preferencesStore.ts
-│   │   └── filtersStore.ts
-│   │
-│   ├── hooks/                    # Shared hooks
-│   │   ├── useDebounce.ts
-│   │   └── useNetworkStatus.ts
-│   │
-│   └── utils/
-│       ├── formatters.ts
-│       ├── validators.ts
-│       └── storage.ts
-│
-├── assets/
-│   ├── images/
-│   └── fonts/
-│
-└── __tests__/
+├── app/                      # Expo Router (Tabs & Screens)
+│   ├── (tabs)/               # Main application tabs
+│   │   ├── index.tsx         # Discover
+│   │   ├── bookings.tsx      # My Bookings
+│   │   └── profile.tsx       # My Profile
+│   ├── (auth)/               # Auth flow screens
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   ├── booking/              # Booking details
+│   ├── tutor/                # Tutor details
+│   └── _layout.tsx           # Global Providers
+├── assets/                   # Images & Fonts
+├── src/                      # Source logic
+│   ├── api/                  # Axios client & types
+│   ├── components/           # Premium UI components
+│   ├── hooks/                # Query & logic hooks
+│   ├── lib/                  # Theme & Constants
+│   ├── store/                # Zustand state
+│   └── types/                # TS definitions
 ```
 
 ---
