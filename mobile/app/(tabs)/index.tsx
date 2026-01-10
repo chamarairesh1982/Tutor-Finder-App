@@ -1,96 +1,79 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HomeSearchBar, Button } from '../../src/components';
-import { colors, spacing, typography, borderRadius, layout } from '../../src/lib/theme';
+import { HomeSearchBar } from '../../src/components';
+import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { TeachingMode } from '../../src/types';
 
 const categoryCards = [
-    { key: 'Music', label: 'Music', accent: '#EEF2FF' },
-    { key: 'Maths', label: 'Maths', accent: '#E0F2FE' },
-    { key: 'English', label: 'English', accent: '#ECFEFF' },
-    { key: 'Science', label: 'Science', accent: '#F0FDF4' },
-    { key: 'Languages', label: 'Languages', accent: '#FFF7ED' },
-    { key: 'Programming', label: 'Programming', accent: '#F5F3FF' },
-];
-
-const quickFilters = [
-    { key: 'dbs', label: 'DBS checked' },
-    { key: 'rating45', label: '4.5+ rating' },
-    { key: 'weekends', label: 'Available weekends' },
-    { key: 'midPrice', label: '£20–£40' },
+    { key: 'all', label: 'All Subjects', color: colors.categories.purple, emoji: '🎯' },
+    { key: 'Music', label: 'Music', color: colors.categories.blue, emoji: '🎸' },
+    { key: 'Sports', label: 'Sports', color: colors.categories.green, emoji: '⚽' },
+    { key: 'Arts', label: 'Arts & Crafts', color: colors.categories.pink, emoji: '🎨' },
+    { key: 'Academic', label: 'Academic', color: colors.categories.orange, emoji: '📚' },
+    { key: 'Languages', label: 'Languages', color: colors.categories.indigo, emoji: '🗣️' },
 ];
 
 export default function DiscoverScreen() {
     const router = useRouter();
-    const { isLg, width } = useBreakpoint();
+    const { width } = useBreakpoint();
 
     const [subject, setSubject] = useState('');
     const [location, setLocation] = useState('');
     const [radius, setRadius] = useState(10);
     const [mode, setMode] = useState<TeachingMode>(TeachingMode.Both);
-    const [selectedQuick, setSelectedQuick] = useState<string[]>([]);
-
-    const heroCopy = useMemo(() => ({
-        title: 'Find trusted tutors for every milestone',
-        subtitle: 'Premium UK tutors with DBS checks, verified reviews, and fast responses.',
-    }), []);
 
     const handleSearch = () => {
-        const params: Record<string, string> = {
-            subject: subject,
-            location: location,
-            radius: String(radius),
-            mode: String(mode),
-        };
-        if (selectedQuick.includes('rating45')) params.rating45 = '1';
-        if (selectedQuick.includes('midPrice')) params.midPrice = '1';
-        if (selectedQuick.includes('dbs')) params.dbs = '1';
-        if (selectedQuick.includes('weekends')) params.weekends = '1';
-        router.push({ pathname: '/search', params });
+        router.push({
+            pathname: '/search',
+            params: {
+                subject,
+                location,
+                radius: radius.toString(),
+                mode: mode.toString()
+            }
+        });
     };
 
     const handleCategorySelect = (key: string) => {
-        if (key === 'all') {
-            setSubject('');
-            return;
-        }
-        setSubject(key);
-    };
-
-    const toggleQuick = (key: string) => {
-        setSelectedQuick((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+        router.push({
+            pathname: '/search',
+            params: { subject: key === 'All Subjects' ? '' : key }
+        });
     };
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
+            <ScrollView
+                contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.navbar}>
-                    <Text style={styles.brand}>TutorFinder</Text>
+                    <View style={styles.brandRow}>
+                        <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
+                        <View>
+                            <Text style={styles.brand}>TutorMatch UK</Text>
+                            <Text style={styles.brandSub}>Find Your Perfect Tutor</Text>
+                        </View>
+                    </View>
                     <View style={styles.navActions}>
-                        <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/(auth)/register')}><Text style={styles.navLink}>Sign up</Text></TouchableOpacity>
                         <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                            <Text style={styles.navCtaText}>Become a Tutor</Text>
+                            <Text style={styles.navCtaText}>Sign Up</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                <View style={[styles.hero, isLg && styles.heroRow]}>
-                    <View style={styles.heroTextCol}>
-                        <Text style={styles.heroTitle}>{heroCopy.title}</Text>
-                        <Text style={styles.heroSubtitle}>{heroCopy.subtitle}</Text>
-                        <View style={styles.heroBadges}>
-                            <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>DBS awareness</Text></View>
-                            <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>Responsive tutors</Text></View>
-                            <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>Safe payments</Text></View>
-                        </View>
-                    </View>
-                    <View style={styles.heroCard}>
+                <View style={styles.heroCentered}>
+                    <Text style={styles.heroTitle}>
+                        Learn Something <Text style={styles.heroAmazing}>Amazing</Text>
+                    </Text>
+                    <Text style={styles.heroSubtitle}>
+                        Connect with verified tutors across the UK for music, sports, academics, and more. Quality learning starts here.
+                    </Text>
+
+                    <View style={styles.searchContainer}>
                         <HomeSearchBar
                             subject={subject}
                             location={location}
@@ -102,66 +85,47 @@ export default function DiscoverScreen() {
                             onModeChange={setMode}
                             onSubmit={handleSearch}
                         />
-                        <View style={styles.quickRow}>
-                            {quickFilters.map((chip) => {
-                                const isActive = selectedQuick.includes(chip.key);
-                                return (
-                                    <TouchableOpacity
-                                        key={chip.key}
-                                        style={[styles.quickChip, isActive && styles.quickChipActive]}
-                                        onPress={() => toggleQuick(chip.key)}
-                                        activeOpacity={0.85}
-                                    >
-                                        <Text style={[styles.quickChipText, isActive && styles.quickChipTextActive]}>{chip.label}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
+                    </View>
+
+                    <View style={styles.trustBadges}>
+                        <TrustBadge icon="🛡️" label="Verified Tutors" />
+                        <TrustBadge icon="⭐" label="5000+ Reviews" />
+                        <TrustBadge icon="📅" label="Easy Booking" />
                     </View>
                 </View>
 
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Browse by category</Text>
-                    <Text style={styles.sectionSubtitle}>Compact, colourful tiles that stay tidy on desktop</Text>
+                    <Text style={styles.sectionTitle}>Browse by Category</Text>
                 </View>
                 <View style={styles.categoryGrid}>
-                    <TouchableOpacity style={[styles.categoryCard, styles.allCard]} onPress={() => handleCategorySelect('all')} activeOpacity={0.9}>
-                        <Text style={styles.categoryLabel}>All subjects</Text>
-                        <Text style={styles.categoryHint}>Reset selection</Text>
-                    </TouchableOpacity>
                     {categoryCards.map((cat) => (
                         <TouchableOpacity
                             key={cat.key}
-                            style={[styles.categoryCard, { backgroundColor: cat.accent }]}
+                            style={[styles.categoryCard, { backgroundColor: cat.color }]}
                             onPress={() => handleCategorySelect(cat.label)}
                             activeOpacity={0.9}
                         >
+                            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
                             <Text style={styles.categoryLabel}>{cat.label}</Text>
-                            <Text style={styles.categoryHint}>Highly rated tutors</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Why learners trust us</Text>
+                <View style={styles.statsBar}>
+                    <View style={styles.statsItem}>
+                        <Text style={styles.statsLabel}>8 tutors found</Text>
+                    </View>
                 </View>
-                <View style={[styles.trustRow, isLg && styles.trustRowWide]}>
-                    <TrustCard title="Verified profiles" subtitle="Tutor bios, pricing, and reviews presented on clean white cards." />
-                    <TrustCard title="Web-first layouts" subtitle="Sticky filters and split map views keep context on large screens." />
-                    <TrustCard title="Fast booking" subtitle="Bold CTAs and responsive focus states across devices." />
-                </View>
-
-                <Button title="Find tutors now" onPress={handleSearch} fullWidth={false} />
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-function TrustCard({ title, subtitle }: { title: string; subtitle: string }) {
+function TrustBadge({ icon, label }: { icon: string; label: string }) {
     return (
-        <View style={trustStyles.card}>
-            <Text style={trustStyles.title}>{title}</Text>
-            <Text style={trustStyles.subtitle}>{subtitle}</Text>
+        <View style={styles.trustBadge}>
+            <Text style={styles.trustBadgeIcon}>{icon}</Text>
+            <Text style={styles.trustBadgeText}>{label}</Text>
         </View>
     );
 }
@@ -172,119 +136,116 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.background,
     },
     page: {
-        paddingVertical: spacing['2xl'],
-        gap: spacing.lg,
+        paddingVertical: spacing.xl,
+        gap: spacing['2xl'],
     },
     navbar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingVertical: spacing.md,
     },
-    brand: {
+    brandRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    logo: {
+        width: 44,
+        height: 44,
+        backgroundColor: colors.primary,
+        borderRadius: borderRadius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoText: {
+        color: colors.neutrals.surface,
         fontSize: typography.fontSize['2xl'],
         fontWeight: typography.fontWeight.heavy,
-        color: colors.primary,
+    },
+    brand: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.primaryDark,
         letterSpacing: -0.5,
+    },
+    brandSub: {
+        fontSize: 11,
+        color: colors.neutrals.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        fontWeight: typography.fontWeight.semibold,
     },
     navActions: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
     },
-    navLink: {
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
     navCta: {
         backgroundColor: colors.primary,
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.xl,
         borderRadius: borderRadius.full,
     },
     navCtaText: {
         color: colors.neutrals.surface,
         fontWeight: typography.fontWeight.bold,
     },
-    hero: {
+    heroCentered: {
+        alignItems: 'center',
+        paddingVertical: spacing['2xl'],
         gap: spacing.lg,
     },
-    heroRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    heroTextCol: {
-        flex: 1,
-        gap: spacing.md,
-    },
     heroTitle: {
-        fontSize: typography.fontSize['3xl'],
+        fontSize: typography.fontSize['5xl'],
         fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
+        textAlign: 'center',
+        letterSpacing: -1.5,
+        lineHeight: 52,
+    },
+    heroAmazing: {
+        color: colors.primary,
     },
     heroSubtitle: {
         fontSize: typography.fontSize.lg,
         color: colors.neutrals.textSecondary,
-        lineHeight: 26,
+        textAlign: 'center',
+        maxWidth: 600,
+        lineHeight: 28,
     },
-    heroBadges: {
+    searchContainer: {
+        width: '100%',
+        maxWidth: 800,
+        marginTop: spacing.md,
+    },
+    trustBadges: {
         flexDirection: 'row',
+        gap: spacing.xl,
+        marginTop: spacing.md,
         flexWrap: 'wrap',
-        gap: spacing.sm,
+        justifyContent: 'center',
     },
-    heroBadge: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    heroBadgeText: {
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    heroCard: {
-        flex: 1,
-        gap: spacing.md,
-    },
-    quickRow: {
+    trustBadge: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.sm,
+        alignItems: 'center',
+        gap: spacing.xs,
     },
-    quickChip: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...Platform.select({ web: { cursor: 'pointer' } }),
+    trustBadgeIcon: {
+        fontSize: typography.fontSize.base,
     },
-    quickChipActive: {
-        backgroundColor: colors.primarySoft,
-        borderColor: colors.primary,
-    },
-    quickChipText: {
-        color: colors.neutrals.textPrimary,
+    trustBadgeText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textSecondary,
         fontWeight: typography.fontWeight.medium,
     },
-    quickChipTextActive: {
-        color: colors.primaryDark,
-    },
     sectionHeader: {
-        gap: spacing.xs,
+        marginTop: spacing.xl,
     },
     sectionTitle: {
         fontSize: typography.fontSize['2xl'],
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
-    },
-    sectionSubtitle: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
     },
     categoryGrid: {
         flexDirection: 'row',
@@ -292,49 +253,41 @@ const styles = StyleSheet.create({
         gap: spacing.md,
     },
     categoryCard: {
-        width: '48%',
-        padding: spacing.lg,
+        width: '32%',
+        minWidth: 160,
+        height: 120,
         borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        padding: spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+        ...shadows.sm,
+        flexGrow: 1,
     },
-    allCard: {
-        backgroundColor: colors.neutrals.surface,
+    categoryEmoji: {
+        fontSize: 32,
     },
     categoryLabel: {
-        fontSize: typography.fontSize.lg,
+        fontSize: typography.fontSize.base,
         fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
+        color: colors.neutrals.surface,
+        textAlign: 'center',
     },
-    categoryHint: {
-        color: colors.neutrals.textSecondary,
-        marginTop: spacing.xs,
-    },
-    trustRow: {
-        gap: spacing.md,
-    },
-    trustRowWide: {
-        flexDirection: 'row',
-    },
-});
-
-const trustStyles = StyleSheet.create({
-    card: {
-        flex: 1,
+    statsBar: {
+        marginTop: spacing.xl,
+        padding: spacing.md,
         backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        padding: spacing.lg,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
+        borderRadius: borderRadius.md,
     },
-    title: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-        marginBottom: spacing.xs,
+    statsItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    subtitle: {
+    statsLabel: {
         color: colors.neutrals.textSecondary,
-        lineHeight: 22,
+        fontWeight: typography.fontWeight.medium,
     },
 });

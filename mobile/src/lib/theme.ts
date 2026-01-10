@@ -1,16 +1,27 @@
 // Design System Tokens based on DESIGN_SYSTEM.md with desktop-friendly scale
 
 export const colors = {
-  // Brand
-  primary: '#4F46E5', // Indigo-600
-  primaryDark: '#312E81', // Indigo-900
-  primaryLight: '#6366F1', // Indigo-500
-  primarySoft: '#EEF2FF', // Indigo-50
+  // Brand - Matching Screenshots (Vibrant Magenta/Purple)
+  primary: '#D946EF', // Fuchsia-500
+  primaryDark: '#A21CAF', // Fuchsia-700
+  primaryLight: '#F0ABFC', // Fuchsia-300
+  primarySoft: '#FDF4FF', // Fuchsia-50
 
-  secondary: '#0EA5E9', // Sky-500
-  secondaryDark: '#0369A1', // Sky-700
+  secondary: '#8B5CF6', // Violet-500
+  secondaryDark: '#6D28D9', // Violet-700
+  secondaryLight: '#C4B5FD', // Violet-300
 
-  accent: '#F59E0B', // Amber-500
+  accent: '#F43F5E', // Rose-500
+
+  // Semantic Categories (for Discover Screen Cards)
+  categories: {
+    purple: '#A855F7',
+    blue: '#3B82F6',
+    green: '#10B981',
+    pink: '#EC4899',
+    orange: '#F97316',
+    indigo: '#6366F1',
+  },
 
   // Rating
   ratingStars: '#FBBF24', // Amber-400
@@ -56,8 +67,8 @@ export const colors = {
   statusDeclinedText: '#991B1B',
 
   // Accessibility
-  focusRing: '#C7D2FE',
-  focusRingStrong: '#A5B4FC',
+  focusRing: '#F5D0FE',
+  focusRingStrong: '#F0ABFC',
 };
 
 export const typography = {
@@ -75,6 +86,7 @@ export const typography = {
     '3xl': 30,
     '4xl': 36,
     '5xl': 44,
+    '6xl': 56, // Added for big hero titles
   },
   lineHeight: {
     tight: 1.25,
@@ -100,6 +112,7 @@ export const spacing = {
   '2xl': 48,
   '3xl': 64,
   '4xl': 80,
+  '5xl': 120, // Added for hero spacing
 };
 
 export const borderRadius = {
@@ -112,28 +125,28 @@ export const borderRadius = {
 
 export const shadows = {
   sm: {
-    shadowColor: 'rgba(15, 23, 42, 0.18)',
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 4,
   },
   md: {
-    shadowColor: 'rgba(79, 70, 229, 0.16)',
+    shadowColor: 'rgba(217, 70, 239, 0.12)',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 22,
     elevation: 8,
   },
   lg: {
-    shadowColor: 'rgba(15, 23, 42, 0.18)',
+    shadowColor: 'rgba(15, 23, 42, 0.12)',
     shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 1,
     shadowRadius: 32,
     elevation: 12,
   },
   glass: {
-    shadowColor: 'rgba(15, 23, 42, 0.12)',
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 14,

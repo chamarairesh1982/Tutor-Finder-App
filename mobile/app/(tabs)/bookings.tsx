@@ -9,11 +9,9 @@ import { Booking, BookingStatus } from '../../src/types';
 export default function BookingsScreen() {
     const router = useRouter();
     const { data: bookings, isLoading, isError, refetch } = useMyBookings();
-    const listData = Array.isArray(bookings) ? bookings : (bookings as any)?.items ?? [];
+    const listData = (Array.isArray(bookings) ? bookings : (bookings as any)?.items ?? []) as Booking[];
 
- 
     const getStatusColor = (status: BookingStatus) => {
-
         switch (status) {
             case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText };
             case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText };
@@ -63,7 +61,7 @@ export default function BookingsScreen() {
 
                 <View style={styles.cardFooter}>
                     <View style={styles.footerLeft}>
-                        <View style={[styles.inlineBadge, { backgroundColor: statusStyles.bg }]}> 
+                        <View style={[styles.inlineBadge, { backgroundColor: statusStyles.bg }]}>
                             <Text style={[styles.inlineBadgeText, { color: statusStyles.text }]}>{getStatusLabel(item.status)}</Text>
                         </View>
                         <Text style={styles.messagePreview} numberOfLines={1}>
@@ -99,7 +97,6 @@ export default function BookingsScreen() {
             </View>
 
             {listData.length === 0 ? (
-
                 <View style={styles.centered}>
                     <Text style={styles.emptyText}>You don't have any bookings yet.</Text>
                     <TouchableOpacity
@@ -128,10 +125,8 @@ export default function BookingsScreen() {
                         </View>
                     }
                 />
-
             )}
         </SafeAreaView>
-
     );
 }
 
@@ -142,38 +137,39 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     title: {
-         fontSize: typography.fontSize['2xl'],
-         fontWeight: typography.fontWeight.bold,
-         color: colors.neutrals.textPrimary,
-     },
-     pendingPill: {
-         marginLeft: spacing.md,
-         alignSelf: 'center',
-         backgroundColor: colors.statusPending,
-         paddingHorizontal: spacing.sm,
-         paddingVertical: 4,
-         borderRadius: borderRadius.full,
-     },
-     pendingPillText: {
-         color: colors.statusPendingText,
-         fontSize: typography.fontSize.xs,
-         fontWeight: typography.fontWeight.semibold,
-     },
-
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+    },
+    pendingPill: {
+        marginLeft: spacing.md,
+        alignSelf: 'center',
+        backgroundColor: colors.statusPending,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: borderRadius.full,
+    },
+    pendingPillText: {
+        color: colors.statusPendingText,
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.semibold,
+    },
     listContent: {
         padding: spacing.md,
         paddingBottom: spacing.xl,
     },
     bookingCard: {
-        backgroundColor: colors.neutrals.background,
+        backgroundColor: colors.neutrals.surface,
         borderRadius: borderRadius.lg,
         padding: spacing.md,
         marginBottom: spacing.md,
         ...shadows.md,
         borderWidth: 1,
-        borderColor: colors.neutrals.border,
+        borderColor: colors.neutrals.cardBorder,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -214,35 +210,29 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.medium,
     },
     cardFooter: {
-         flexDirection: 'row',
-         alignItems: 'center',
-         justifyContent: 'space-between',
-         borderTopWidth: 1,
-         borderTopColor: colors.neutrals.surfaceAlt,
-         paddingTop: spacing.sm,
-         gap: spacing.sm,
-     },
-     footerLeft: {
-         flexDirection: 'row',
-         alignItems: 'center',
-         gap: spacing.sm,
-         flex: 1,
-     },
-     inlineBadge: {
-         paddingHorizontal: spacing.sm,
-         paddingVertical: 4,
-         borderRadius: borderRadius.full,
-     },
-     inlineBadgeText: {
-         fontSize: typography.fontSize.xs,
-         fontWeight: typography.fontWeight.bold,
-     },
-     messagePreview: {
-         flex: 1,
-         color: colors.neutrals.textSecondary,
-         fontSize: typography.fontSize.sm,
-     },
-
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.surfaceAlt,
+        paddingTop: spacing.sm,
+        gap: spacing.sm,
+    },
+    footerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flex: 1,
+    },
+    inlineBadge: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: borderRadius.full,
+    },
+    inlineBadgeText: {
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.bold,
+    },
     messagePreview: {
         flex: 1,
         fontSize: typography.fontSize.sm,
@@ -250,25 +240,24 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
     arrow: {
-         fontSize: typography.fontSize.xl,
-         color: colors.neutrals.textMuted,
-         marginLeft: spacing.sm,
-     },
-     footerNote: {
-         paddingVertical: spacing.md,
-         alignItems: 'center',
-     },
-     footerNoteText: {
-         color: colors.neutrals.textMuted,
-         fontSize: typography.fontSize.sm,
-     },
-     centered: {
-         flex: 1,
-         alignItems: 'center',
-         justifyContent: 'center',
-         padding: spacing.xl,
-     },
-
+        fontSize: typography.fontSize.xl,
+        color: colors.neutrals.textMuted,
+        marginLeft: spacing.sm,
+    },
+    footerNote: {
+        paddingVertical: spacing.md,
+        alignItems: 'center',
+    },
+    footerNoteText: {
+        color: colors.neutrals.textMuted,
+        fontSize: typography.fontSize.sm,
+    },
+    centered: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.xl,
+    },
     emptyText: {
         fontSize: typography.fontSize.base,
         color: colors.neutrals.textSecondary,

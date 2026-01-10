@@ -36,237 +36,258 @@ export function HomeSearchBar({
     onModeChange,
     onSubmit,
 }: HomeSearchBarProps) {
-    const { isMd, isLg } = useBreakpoint();
+    const { isLg } = useBreakpoint();
     const [radiusOpen, setRadiusOpen] = useState(false);
 
     const stacked = !isLg;
 
-    const dropdownSpacer = radiusOpen ? 140 : 0;
-
     return (
-        <View style={styles.wrapper}>
-            <View style={[styles.row, stacked && styles.wrap, styles.alignStart]}>
-                <View style={[styles.fieldGroup, stacked && styles.fieldGroupFull]}>
+        <View style={styles.container}>
+            <View style={[styles.mainRow, stacked && styles.mainRowStacked]}>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.innerLabel}>What do you want to learn?</Text>
                     <Input
-                        label="Subject"
                         placeholder="e.g. Maths, Piano, GCSE Chemistry"
                         value={subject}
                         onChangeText={onSubjectChange}
                         autoCapitalize="words"
                         returnKeyType="search"
+                        containerStyle={styles.borderlessInput}
                     />
                 </View>
 
-                <View style={[styles.fieldGroup, stacked && styles.fieldGroupFull]}>
-                    <Input
-                        label="Location"
-                        placeholder="Postcode or town"
-                        value={location}
-                        onChangeText={onLocationChange}
-                        autoCapitalize="characters"
-                        returnKeyType="search"
-                    />
-                </View>
+                <View style={styles.divider} />
 
-                <View style={[styles.radiusGroup, stacked && styles.fieldGroupFull]}>
-                    <Text style={styles.label}>Radius</Text>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.radiusControl}
-                        onPress={() => setRadiusOpen((prev) => !prev)}
-                    >
-                        <Text style={styles.radiusValue}>{radius} miles</Text>
-                        <Text style={styles.chevron}>{radiusOpen ? '▲' : '▼'}</Text>
-                    </TouchableOpacity>
-                    {radiusOpen && (
-                        <View style={styles.radiusMenu}>
-                            {radiusOptions.map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    style={[styles.radiusOption, option === radius && styles.radiusOptionActive]}
-                                    onPress={() => {
-                                        onRadiusChange(option);
-                                        setRadiusOpen(false);
-                                    }}
-                                >
-                                    <Text style={[styles.radiusOptionText, option === radius && styles.radiusOptionTextActive]}>
-                                        {option} miles
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                <View style={[styles.inputContainer, styles.locationContainer]}>
+                    <Text style={styles.innerLabel}>Where?</Text>
+                    <View style={styles.locationRow}>
+                        <Input
+                            placeholder="Postcode or town"
+                            value={location}
+                            onChangeText={onLocationChange}
+                            autoCapitalize="characters"
+                            returnKeyType="search"
+                            containerStyle={[styles.borderlessInput, { flex: 1 }]}
+                        />
+                        <View style={styles.radiusControlWrapper}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                style={styles.radiusToggle}
+                                onPress={() => setRadiusOpen(!radiusOpen)}
+                            >
+                                <Text style={styles.radiusText}>{radius} mi</Text>
+                                <Text style={styles.chevron}>{radiusOpen ? '▲' : '▼'}</Text>
+                            </TouchableOpacity>
+
+                            {radiusOpen && (
+                                <View style={styles.radiusMenu}>
+                                    {radiusOptions.map((opt) => (
+                                        <TouchableOpacity
+                                            key={opt}
+                                            style={[styles.radiusOpt, opt === radius && styles.radiusOptActive]}
+                                            onPress={() => {
+                                                onRadiusChange(opt);
+                                                setRadiusOpen(false);
+                                            }}
+                                        >
+                                            <Text style={[styles.radiusOptText, opt === radius && styles.radiusOptTextActive]}>{opt} miles</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
                         </View>
-                    )}
-                    {radiusOpen && <View style={{ height: dropdownSpacer }} />}
-                </View>
-            </View>
-
-            <View style={[styles.row, styles.modeRow, stacked && styles.wrap]}>
-                <View style={[styles.modeGroup, stacked && styles.fieldGroupFull]}>
-                    <Text style={styles.label}>Mode</Text>
-                    <View style={styles.modePills}>
-                        {modeOptions.map((item) => {
-                            const isActive = item.value === mode;
-                            return (
-                                <TouchableOpacity
-                                    key={item.value}
-                                    style={[styles.modePill, isActive && styles.modePillActive]}
-                                    onPress={() => onModeChange(item.value)}
-                                    activeOpacity={0.85}
-                                >
-                                    <Text style={[styles.modePillText, isActive && styles.modePillTextActive]}>
-                                        {item.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
                     </View>
                 </View>
 
-                <View style={[styles.ctaWrapper, stacked && styles.ctaFull]}>
-                    <Button title="Find tutors" onPress={onSubmit} fullWidth size="lg" />
-                    <Text style={styles.helperText}>Trusted, verified tutors across the UK</Text>
-                </View>
+                <TouchableOpacity style={styles.searchButton} onPress={onSubmit} activeOpacity={0.9}>
+                    <Text style={styles.searchButtonIcon}>🔍</Text>
+                    {isLg && <Text style={styles.searchButtonText}>Search</Text>}
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.modeRow}>
+                {modeOptions.map((opt) => {
+                    const isActive = opt.value === mode;
+                    return (
+                        <TouchableOpacity
+                            key={opt.value}
+                            style={[styles.modePill, isActive && styles.modePillActive]}
+                            onPress={() => onModeChange(opt.value)}
+                        >
+                            <Text style={[styles.modePillText, isActive && styles.modePillTextActive]}>{opt.label}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
+                <View style={styles.helperDot} />
+                <Text style={styles.helperText}>Verified Experts only</Text>
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    wrapper: {
+    container: {
+        width: '100%',
+        gap: spacing.md,
+    },
+    mainRow: {
+        flexDirection: 'row',
         backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        padding: spacing.lg,
+        borderRadius: borderRadius.full,
+        padding: spacing.xs,
+        paddingLeft: spacing.xl,
+        alignItems: 'center',
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         ...shadows.md,
-        gap: spacing.md,
     },
-    row: {
-        flexDirection: 'row',
-        gap: spacing.md,
-        flexWrap: 'nowrap',
+    mainRowStacked: {
+        flexDirection: 'column',
+        borderRadius: borderRadius.xl,
+        padding: spacing.md,
+        alignItems: 'stretch',
     },
-    wrap: {
-        flexWrap: 'wrap',
+    inputContainer: {
+        flex: 1.2,
+        justifyContent: 'center',
+        paddingVertical: spacing.xs,
     },
-    alignStart: {
-        alignItems: 'flex-start',
-    },
-    fieldGroup: {
+    locationContainer: {
         flex: 1,
-        minWidth: 220,
     },
-    fieldGroupFull: {
-        width: '100%',
-        minWidth: '100%',
-    },
-    radiusGroup: {
-        width: 200,
-        position: 'relative',
-        zIndex: 20,
-        flexShrink: 0,
-    },
-    label: {
-        fontSize: typography.fontSize.xs,
+    innerLabel: {
+        fontSize: 10,
         fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-        marginBottom: spacing.xs,
+        color: colors.neutrals.textMuted,
         textTransform: 'uppercase',
-        letterSpacing: 0.6,
+        letterSpacing: 0.5,
+        marginBottom: -4,
+        paddingLeft: Platform.OS === 'web' ? 0 : spacing.xs,
     },
-    radiusControl: {
-        height: 52,
-        borderRadius: borderRadius.md,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        paddingHorizontal: spacing.md,
+    borderlessInput: {
+        borderWidth: 0,
+        backgroundColor: 'transparent',
+    },
+    divider: {
+        width: 1,
+        height: 32,
+        backgroundColor: colors.neutrals.cardBorder,
+        marginHorizontal: spacing.md,
+        ...Platform.select({
+            web: { display: 'flex' } as any,
+            default: { display: 'none' } as any
+        })
+    },
+    locationRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        ...Platform.select({
-            web: { cursor: 'pointer' },
-        }),
     },
-    radiusValue: {
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.medium,
+    radiusControlWrapper: {
+        position: 'relative',
+        zIndex: 100,
+    },
+    radiusToggle: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: borderRadius.full,
+        marginRight: spacing.sm,
+    },
+    radiusText: {
+        fontSize: 12,
+        fontWeight: typography.fontWeight.semibold,
         color: colors.neutrals.textPrimary,
     },
     chevron: {
-        color: colors.neutrals.textSecondary,
+        fontSize: 10,
+        color: colors.neutrals.textMuted,
     },
     radiusMenu: {
         position: 'absolute',
-        bottom: '100%',
-        marginBottom: spacing.xs,
-        left: 0,
+        top: '100%',
+        marginTop: spacing.xs,
         right: 0,
+        width: 120,
         backgroundColor: colors.neutrals.surface,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        borderRadius: borderRadius.md,
         ...shadows.sm,
-        zIndex: 50,
+        zIndex: 200,
     },
-    radiusOption: {
+    radiusOpt: {
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
     },
-    radiusOptionActive: {
+    radiusOptActive: {
         backgroundColor: colors.primarySoft,
     },
-    radiusOptionText: {
-        fontSize: typography.fontSize.base,
+    radiusOptText: {
+        fontSize: typography.fontSize.sm,
         color: colors.neutrals.textPrimary,
     },
-    radiusOptionTextActive: {
+    radiusOptTextActive: {
         color: colors.primaryDark,
-        fontWeight: typography.fontWeight.semibold,
+        fontWeight: typography.fontWeight.bold,
+    },
+    searchButton: {
+        backgroundColor: colors.primary,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.full,
+        ...shadows.sm,
+    },
+    searchButtonText: {
+        color: colors.neutrals.surface,
+        fontWeight: typography.fontWeight.bold,
+        fontSize: typography.fontSize.base,
+    },
+    searchButtonIcon: {
+        fontSize: 16,
     },
     modeRow: {
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        rowGap: spacing.sm,
-    },
-    modeGroup: {
-        flex: 1,
-    },
-    modePills: {
         flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: spacing.sm,
-        flexWrap: 'wrap',
+        marginTop: spacing.xs,
     },
     modePill: {
-        paddingVertical: spacing.sm,
+        paddingVertical: spacing.xs,
         paddingHorizontal: spacing.lg,
         borderRadius: borderRadius.full,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surfaceAlt,
+        borderColor: 'transparent',
     },
     modePillActive: {
-        backgroundColor: colors.primarySoft,
-        borderColor: colors.primary,
+        backgroundColor: 'rgba(217, 70, 239, 0.1)',
+        borderColor: 'rgba(217, 70, 239, 0.2)',
     },
     modePillText: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
+        fontSize: 12,
         color: colors.neutrals.textSecondary,
+        fontWeight: typography.fontWeight.medium,
     },
     modePillTextActive: {
-        color: colors.primary,
+        color: colors.primaryDark,
+        fontWeight: typography.fontWeight.bold,
     },
-    ctaWrapper: {
-        width: 240,
-        alignItems: 'flex-start',
-        gap: spacing.xs,
-    },
-    ctaFull: {
-        width: '100%',
+    helperDot: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: colors.neutrals.textMuted,
+        marginHorizontal: spacing.xs,
     },
     helperText: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textSecondary,
+        fontSize: 11,
+        color: colors.neutrals.textMuted,
+        fontWeight: typography.fontWeight.medium,
     },
 });

@@ -122,7 +122,7 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
             <View style={styles.divider} />
 
             <View style={styles.footerButtons}>
-                <Button title="Apply" onPress={onClose || (() => {})} fullWidth size="md" />
+                <Button title="Apply" onPress={onClose || (() => { })} fullWidth size="md" />
                 <Text style={styles.helper}>Filters use existing API fields; DBS/weekend tags are surfaced once available.</Text>
             </View>
         </View>
@@ -133,19 +133,20 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.neutrals.surface,
         borderRadius: borderRadius.lg,
-        padding: spacing.lg,
+        padding: spacing.xl,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         ...shadows.sm,
-        gap: spacing.md,
+        gap: spacing.lg,
     },
     compact: {
-        padding: spacing.md,
+        padding: spacing.lg,
     },
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginBottom: spacing.xs,
     },
     title: {
         fontSize: typography.fontSize.xl,
@@ -154,14 +155,14 @@ const styles = StyleSheet.create({
     },
     close: {
         color: colors.primary,
-        fontWeight: typography.fontWeight.semibold,
+        fontWeight: typography.fontWeight.bold,
     },
     sectionLabel: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.neutrals.textSecondary,
+        fontSize: 11,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textMuted,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 1,
     },
     chipRow: {
         flexDirection: 'row',
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     },
     chip: {
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.lg,
         borderRadius: borderRadius.full,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
@@ -178,16 +179,17 @@ const styles = StyleSheet.create({
         ...Platform.select({ web: { cursor: 'pointer' } }),
     },
     chipActive: {
-        backgroundColor: colors.primarySoft,
+        backgroundColor: 'rgba(217, 70, 239, 0.1)',
         borderColor: colors.primary,
     },
     chipText: {
         fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
+        color: colors.neutrals.textSecondary,
         fontWeight: typography.fontWeight.medium,
     },
     chipTextActive: {
-        color: colors.primary,
+        color: colors.primaryDark,
+        fontWeight: typography.fontWeight.bold,
     },
     modeRow: {
         flexDirection: 'row',
@@ -196,8 +198,8 @@ const styles = StyleSheet.create({
     },
     modeButton: {
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.full,
+        paddingHorizontal: spacing.xl,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         backgroundColor: colors.neutrals.surfaceAlt,
@@ -218,13 +220,16 @@ const styles = StyleSheet.create({
     divider: {
         height: 1,
         backgroundColor: colors.neutrals.cardBorder,
-        opacity: 0.8,
+        opacity: 0.5,
     },
     footerButtons: {
-        gap: spacing.xs,
+        gap: spacing.md,
+        marginTop: spacing.md,
     },
     helper: {
-        fontSize: typography.fontSize.xs,
+        fontSize: 11,
         color: colors.neutrals.textMuted,
+        textAlign: 'center',
+        lineHeight: 16,
     },
 });

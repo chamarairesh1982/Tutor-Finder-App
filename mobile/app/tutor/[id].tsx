@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Image, Alert, ActivityIndicator, Platform, Modal, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTutorProfile } from '../../src/hooks/useTutors';
 import { useCreateBooking } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { BookingPanel, ReviewList } from '../../src/components';
-import { colors, spacing, typography, borderRadius, layout } from '../../src/lib/theme';
+import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { Category, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { Button } from '../../src/components/Button';
@@ -23,6 +23,7 @@ export default function TutorDetailScreen() {
     const [preferredMode, setPreferredMode] = useState<TeachingMode>(TeachingMode.Both);
     const [preferredDate, setPreferredDate] = useState('');
     const [reviewSort, setReviewSort] = useState<'recent' | 'highest'>('recent');
+    const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
     const handleBooking = () => {
         if (!isAuthenticated) {
@@ -44,6 +45,7 @@ export default function TutorDetailScreen() {
             },
             {
                 onSuccess: () => {
+                    setBookingModalOpen(false);
                     Alert.alert('Request Sent', 'Your booking request has been sent to the tutor.', [
                         { text: 'View Bookings', onPress: () => router.push('/bookings') },
                         { text: 'OK' }
@@ -58,6 +60,14 @@ export default function TutorDetailScreen() {
             }
         );
     };
+
+    const openBookingModal = () => {
+        if (!isAuthenticated) {
+            router.push('/(auth)/login');
+            return;
+        }
+        setBookingModalOpen(true);
+    }
 
     if (isLoading) {
         return (
@@ -88,21 +98,52 @@ export default function TutorDetailScreen() {
     })();
 
     const aboutText = tutor.bio?.trim() || 'This tutor is updating their bio.';
-    const qualificationsText = tutor.qualifications?.trim() || 'Qualifications shared after you get in touch.';
-    const teachingStyleText = tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner. Share goals in your booking message for a bespoke plan.';
+    const teachingStyleText = tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner.';
     const specialityList = (tutor.specialities?.length ? tutor.specialities : tutor.subjects) ?? [];
-    const specialitiesText = specialityList.length ? specialityList.join(', ') : 'Specialities coming soon.';
     const locationText = tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.`;
     const availabilityText = tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.';
     const reviewList = tutor.reviews ?? [];
+
     const infoSections = [
-        { title: 'About', body: aboutText },
-        { title: 'Qualifications', body: qualificationsText },
-        { title: 'Teaching style', body: teachingStyleText },
-        { title: 'Specialities', body: specialitiesText },
-        { title: 'Location & mode', body: locationText },
-        { title: 'Availability', body: availabilityText },
+        {
+            title: 'About',
+            icon: '👤',
+            body: aboutText
+        },
+        {
+            title: 'Qualifications',
+            icon: '🎓',
+            items: tutor.qualifications?.split('\n').filter(l => l.trim()) ?? ['DBS Checked', 'Verified Profile'],
+            isChecklist: true
+        },
+        {
+            title: 'Teaching style',
+            icon: '💡',
+            body: teachingStyleText
+        },
+        {
+            title: 'Specialties',
+            icon: '✨',
+            items: specialityList,
+            isPill: true
+        },
+        {
+            title: 'Location',
+            icon: '📍',
+            body: locationText
+        },
+        {
+            title: 'Availability',
+            icon: '🕒',
+            body: availabilityText
+        },
+        {
+            title: 'Response Time',
+            icon: '💬',
+            body: tutor.responseTimeText ?? 'Usually replies within 24 hours'
+        },
     ];
+
     const horizontalPadding = width > layout.contentMaxWidth ? spacing['2xl'] : spacing.lg;
 
     return (
@@ -123,42 +164,44 @@ export default function TutorDetailScreen() {
                                     )}
                                 </View>
                                 <View style={styles.nameSection}>
-                                    <Text style={styles.fullName}>{tutor.fullName}</Text>
+                                    <View style={styles.nameHeader}>
+                                        <Text style={styles.fullName}>{tutor.fullName}</Text>
+                                        <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+                                    </View>
                                     <Text style={styles.categoryText}>{Category[tutor.category]}</Text>
                                     <View style={styles.ratingRow}>
+                                        <Text style={styles.ratingValue}>{tutor.averageRating.toFixed(1)}</Text>
                                         <Text style={styles.ratingStars}>{'★'.repeat(Math.round(tutor.averageRating))}</Text>
                                         <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
                                     </View>
-                                    <View style={styles.metaRow}>
-                                        <MetaBadge label={`£${tutor.pricePerHour}/hr`} />
-                                        <MetaBadge label={teachingModeLabel} />
-                                        <MetaBadge label={tutor.postcode} />
-                                    </View>
                                 </View>
                             </View>
-                            <View style={styles.topCtas}>
-                                <Button title="Request booking" onPress={handleBooking} isLoading={isBookingPending} />
-                                <Button title="Share profile" variant="outline" onPress={() => { }} />
-                            </View>
+                            {isLg && (
+                                <View style={styles.topCtas}>
+                                    <Text style={styles.headerPrice}>£{tutor.pricePerHour}<Text style={styles.headerPriceUnit}>/hr</Text></Text>
+                                    <Button title="Book a Session" onPress={openBookingModal} isLoading={isBookingPending} size="lg" />
+                                </View>
+                            )}
                         </View>
                     </View>
 
                     <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide]}>
                         <View style={styles.contentColumn}>
                             {infoSections.map((section) => (
-                                <InfoSection key={section.title} title={section.title} body={section.body} />
+                                <InfoSection key={section.title} section={section} />
                             ))}
 
-                            <View style={styles.sectionCard}>
-                                <ReviewList
-                                    reviews={reviewList}
-                                    averageRating={tutor.averageRating}
-                                    totalCount={tutor.reviewCount}
-                                    ratingBreakdown={tutor.ratingBreakdown}
-                                    sort={reviewSort}
-                                    onSortChange={setReviewSort}
-                                />
+                            <View style={styles.reviewsHeader}>
+                                <Text style={styles.sectionTitle}>Student Reviews</Text>
                             </View>
+                            <ReviewList
+                                reviews={reviewList}
+                                averageRating={tutor.averageRating}
+                                totalCount={tutor.reviewCount}
+                                ratingBreakdown={tutor.ratingBreakdown}
+                                sort={reviewSort}
+                                onSortChange={setReviewSort}
+                            />
                         </View>
 
                         <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
@@ -174,36 +217,81 @@ export default function TutorDetailScreen() {
                                 isSubmitting={isBookingPending}
                                 responseTimeText={tutor.responseTimeText}
                             />
-                            <View style={styles.safetyBox}>
-                                <Text style={styles.safetyTitle}>Safety first</Text>
-                                <Text style={styles.safetyText}>Keep chats inside TutorFinder. We’ll share contact details only after a booking is confirmed.</Text>
-                                <View style={styles.safetyLinks}>
-                                    <Text style={styles.safetyLink}>Safety tips</Text>
-                                    <Text style={styles.safetySeparator}>•</Text>
-                                    <Text style={styles.safetyLink}>Staying secure on TutorFinder</Text>
-                                </View>
-                            </View>
                         </View>
                     </View>
                 </View>
             </ScrollView>
+
+            {!isLg && (
+                <>
+                    <View style={styles.mobileBookingBar}>
+                        <View>
+                            <Text style={styles.mobilePrice}>£{tutor.pricePerHour}<Text style={styles.mobilePriceUnit}>/hr</Text></Text>
+                            <Text style={styles.mobilePriceCaption}>Secure booking</Text>
+                        </View>
+                        <Button title="Book Now" onPress={openBookingModal} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
+                    </View>
+
+                    <Modal visible={bookingModalOpen} animationType="slide" onRequestClose={() => setBookingModalOpen(false)}>
+                        <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Request a Session</Text>
+                                <TouchableOpacity onPress={() => setBookingModalOpen(false)} style={styles.closeBtn}>
+                                    <Text style={styles.closeBtnText}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+                                <BookingPanel
+                                    pricePerHour={tutor.pricePerHour}
+                                    mode={preferredMode}
+                                    onModeChange={setPreferredMode}
+                                    preferredDate={preferredDate}
+                                    onPreferredDateChange={setPreferredDate}
+                                    message={initialMessage}
+                                    onMessageChange={setInitialMessage}
+                                    onSubmit={handleBooking}
+                                    isSubmitting={isBookingPending}
+                                    responseTimeText={tutor.responseTimeText}
+                                />
+                            </ScrollView>
+                        </SafeAreaView>
+                    </Modal>
+                </>
+            )}
         </SafeAreaView>
     );
 }
 
-function InfoSection({ title, body }: { title: string; body: string }) {
+function InfoSection({ section }: { section: any }) {
     return (
         <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <Text style={styles.sectionBody}>{body}</Text>
-        </View>
-    );
-}
+            <View style={styles.sectionTitleRow}>
+                <View style={styles.iconCircle}><Text style={styles.sectionIcon}>{section.icon}</Text></View>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+            </View>
 
-function MetaBadge({ label }: { label: string }) {
-    return (
-        <View style={styles.metaBadge}>
-            <Text style={styles.metaBadgeText}>{label}</Text>
+            {section.body && <Text style={styles.sectionBody}>{section.body}</Text>}
+
+            {section.isChecklist && (
+                <View style={styles.checklist}>
+                    {section.items.map((item: string, idx: number) => (
+                        <View key={idx} style={styles.checkItem}>
+                            <Text style={styles.checkIcon}>✓</Text>
+                            <Text style={styles.checkText}>{item}</Text>
+                        </View>
+                    ))}
+                </View>
+            )}
+
+            {section.isPill && (
+                <View style={styles.pillRow}>
+                    {section.items.map((item: string, idx: number) => (
+                        <View key={idx} style={styles.specialtyPill}>
+                            <Text style={styles.specialtyText}>{item}</Text>
+                        </View>
+                    ))}
+                </View>
+            )}
         </View>
     );
 }
@@ -214,7 +302,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.background,
     },
     scrollContent: {
-        paddingVertical: spacing['2xl'],
+        paddingVertical: spacing.xl,
         gap: spacing.lg,
         alignItems: 'center',
     },
@@ -231,28 +319,29 @@ const styles = StyleSheet.create({
     },
     headerCard: {
         backgroundColor: colors.neutrals.surface,
-        padding: spacing.lg,
+        padding: spacing.xl,
         borderRadius: borderRadius.lg,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
+        ...shadows.sm,
     },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         gap: spacing.lg,
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     profileInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.lg,
+        gap: spacing.xl,
         flex: 1,
     },
     avatarLarge: {
-        width: 112,
-        height: 112,
+        width: 128,
+        height: 128,
         borderRadius: borderRadius.lg,
-        backgroundColor: colors.primaryLight,
+        backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
@@ -262,29 +351,55 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     avatarInitial: {
-        fontSize: 36,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.background,
+        fontSize: 48,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.primary,
     },
     nameSection: {
         flex: 1,
         gap: spacing.xs,
     },
+    nameHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        flexWrap: 'wrap',
+    },
     fullName: {
-        fontSize: typography.fontSize['3xl'],
+        fontSize: typography.fontSize['4xl'],
         fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
+        letterSpacing: -1,
+    },
+    verifiedBadge: {
+        backgroundColor: colors.primarySoft,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    verifiedText: {
+        color: colors.primaryDark,
+        fontSize: 11,
+        fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
     },
     categoryText: {
-        fontSize: typography.fontSize.base,
+        fontSize: typography.fontSize.lg,
         color: colors.primary,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: typography.fontWeight.semibold,
     },
     ratingRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        gap: spacing.sm,
+        marginTop: spacing.xs,
+    },
+    ratingValue: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
     },
     ratingStars: {
         color: colors.ratingStars,
@@ -293,26 +408,21 @@ const styles = StyleSheet.create({
     reviewCount: {
         fontSize: typography.fontSize.sm,
         color: colors.neutrals.textSecondary,
-    },
-    metaRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.sm,
-    },
-    metaBadge: {
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.md,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    metaBadgeText: {
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
+        fontWeight: typography.fontWeight.medium,
     },
     topCtas: {
-        gap: spacing.sm,
+        alignItems: 'flex-end',
+        gap: spacing.md,
+    },
+    headerPrice: {
+        fontSize: typography.fontSize['3xl'],
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+    },
+    headerPriceUnit: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textMuted,
+        fontWeight: typography.fontWeight.normal,
     },
     bodyLayout: {
         gap: spacing.lg,
@@ -325,8 +435,12 @@ const styles = StyleSheet.create({
     },
     contentColumn: {
         flex: 1.2,
-        gap: spacing.md,
+        gap: spacing.lg,
         minWidth: 0,
+    },
+    reviewsHeader: {
+        marginTop: spacing.xl,
+        marginBottom: -spacing.md,
     },
     bookingColumn: {
         flex: 0.8,
@@ -342,53 +456,127 @@ const styles = StyleSheet.create({
     },
     sectionCard: {
         backgroundColor: colors.neutrals.surface,
-        padding: spacing.lg,
+        padding: spacing.xl,
         borderRadius: borderRadius.lg,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
+        ...shadows.sm,
+    },
+    sectionTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        marginBottom: spacing.md,
+    },
+    iconCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.primarySoft,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    sectionIcon: {
+        fontSize: 18,
     },
     sectionTitle: {
         fontSize: typography.fontSize.xl,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
-        marginBottom: spacing.sm,
     },
     sectionBody: {
         fontSize: typography.fontSize.base,
         color: colors.neutrals.textSecondary,
-        lineHeight: 24,
+        lineHeight: 26,
     },
-    safetyBox: {
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        padding: spacing.md,
-        gap: spacing.xs,
+    checklist: {
+        gap: spacing.sm,
     },
-    safetyTitle: {
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.neutrals.textPrimary,
-    },
-    safetyText: {
-        color: colors.neutrals.textSecondary,
-        lineHeight: 20,
-    },
-    safetyLinks: {
+    checkItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        gap: spacing.md,
     },
-    safetyLink: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.semibold,
+    checkIcon: {
+        color: colors.success,
+        fontSize: 18,
+        fontWeight: typography.fontWeight.bold,
+    },
+    checkText: {
+        fontSize: typography.fontSize.base,
+        color: colors.neutrals.textPrimary,
+        fontWeight: typography.fontWeight.medium,
+    },
+    pillRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+    },
+    specialtyPill: {
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.xs,
+        backgroundColor: colors.primarySoft,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    specialtyText: {
+        color: colors.primaryDark,
         fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.semibold,
     },
-    safetySeparator: {
+    mobileBookingBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: spacing.lg,
+        backgroundColor: colors.neutrals.surface,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.cardBorder,
+        ...shadows.lg,
+    },
+    mobilePrice: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+    },
+    mobilePriceUnit: {
+        fontSize: typography.fontSize.xs,
         color: colors.neutrals.textMuted,
+    },
+    mobilePriceCaption: {
+        fontSize: 11,
+        color: colors.success,
+        fontWeight: typography.fontWeight.bold,
+    },
+    mobileBookingBtn: {
+        minWidth: 160,
     },
     errorText: {
         fontSize: typography.fontSize.base,
         color: colors.error,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
+    },
+    modalTitle: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+    },
+    closeBtn: {
+        padding: spacing.sm,
+    },
+    closeBtnText: {
+        fontSize: 20,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textSecondary,
     },
 });

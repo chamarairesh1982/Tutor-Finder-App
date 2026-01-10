@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { TeachingMode } from '../types';
 import { Input } from './Input';
@@ -37,46 +37,57 @@ export function BookingPanel({
     responseTimeText,
 }: BookingPanelProps) {
     const handleLinkPress = (url: string) => {
-        Linking.openURL(url).catch(() => {});
+        Linking.openURL(url).catch(() => { });
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.priceRow}>
+            <View style={styles.header}>
                 <View>
-                    <Text style={styles.price}>£{pricePerHour}</Text>
-                    <Text style={styles.priceCaption}>per hour</Text>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.currency}>£</Text>
+                        <Text style={styles.price}>{pricePerHour}</Text>
+                        <Text style={styles.perHour}>/hr</Text>
+                    </View>
+                    <Text style={styles.priceSub}>Session price</Text>
                 </View>
-                <View style={styles.tag}><Text style={styles.tagText}>Secure booking</Text></View>
+                <View style={styles.secureTag}>
+                    <Text style={styles.secureIcon}>🔒</Text>
+                    <Text style={styles.secureText}>Secure</Text>
+                </View>
             </View>
 
-            <Text style={styles.sectionLabel}>Mode</Text>
-            <View style={styles.modeRow}>
-                {modeLabels.map((item) => {
-                    const isActive = item.value === mode;
-                    return (
-                        <TouchableOpacity
-                            key={item.value}
-                            style={[styles.modeButton, isActive && styles.modeButtonActive]}
-                            onPress={() => onModeChange(item.value)}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={[styles.modeText, isActive && styles.modeTextActive]}>{item.label}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
+            <View style={styles.divider} />
+
+            <View style={styles.formGroup}>
+                <Text style={styles.label}>Teaching Mode</Text>
+                <View style={styles.modeRow}>
+                    {modeLabels.map((item) => {
+                        const isActive = item.value === mode;
+                        return (
+                            <TouchableOpacity
+                                key={item.value}
+                                style={[styles.modeButton, isActive && styles.modeButtonActive]}
+                                onPress={() => onModeChange(item.value)}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={[styles.modeText, isActive && styles.modeTextActive]}>{item.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
             </View>
 
             <Input
-                label="Date/time preference"
-                placeholder="e.g. Saturdays 10–12 or evenings"
+                label="When would you like to meet?"
+                placeholder="e.g. Weekdays after 5pm"
                 value={preferredDate ?? ''}
                 onChangeText={onPreferredDateChange}
             />
 
             <Input
-                label="Message"
-                placeholder="Introduce yourself and your goals"
+                label="Message to tutor"
+                placeholder="Hi, I'm looking for help with..."
                 value={message}
                 onChangeText={onMessageChange}
                 multiline
@@ -84,20 +95,22 @@ export function BookingPanel({
                 style={styles.messageInput}
             />
 
-            <Button title="Send booking request" onPress={onSubmit} isLoading={isSubmitting} fullWidth size="lg" />
-            <View style={styles.helperSection}>
-                <Text style={styles.helper}>
-                    {responseTimeText ?? 'Most tutors reply within 24 hours. We keep your details safe.'}
+            <Button
+                title="Request Booking"
+                onPress={onSubmit}
+                isLoading={isSubmitting}
+                fullWidth
+                size="lg"
+            />
+
+            <View style={styles.footer}>
+                <Text style={styles.responseTime}>
+                    <Text style={styles.responseIcon}>⚡ </Text>
+                    {responseTimeText || 'Typically responds within a few hours'}
                 </Text>
-                <View style={styles.helperLinks}>
-                    <TouchableOpacity onPress={() => handleLinkPress('https://www.tutorfinder.uk/safety')} activeOpacity={0.8}>
-                        <Text style={styles.helperLink}>Safety tips</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.helperSeparator}>•</Text>
-                    <TouchableOpacity onPress={() => handleLinkPress('https://www.tutorfinder.uk/help/secure-payments')} activeOpacity={0.8}>
-                        <Text style={styles.helperLink}>Secure payments</Text>
-                    </TouchableOpacity>
-                </View>
+                <Text style={styles.guarantee}>
+                    Free cancellation before the first lesson.
+                </Text>
             </View>
         </View>
     );
@@ -107,44 +120,76 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.neutrals.surface,
         borderRadius: borderRadius.lg,
-        padding: spacing.lg,
+        padding: spacing.xl,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        gap: spacing.md,
+        ...shadows.md,
+        gap: spacing.lg,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
     },
     priceRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'baseline',
     },
-    price: {
-        fontSize: typography.fontSize['3xl'],
+    currency: {
+        fontSize: typography.fontSize.xl,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
+        marginRight: 2,
     },
-    priceCaption: {
-        fontSize: typography.fontSize.sm,
+    price: {
+        fontSize: typography.fontSize['4xl'],
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+        letterSpacing: -1,
+    },
+    perHour: {
+        fontSize: typography.fontSize.base,
         color: colors.neutrals.textSecondary,
+        marginLeft: 2,
     },
-    tag: {
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.md,
-        backgroundColor: colors.primarySoft,
+    priceSub: {
+        fontSize: typography.fontSize.xs,
+        color: colors.neutrals.textMuted,
+        marginTop: -4,
+    },
+    secureTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingVertical: 4,
+        paddingHorizontal: spacing.sm,
+        backgroundColor: 'rgba(217, 70, 239, 0.1)',
         borderRadius: borderRadius.full,
         borderWidth: 1,
-        borderColor: colors.primary,
+        borderColor: 'rgba(217, 70, 239, 0.2)',
     },
-    tagText: {
+    secureIcon: {
+        fontSize: 10,
+    },
+    secureText: {
+        fontSize: 11,
         color: colors.primaryDark,
-        fontSize: typography.fontSize.xs,
-        fontWeight: typography.fontWeight.semibold,
+        fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
     },
-    sectionLabel: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.neutrals.textSecondary,
+    divider: {
+        height: 1,
+        backgroundColor: colors.neutrals.cardBorder,
+        opacity: 0.5,
+    },
+    formGroup: {
+        marginBottom: spacing.md,
+    },
+    label: {
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+        marginBottom: spacing.xs,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
@@ -156,10 +201,11 @@ const styles = StyleSheet.create({
     modeButton: {
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.full,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         backgroundColor: colors.neutrals.surfaceAlt,
+        ...Platform.select({ web: { cursor: 'pointer' } }),
     },
     modeButtonActive: {
         backgroundColor: colors.primarySoft,
@@ -168,36 +214,32 @@ const styles = StyleSheet.create({
     modeText: {
         fontSize: typography.fontSize.sm,
         color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
+        fontWeight: typography.fontWeight.medium,
     },
     modeTextActive: {
         color: colors.primaryDark,
+        fontWeight: typography.fontWeight.bold,
     },
     messageInput: {
-        height: 120,
+        height: 100,
         textAlignVertical: 'top',
         paddingTop: spacing.sm,
     },
-    helperSection: {
-        gap: spacing.xs,
-    },
-    helper: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textSecondary,
-    },
-    helperLinks: {
-        flexDirection: 'row',
+    footer: {
         alignItems: 'center',
         gap: spacing.xs,
-        flexWrap: 'wrap',
     },
-    helperLink: {
+    responseTime: {
         fontSize: typography.fontSize.xs,
-        color: colors.primary,
+        color: colors.neutrals.textPrimary,
         fontWeight: typography.fontWeight.semibold,
     },
-    helperSeparator: {
+    responseIcon: {
+        fontSize: 12,
+    },
+    guarantee: {
+        fontSize: 11,
         color: colors.neutrals.textMuted,
-        fontSize: typography.fontSize.xs,
+        textAlign: 'center',
     },
 });

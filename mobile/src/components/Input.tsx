@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
+import { View, TextInput, Text, StyleSheet, TextInputProps, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../lib/theme';
 
 interface InputProps extends TextInputProps {
@@ -9,6 +9,7 @@ interface InputProps extends TextInputProps {
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
     onRightIconPress?: () => void;
+    containerStyle?: StyleProp<ViewStyle>;
 }
 
 export function Input({
@@ -18,13 +19,14 @@ export function Input({
     leftIcon,
     rightIcon,
     onRightIconPress,
+    containerStyle,
     style,
     ...props
 }: InputProps) {
     const [isFocused, setIsFocused] = useState(false);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
             {label && <Text style={styles.label}>{label}</Text>}
 
             <View

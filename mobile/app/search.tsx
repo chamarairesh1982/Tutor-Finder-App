@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FilterSidebar, MapPanelPlaceholder, TutorCard, TutorCardWeb, HomeSearchBar } from '../src/components';
-import { colors, spacing, typography, borderRadius, layout } from '../src/lib/theme';
+import { colors, spacing, typography, borderRadius, layout, shadows } from '../src/lib/theme';
 import { useBreakpoint } from '../src/lib/responsive';
 import { useSearchTutors } from '../src/hooks/useTutors';
 import { SearchFiltersState } from '../src/components/FilterSidebar';
@@ -19,6 +19,7 @@ export default function SearchPage() {
     const [sortBy, setSortBy] = useState<TutorSearchRequest['sortBy']>('best');
     const [sortOpen, setSortOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>(isLg ? 'split' : 'list');
+
     const quickDefaults = {
         dbs: params.dbs === '1',
         weekends: params.weekends === '1',
@@ -102,15 +103,18 @@ export default function SearchPage() {
 
     const renderTopBar = () => (
         <View style={styles.topBar}>
-            <Text style={styles.resultCount}>{resultsCount} tutors</Text>
-            <View style={styles.topBarRight}>
+            <View style={styles.topBarLeft}>
+                <Text style={styles.resultCount}>{resultsCount} tutors found</Text>
                 <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>{results.length}/{resultsCount}</Text>
+                    <Text style={styles.countBadgeText}>Showing {results.length}</Text>
                 </View>
-                <View style={styles.sortMenu}>
+            </View>
+            <View style={styles.topBarRight}>
+                <View style={[styles.sortMenu, { zIndex: 100 }]}>
                     <TouchableOpacity style={styles.sortTrigger} onPress={() => setSortOpen((prev) => !prev)}>
-                        <Text style={styles.sortLabel}>Sort</Text>
+                        <Text style={styles.sortLabel}>Sort by:</Text>
                         <Text style={styles.sortValue}>{sortLabel(sortBy)}</Text>
+                        <Text style={styles.sortChevron}>▼</Text>
                     </TouchableOpacity>
                     {sortOpen && (
                         <View style={styles.sortOptions}>
@@ -121,7 +125,7 @@ export default function SearchPage() {
                                         setSortBy(option);
                                         setSortOpen(false);
                                     }}
-                                    style={styles.sortOption}
+                                    style={[styles.sortOption, option === sortBy && styles.sortOptionActive]}
                                 >
                                     <Text style={[styles.sortOptionText, option === sortBy && styles.sortOptionTextActive]}>{sortLabel(option)}</Text>
                                 </TouchableOpacity>
@@ -130,14 +134,16 @@ export default function SearchPage() {
                     )}
                 </View>
 
-                <View style={styles.viewToggle}>
-                    <ToggleButton label="List" active={viewMode === 'list' || viewMode === 'split'} onPress={() => setViewMode(isLg ? 'split' : 'list')} />
-                    <ToggleButton label="Map" active={viewMode === 'map'} onPress={() => setViewMode('map')} />
-                </View>
+                {isLg && (
+                    <View style={styles.viewToggle}>
+                        <ToggleButton label="List View" active={viewMode === 'split'} onPress={() => setViewMode('split')} />
+                        <ToggleButton label="Full Map" active={viewMode === 'map'} onPress={() => setViewMode('map')} />
+                    </View>
+                )}
 
                 {!isLg && (
-                    <TouchableOpacity style={styles.filterButton} onPress={() => setFiltersOpen(true)}>
-                        <Text style={styles.filterButtonText}>Filters</Text>
+                    <TouchableOpacity style={styles.filterTrigger} onPress={() => setFiltersOpen(true)}>
+                        <Text style={styles.filterTriggerText}>Filters</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -170,17 +176,6 @@ export default function SearchPage() {
             );
         }
 
-        if (!hasMore && results.length > 0) {
-            return (
-                <View>
-                    {renderList()}
-                    <View style={styles.footerNote}>
-                        <Text style={styles.footerNoteText}>End of results</Text>
-                    </View>
-                </View>
-            );
-        }
-
         if (isError) {
             return (
                 <View style={styles.centered}>
@@ -190,10 +185,15 @@ export default function SearchPage() {
             );
         }
 
-        if (!results || results.length === 0) {
+        if (results.length === 0 && !isFetching) {
             return (
                 <View style={styles.centered}>
-                    <Text style={styles.emptyText}>No tutors match these filters yet.</Text>
+                    <Text style={styles.emptyText}>No tutors found matching your search.</Text>
+                    <TouchableOpacity style={styles.retry} onPress={() => {
+                        setSubject('');
+                        setLocation('');
+                        setFilters({ ...filters, radiusMiles: 10, mode: undefined });
+                    }}><Text style={styles.retryText}>Clear all filters</Text></TouchableOpacity>
                 </View>
             );
         }
@@ -218,22 +218,27 @@ export default function SearchPage() {
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
-                showsVerticalScrollIndicator={false}
-                onScroll={onScroll}
-                scrollEventThrottle={250}
-            >
-                <View style={styles.navbar}>
-                    <Text style={styles.brand}>TutorFinder</Text>
+            <View style={styles.navbarOuter}>
+                <View style={[styles.navbar, { maxWidth: layout.contentMaxWidth + 400, alignSelf: 'center', width: '100%', paddingHorizontal: spacing.xl }]}>
+                    <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
+                        <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
+                        <Text style={styles.brand}>TutorMatch UK</Text>
+                    </TouchableOpacity>
                     <View style={styles.navActions}>
                         <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/(auth)/register')}><Text style={styles.navLink}>Sign up</Text></TouchableOpacity>
                         <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                            <Text style={styles.navCtaText}>Become a Tutor</Text>
+                            <Text style={styles.navCtaText}>Sign up</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
+            </View>
 
+            <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth + 400 ? spacing.xl : spacing.lg }]}
+                showsVerticalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={250}
+                stickyHeaderIndices={[1]}
+            >
                 <View style={styles.searchShell}>
                     <HomeSearchBar
                         subject={subject}
@@ -248,6 +253,9 @@ export default function SearchPage() {
                     />
                 </View>
 
+                {/* This empty view serves as a sticky header anchor if needed, or we just use resultsShell */}
+                <View style={{ height: 1, backgroundColor: 'transparent' }} />
+
                 <View style={styles.resultsShell}>
                     {isLg && (
                         <View style={styles.sidebarWrapper}>
@@ -260,10 +268,16 @@ export default function SearchPage() {
                         <View style={styles.divider} />
                         {isFetching && results.length > 0 && <Text style={styles.loadingHint}>Updating results…</Text>}
                         {renderContent()}
+
                         {isFetching && hasMore && (
                             <View style={styles.loadingMoreRow}>
                                 <ActivityIndicator size="small" color={colors.primary} />
-                                <Text style={styles.loadingMoreText}>Loading more…</Text>
+                                <Text style={styles.loadingMoreText}>Loading more experts…</Text>
+                            </View>
+                        )}
+                        {!hasMore && results.length > 0 && (
+                            <View style={styles.footerNote}>
+                                <Text style={styles.footerNoteText}>You've seen all available tutors for this search.</Text>
                             </View>
                         )}
                     </View>
@@ -292,13 +306,13 @@ function ToggleButton({ label, active, onPress }: { label: string; active: boole
 function sortLabel(value: TutorSearchRequest['sortBy']) {
     switch (value) {
         case 'nearest':
-            return 'Nearest';
+            return 'Nearest First';
         case 'rating':
-            return 'Rating';
+            return 'Top Rated';
         case 'price':
-            return 'Price';
+            return 'Price (Low to High)';
         default:
-            return 'Best match';
+            return 'Best Match';
     }
 }
 
@@ -307,20 +321,39 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.neutrals.background,
     },
-    page: {
-        paddingVertical: spacing['2xl'],
-        gap: spacing.lg,
+    navbarOuter: {
+        backgroundColor: colors.neutrals.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
     },
     navbar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.md,
+    },
+    brandRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    logo: {
+        width: 32,
+        height: 32,
+        backgroundColor: colors.primary,
+        borderRadius: borderRadius.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoText: {
+        color: colors.neutrals.surface,
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.heavy,
     },
     brand: {
-        fontSize: typography.fontSize['2xl'],
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.primary,
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.primaryDark,
         letterSpacing: -0.5,
     },
     navActions: {
@@ -329,8 +362,9 @@ const styles = StyleSheet.create({
         gap: spacing.md,
     },
     navLink: {
-        color: colors.neutrals.textPrimary,
+        color: colors.neutrals.textSecondary,
         fontWeight: typography.fontWeight.semibold,
+        fontSize: typography.fontSize.sm,
     },
     navCta: {
         backgroundColor: colors.primary,
@@ -341,23 +375,33 @@ const styles = StyleSheet.create({
     navCtaText: {
         color: colors.neutrals.surface,
         fontWeight: typography.fontWeight.bold,
+        fontSize: typography.fontSize.sm,
+    },
+    page: {
+        paddingVertical: spacing.xl,
+        gap: spacing.lg,
+        alignItems: 'center',
     },
     searchShell: {
-        marginTop: spacing.md,
+        width: '100%',
+        maxWidth: layout.contentMaxWidth + 200,
+        marginTop: spacing.sm,
     },
     resultsShell: {
         flexDirection: 'row',
-        gap: spacing.lg,
+        gap: spacing.xl,
         alignItems: 'flex-start',
+        width: '100%',
+        maxWidth: layout.contentMaxWidth + 400,
     },
     sidebarWrapper: {
-        width: 320,
+        width: 300,
         position: 'sticky' as any,
         top: spacing.lg,
     },
     resultsColumn: {
         flex: 1,
-        gap: spacing.md,
+        gap: spacing.lg,
     },
     topBar: {
         flexDirection: 'row',
@@ -366,118 +410,19 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: spacing.md,
     },
+    topBarLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
     resultCount: {
-        fontSize: typography.fontSize.lg,
+        fontSize: typography.fontSize.xl,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
     },
-    topBarRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    sortMenu: {
-        position: 'relative',
-        zIndex: 10,
-    },
-    sortTrigger: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surface,
-    },
-    sortLabel: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textSecondary,
-        textTransform: 'uppercase',
-    },
-    sortValue: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    sortOptions: {
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        right: 0,
-        marginTop: spacing.xs,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        borderRadius: borderRadius.md,
-        overflow: 'hidden',
-        zIndex: 5,
-    },
-    sortOption: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-    },
-    sortOptionText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
-    },
-    sortOptionTextActive: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    viewToggle: {
-        flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        borderRadius: borderRadius.full,
-        overflow: 'hidden',
-    },
-    toggle: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        backgroundColor: colors.neutrals.surface,
-    },
-    toggleActive: {
-        backgroundColor: colors.primarySoft,
-    },
-    toggleText: {
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    toggleTextActive: {
-        color: colors.primaryDark,
-    },
-    filterButton: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    filterButtonText: {
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: colors.neutrals.cardBorder,
-    },
-    loadingHint: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textSecondary,
-    },
-    loadingMoreRow: {
-        marginTop: spacing.md,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    loadingMoreText: {
-        color: colors.neutrals.textSecondary,
-        fontSize: typography.fontSize.sm,
-    },
     countBadge: {
         paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xs,
+        paddingVertical: 2,
         borderRadius: borderRadius.full,
         backgroundColor: colors.neutrals.surfaceAlt,
         borderWidth: 1,
@@ -485,45 +430,168 @@ const styles = StyleSheet.create({
     },
     countBadgeText: {
         color: colors.neutrals.textSecondary,
+        fontSize: 10,
+        fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
+    },
+    topBarRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    sortMenu: {
+        position: 'relative',
+    },
+    sortTrigger: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+    },
+    sortLabel: {
         fontSize: typography.fontSize.xs,
+        color: colors.neutrals.textMuted,
+        fontWeight: typography.fontWeight.medium,
+    },
+    sortValue: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textPrimary,
+        fontWeight: typography.fontWeight.bold,
+    },
+    sortChevron: {
+        fontSize: 10,
+        color: colors.neutrals.textMuted,
+        marginLeft: spacing.xs,
+    },
+    sortOptions: {
+        position: 'absolute',
+        top: '100%',
+        right: 0,
+        marginTop: spacing.xs,
+        width: 200,
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        borderRadius: borderRadius.md,
+        ...shadows.md,
+        overflow: 'hidden',
+    },
+    sortOption: {
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+    },
+    sortOptionActive: {
+        backgroundColor: colors.primarySoft,
+    },
+    sortOptionText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textPrimary,
+    },
+    sortOptionTextActive: {
+        color: colors.primaryDark,
+        fontWeight: typography.fontWeight.bold,
+    },
+    viewToggle: {
+        flexDirection: 'row',
+        backgroundColor: colors.neutrals.surfaceAlt,
+        padding: 4,
+        borderRadius: borderRadius.md,
+        gap: 4,
+    },
+    toggle: {
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.sm,
+    },
+    toggleActive: {
+        backgroundColor: colors.neutrals.surface,
+        ...shadows.sm,
+    },
+    toggleText: {
+        color: colors.neutrals.textSecondary,
         fontWeight: typography.fontWeight.semibold,
+        fontSize: 12,
+    },
+    toggleTextActive: {
+        color: colors.primaryDark,
+    },
+    filterTrigger: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.xl,
+        backgroundColor: colors.primary,
+        borderRadius: borderRadius.full,
+    },
+    filterTriggerText: {
+        color: colors.neutrals.surface,
+        fontWeight: typography.fontWeight.bold,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: colors.neutrals.cardBorder,
+    },
+    loadingHint: {
+        fontSize: typography.fontSize.xs,
+        color: colors.primary,
+        fontWeight: typography.fontWeight.bold,
+    },
+    loadingMoreRow: {
+        marginTop: spacing.xl,
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    loadingMoreText: {
+        color: colors.neutrals.textSecondary,
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.medium,
     },
     footerNote: {
-        marginTop: spacing.md,
+        marginTop: spacing.xl,
         alignItems: 'center',
+        paddingVertical: spacing.xl,
     },
     footerNoteText: {
         color: colors.neutrals.textMuted,
         fontSize: typography.fontSize.sm,
     },
     cardStack: {
-        gap: spacing.md,
+        gap: spacing.lg,
     },
-
     cardWrapper: {
         borderRadius: borderRadius.lg,
-        overflow: 'hidden',
     },
     splitLayout: {
         flexDirection: 'row',
-        gap: spacing.lg,
+        gap: spacing.xl,
     },
     splitList: {
         flex: 1,
-        gap: spacing.md,
+        gap: spacing.lg,
     },
     splitMap: {
-        width: 420,
+        width: 440,
+        height: 700,
+        position: 'sticky' as any,
+        top: spacing.lg,
+        borderRadius: borderRadius.lg,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
     },
     centered: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing['2xl'],
-        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing['5xl'],
+        gap: spacing.md,
     },
     emptyText: {
         color: colors.neutrals.textSecondary,
-        fontSize: typography.fontSize.base,
+        fontSize: typography.fontSize.lg,
+        textAlign: 'center',
     },
     errorText: {
         color: colors.error,
@@ -539,6 +607,5 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         backgroundColor: colors.neutrals.background,
-        padding: spacing.lg,
     },
 });
