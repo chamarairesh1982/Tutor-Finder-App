@@ -60,7 +60,12 @@ export interface TutorProfile {
     averageRating: number;
     reviewCount: number;
     isActive: boolean;
+    responseTimeText?: string;
+    reviews?: Review[];
+    ratingBreakdown?: Record<number, number>;
+    nextAvailableText?: string;
 }
+
 
 export interface TutorSearchResult {
     id: string;
@@ -73,7 +78,12 @@ export interface TutorSearchResult {
     reviewCount: number;
     distanceMiles: number;
     nextAvailableText: string;
+    teachingMode?: TeachingMode;
+    responseTimeText?: string;
+    hasDbsCheck?: boolean;
+    badges?: string[];
 }
+
 
 export interface TutorSearchRequest {
     lat?: number;

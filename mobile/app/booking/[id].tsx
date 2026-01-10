@@ -19,19 +19,28 @@ export default function BookingDetailScreen() {
     const [message, setMessage] = useState('');
     const scrollViewRef = useRef<ScrollView>(null);
 
+    const messages = booking?.messages ?? [];
+
     useEffect(() => {
         // Scroll to bottom when booking data updates (new messages)
-        if (booking?.messages.length) {
+        if (messages.length) {
             setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
         }
-    }, [booking?.messages.length]);
+    }, [messages.length]);
+
 
     const handleSend = () => {
-        if (!message.trim()) return;
-        sendMessage(message.trim(), {
+        const trimmed = message.trim();
+        if (!trimmed) return;
+        sendMessage(trimmed, {
             onSuccess: () => setMessage(''),
+            onError: (err: any) => {
+                const detail = err?.response?.data?.detail || 'Unable to send message.';
+                Alert.alert('Send failed', detail);
+            },
         });
     };
+
 
     const handleStatusChange = (newStatus: BookingStatus) => {
         respond({ newStatus }, {
@@ -66,6 +75,10 @@ export default function BookingDetailScreen() {
 
     const isTutor = user?.role === UserRole.Tutor;
     const statusStyles = getStatusColor(booking.status);
+    const modeLabel = booking.preferredMode === 0 ? 'In Person' : booking.preferredMode === 1 ? 'Online' : 'Flexible';
+    const priceLabel = booking.pricePerHour ? `£${booking.pricePerHour}/hr` : '£—/hr';
+    const dateLabel = booking.preferredDate || 'Flexible';
+
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -94,18 +107,19 @@ export default function BookingDetailScreen() {
                         <View style={styles.detailsRow}>
                             <View style={styles.detailItem}>
                                 <Text style={styles.detailLabel}>Date</Text>
-                                <Text style={styles.detailValue}>{booking.preferredDate || 'Flexible'}</Text>
+                                <Text style={styles.detailValue}>{dateLabel}</Text>
                             </View>
                             <View style={styles.detailItem}>
                                 <Text style={styles.detailLabel}>Mode</Text>
                                 <Text style={styles.detailValue}>
-                                    {booking.preferredMode === 0 ? 'In Person' : 'Online'}
+                                    {modeLabel}
                                 </Text>
                             </View>
                             <View style={styles.detailItem}>
                                 <Text style={styles.detailLabel}>Price</Text>
-                                <Text style={styles.detailValue}>£{booking.pricePerHour}/hr</Text>
+                                <Text style={styles.detailValue}>{priceLabel}</Text>
                             </View>
+
                         </View>
 
                         {isTutor && booking.status === BookingStatus.Pending && (
@@ -134,7 +148,7 @@ export default function BookingDetailScreen() {
                     <Text style={styles.messageTitle}>Messages</Text>
 
                     <View style={styles.messagesList}>
-                        {booking.messages.map((msg: BookingMessage, idx: number) => {
+                        {(messages.length ? messages : []).map((msg: BookingMessage) => {
                             const isMe = msg.senderId === user?.id;
                             return (
                                 <View
@@ -149,7 +163,11 @@ export default function BookingDetailScreen() {
                                 </View>
                             );
                         })}
+                        {!messages.length && (
+                            <Text style={styles.emptyMessage}>No messages yet. Start the conversation.</Text>
+                        )}
                     </View>
+
                 </ScrollView>
 
                 <View style={styles.inputArea}>
@@ -161,7 +179,7 @@ export default function BookingDetailScreen() {
                         multiline
                     />
                     <TouchableOpacity
-                        style={[styles.sendBtn, !message.trim() && styles.sendBtnDisabled]}
+                        style={[styles.sendBtn, (!message.trim() || isSending) && styles.sendBtnDisabled]}
                         onPress={handleSend}
                         disabled={!message.trim() || isSending}
                     >
@@ -171,6 +189,7 @@ export default function BookingDetailScreen() {
                             <Text style={styles.sendBtnText}>Send</Text>
                         )}
                     </TouchableOpacity>
+
                 </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -256,6 +275,12 @@ const styles = StyleSheet.create({
     messagesList: {
         marginBottom: spacing.md,
     },
+    emptyMessage: {
+        color: colors.neutrals.textSecondary,
+        fontSize: typography.fontSize.sm,
+        marginBottom: spacing.md,
+    },
+
     messageBubble: {
         padding: spacing.md,
         borderRadius: borderRadius.lg,

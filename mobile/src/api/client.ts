@@ -1,8 +1,30 @@
 import axios from 'axios';
 import { storage } from '../lib/storage';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5270/api/v1';
+const envUrl = process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl;
+
+function resolveBaseUrl() {
+    if (envUrl) {
+        return envUrl.replace(/\/$/, '');
+    }
+
+    // Web: fall back to same-origin proxy if configured
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return `${window.location.origin}/api/v1`;
+    }
+
+    // Emulators
+    if (Platform.OS === 'android') {
+        return 'http://10.0.2.2:5270/api/v1';
+    }
+
+    // iOS simulator + default
+    return 'http://localhost:5270/api/v1';
+}
+
+const API_BASE_URL = resolveBaseUrl();
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -11,6 +33,7 @@ export const apiClient = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
 
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(

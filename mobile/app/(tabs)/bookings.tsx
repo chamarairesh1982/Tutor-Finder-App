@@ -9,6 +9,8 @@ import { Booking, BookingStatus } from '../../src/types';
 export default function BookingsScreen() {
     const router = useRouter();
     const { data: bookings, isLoading, isError, refetch } = useMyBookings();
+    const listData = bookings ?? [];
+
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
@@ -60,10 +62,11 @@ export default function BookingsScreen() {
 
                 <View style={styles.cardFooter}>
                     <Text style={styles.messagePreview} numberOfLines={1}>
-                        {item.messages.length > 0 ? item.messages[item.messages.length - 1].content : 'No messages'}
+                        {item.messages && item.messages.length > 0 ? item.messages[item.messages.length - 1].content : 'No messages'}
                     </Text>
                     <Text style={styles.arrow}>›</Text>
                 </View>
+
             </TouchableOpacity>
         );
     };
@@ -82,7 +85,8 @@ export default function BookingsScreen() {
                 <Text style={styles.title}>My Bookings</Text>
             </View>
 
-            {bookings && bookings.length === 0 ? (
+            {listData.length === 0 ? (
+
                 <View style={styles.centered}>
                     <Text style={styles.emptyText}>You don't have any bookings yet.</Text>
                     <TouchableOpacity
@@ -94,13 +98,19 @@ export default function BookingsScreen() {
                 </View>
             ) : (
                 <FlatList
-                    data={bookings}
-                    keyExtractor={(item) => item.id}
+                    data={listData}
+                    keyExtractor={(item, index) => item.id || `booking-${index}`}
                     renderItem={renderBookingItem}
                     contentContainerStyle={styles.listContent}
                     onRefresh={refetch}
                     refreshing={isLoading}
+                    ListEmptyComponent={() => (
+                        <View style={styles.centered}>
+                            <Text style={styles.emptyText}>You don't have any bookings yet.</Text>
+                        </View>
+                    )}
                 />
+
             )}
         </SafeAreaView>
     );

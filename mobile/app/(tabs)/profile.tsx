@@ -32,6 +32,11 @@ export default function ProfileScreen() {
         </View>
     );
 
+    const handleSoon = (title: string) => {
+        alert(`${title} coming soon`);
+    };
+
+
     if (!isAuthenticated || !user) {
         return (
             <SafeAreaView style={styles.container} edges={['top']}>
@@ -50,26 +55,38 @@ export default function ProfileScreen() {
                     <Text style={styles.title}>Profile</Text>
                 </View>
 
-                <View style={styles.profileCard}>
-                    <View style={styles.avatarLarge}>
-                        <Text style={styles.avatarInitialLarge}>{user.displayName.charAt(0)}</Text>
+                    <View style={styles.profileCard}>
+                        <View style={styles.avatarLarge}>
+                            <Text style={styles.avatarInitialLarge}>{(user.displayName || user.email || '?').charAt(0).toUpperCase()}</Text>
+                        </View>
+                        <Text style={styles.userName}>{user.displayName || 'Account'}</Text>
+                        <Text style={styles.userEmail}>{user.email || ''}</Text>
+                        <View style={styles.roleBadge}>
+                            <Text style={styles.roleText}>
+                                {user.role === UserRole.Tutor ? 'TUTOR' : user.role === UserRole.Admin ? 'ADMIN' : 'STUDENT'}
+                            </Text>
+                        </View>
                     </View>
-                    <Text style={styles.userName}>{user.displayName}</Text>
-                    <Text style={styles.userEmail}>{user.email}</Text>
-                    <View style={styles.roleBadge}>
-                        <Text style={styles.roleText}>
-                            {user.role === UserRole.Tutor ? 'TUTOR' : user.role === UserRole.Admin ? 'ADMIN' : 'STUDENT'}
-                        </Text>
-                    </View>
-                </View>
+
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account Settings</Text>
 
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/edit-info')}>
                         <Text style={styles.menuItemText}>Edit Personal Info</Text>
                         <Text style={styles.menuItemArrow}>›</Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/change-password')}>
+                        <Text style={styles.menuItemText}>Change Password</Text>
+                        <Text style={styles.menuItemArrow}>›</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/notifications')}>
+                        <Text style={styles.menuItemText}>Notifications</Text>
+                        <Text style={styles.menuItemArrow}>›</Text>
+                    </TouchableOpacity>
+
 
                     {user.role === UserRole.Tutor && (
                         <TouchableOpacity
@@ -79,6 +96,8 @@ export default function ProfileScreen() {
                             <Text style={styles.menuItemText}>Tutor Profile Settings</Text>
                             <Text style={styles.menuItemArrow}>›</Text>
                         </TouchableOpacity>
+                    )}
+
                     )}
 
                     <TouchableOpacity style={styles.menuItem}>
@@ -94,18 +113,19 @@ export default function ProfileScreen() {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Support</Text>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/help-center')}>
                         <Text style={styles.menuItemText}>Help Center</Text>
                         <Text style={styles.menuItemArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/privacy')}>
                         <Text style={styles.menuItemText}>Privacy Policy</Text>
                         <Text style={styles.menuItemArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/terms')}>
                         <Text style={styles.menuItemText}>Terms of Service</Text>
                         <Text style={styles.menuItemArrow}>›</Text>
                     </TouchableOpacity>
+
                 </View>
 
                 <TouchableOpacity

@@ -9,8 +9,11 @@ export function useMyBookings() {
             const response = await apiClient.get<Booking[]>('/bookings');
             return response.data;
         },
+        staleTime: 1000 * 30,
+        refetchOnWindowFocus: false,
     });
 }
+
 
 export function useBooking(bookingId: string) {
     return useQuery({
@@ -65,8 +68,15 @@ export function useSendMessage(bookingId: string) {
             const response = await apiClient.post<BookingMessage>(`/bookings/${bookingId}/messages`, { content });
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (message) => {
+            // Optimistically append message to the booking detail cache
+            queryClient.setQueryData<Booking | undefined>(['bookings', bookingId], (prev) => {
+                if (!prev) return prev;
+                const nextMessages = [...(prev.messages ?? []), message];
+                return { ...prev, messages: nextMessages } as Booking;
+            });
             queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
         },
     });
 }
+

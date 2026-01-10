@@ -1,14 +1,14 @@
-// Design System Tokens based on DESIGN_SYSTEM.md
+// Design System Tokens based on DESIGN_SYSTEM.md with desktop-friendly scale
 
 export const colors = {
   // Brand
   primary: '#4F46E5', // Indigo-600
-  primaryDark: '#3730A3', // Indigo-800
+  primaryDark: '#312E81', // Indigo-900
   primaryLight: '#6366F1', // Indigo-500
   primarySoft: '#EEF2FF', // Indigo-50
 
-  secondary: '#10B981', // Emerald-500
-  secondaryDark: '#059669', // Emerald-600
+  secondary: '#0EA5E9', // Sky-500
+  secondaryDark: '#0369A1', // Sky-700
 
   accent: '#F59E0B', // Amber-500
 
@@ -17,46 +17,52 @@ export const colors = {
 
   // Neutrals - Light Mode
   neutrals: {
-    background: '#FFFFFF',
-    surface: '#F9FAFB', // Gray-50
-    surfaceAlt: '#F3F4F6', // Gray-100
-    border: '#E5E7EB', // Gray-200
-    textPrimary: '#111827', // Gray-900
-    textSecondary: '#6B7280', // Gray-500
-    textMuted: '#9CA3AF', // Gray-400
-    placeholder: '#9CA3AF', // Gray-400
+    background: '#F6F7FB',
+    surface: '#FFFFFF',
+    surfaceAlt: '#F3F4F6',
+    border: '#E2E8F0',
+    cardBorder: '#E5E7EB',
+    textPrimary: '#0F172A',
+    textSecondary: '#475569',
+    textMuted: '#94A3B8',
+    placeholder: '#94A3B8',
   },
 
   // Neutrals - Dark Mode
   darkNeutrals: {
-    background: '#111827', // Gray-900
-    surface: '#1F2937', // Gray-800
-    surfaceAlt: '#374151', // Gray-700
-    border: '#4B5563', // Gray-600
-    textPrimary: '#F9FAFB', // Gray-50
-    textSecondary: '#D1D5DB', // Gray-300
-    textMuted: '#6B7280', // Gray-500
-    placeholder: '#6B7280', // Gray-500
+    background: '#0B1221',
+    surface: '#111827',
+    surfaceAlt: '#1F2937',
+    border: '#1F2937',
+    cardBorder: '#334155',
+    textPrimary: '#E2E8F0',
+    textSecondary: '#CBD5E1',
+    textMuted: '#94A3B8',
+    placeholder: '#94A3B8',
   },
 
   // Semantic
-  success: '#10B981', // Emerald-500
-  warning: '#F59E0B', // Amber-500
-  error: '#EF4444', // Red-500
-  info: '#3B82F6', // Blue-500
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
 
   // Status Chip
-  statusPending: '#FEF3C7', // Amber-100
-  statusPendingText: '#92400E', // Amber-800
-  statusAccepted: '#D1FAE5', // Emerald-100
-  statusAcceptedText: '#065F46', // Emerald-800
-  statusDeclined: '#FEE2E2', // Red-100
-  statusDeclinedText: '#991B1B', // Red-800
+  statusPending: '#FEF3C7',
+  statusPendingText: '#92400E',
+  statusAccepted: '#D1FAE5',
+  statusAcceptedText: '#065F46',
+  statusDeclined: '#FEE2E2',
+  statusDeclinedText: '#991B1B',
+
+  // Accessibility
+  focusRing: '#C7D2FE',
+  focusRingStrong: '#A5B4FC',
 };
 
 export const typography = {
   fontFamily: {
-    sans: 'System', // Will use platform default
+    sans: 'System',
     mono: 'monospace',
   },
   fontSize: {
@@ -68,6 +74,7 @@ export const typography = {
     '2xl': 24,
     '3xl': 30,
     '4xl': 36,
+    '5xl': 44,
   },
   lineHeight: {
     tight: 1.25,
@@ -79,61 +86,71 @@ export const typography = {
     medium: '500' as const,
     semibold: '600' as const,
     bold: '700' as const,
+    heavy: '800' as const,
   },
 };
 
 export const spacing = {
-  xs: 4,
-  sm: 8,
+  xxs: 2,
+  xs: 6,
+  sm: 10,
   md: 16,
   lg: 24,
   xl: 32,
   '2xl': 48,
+  '3xl': 64,
+  '4xl': 80,
 };
 
 export const borderRadius = {
-  sm: 6,
-  md: 10,
-  lg: 16,
+  sm: 8,
+  md: 12,
+  lg: 18,
+  xl: 24,
   full: 9999,
 };
 
 export const shadows = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: 'rgba(15, 23, 42, 0.18)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   md: {
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowColor: 'rgba(79, 70, 229, 0.16)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 1,
+    shadowRadius: 22,
+    elevation: 8,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 10,
+    shadowColor: 'rgba(15, 23, 42, 0.18)',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 1,
+    shadowRadius: 32,
+    elevation: 12,
   },
-  // New neumorphic/glass shadow
   glass: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: 'rgba(15, 23, 42, 0.12)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 14,
+    elevation: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-  }
+    borderColor: 'rgba(255, 255, 255, 0.55)',
+  },
 };
 
 export const animation = {
   fast: 150,
   normal: 250,
   slow: 350,
+};
+
+export const layout = {
+  contentMaxWidth: 1280,
+  wideContentMaxWidth: 1440,
+  pageGutter: spacing.lg,
 };

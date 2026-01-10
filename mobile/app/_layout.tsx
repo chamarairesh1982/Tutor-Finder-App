@@ -5,9 +5,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/store/authStore';
-import { colors } from '../src/lib/theme';
+import { colors, spacing, layout } from '../src/lib/theme';
 
 const queryClient = new QueryClient({
+
     defaultOptions: {
         queries: {
             retry: 2,
@@ -72,23 +73,24 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
     webContainer: {
         flex: 1,
-        backgroundColor: Platform.OS === 'web' ? '#f0f2f5' : colors.neutrals.background,
+        backgroundColor: Platform.OS === 'web' ? colors.neutrals.surfaceAlt : colors.neutrals.background,
         alignItems: 'center',
     },
     appWrapper: {
         flex: 1,
         width: '100%',
-        maxWidth: Platform.OS === 'web' ? 480 : '100%',
+        maxWidth: Platform.OS === 'web' ? layout.wideContentMaxWidth : '100%',
+        paddingHorizontal: Platform.OS === 'web' ? spacing.xl : 0,
+        paddingVertical: Platform.OS === 'web' ? spacing.lg : 0,
         backgroundColor: colors.neutrals.background,
-        // Add shadow on web for "app" feel
+        alignSelf: 'center',
+        // Subtle shadow on web to lift the app surface
         ...Platform.select({
             web: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 5,
-            },
+                boxShadow: '0 12px 40px rgba(15, 23, 42, 0.08)',
+                borderRadius: 24,
+            } as any,
         }),
     },
+
 });
