@@ -13,7 +13,7 @@ public class BookingRequest
     public TutorProfile Tutor { get; set; } = null!;
     
     public TeachingMode PreferredMode { get; set; }
-    public DateOnly? PreferredDate { get; set; }
+    public string? PreferredDate { get; set; }
     public decimal PricePerHourAtBooking { get; set; }
     
     public BookingStatus Status { get; set; } = BookingStatus.Pending;

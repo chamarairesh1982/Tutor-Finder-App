@@ -5,7 +5,7 @@ namespace TutorFinder.Application.DTOs;
 public record CreateBookingRequest(
     Guid TutorId,
     TeachingMode PreferredMode,
-    DateOnly? PreferredDate,
+    string? PreferredDate,
     string InitialMessage
 );
 
@@ -16,7 +16,7 @@ public record BookingResponse(
     Guid TutorId,
     string TutorName,
     TeachingMode PreferredMode,
-    DateOnly? PreferredDate,
+    string? PreferredDate,
     decimal PricePerHour,
     BookingStatus Status,
     DateTime CreatedAt,

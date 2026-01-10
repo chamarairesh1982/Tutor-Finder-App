@@ -61,7 +61,7 @@ public class DbSeeder
             PreferredMode = TeachingMode.Online,
             Status = BookingStatus.Completed,
             PricePerHourAtBooking = firstTutor.PricePerHour,
-            PreferredDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7))
+            PreferredDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)).ToString()
         };
         _context.BookingRequests.Add(completedBooking);
         await _context.SaveChangesAsync();
