@@ -10,12 +10,15 @@ function resolveBaseUrl() {
         return envUrl.replace(/\/$/, '');
     }
 
-    // Web: fall back to same-origin proxy if configured
+    // Web: fall back to same-origin proxy if configured, or default dev port
     if (typeof window !== 'undefined' && window.location?.origin) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:5270/api/v1';
+        }
         return `${window.location.origin}/api/v1`;
     }
 
-    // Emulators
+    // Emulators (Fallback for native)
     if (Platform.OS === 'android') {
         return 'http://10.0.2.2:5270/api/v1';
     }

@@ -9,7 +9,7 @@ export function useSearchTutors(params: TutorSearchRequest) {
             const response = await apiClient.get<PagedResult<TutorSearchResult>>('/tutors/search', { params });
             return response.data;
         },
-        enabled: (params.lat != null && params.lng != null) || !!params.postcode,
+        enabled: true,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 }

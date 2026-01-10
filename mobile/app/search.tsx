@@ -164,14 +164,6 @@ export default function SearchPage() {
     );
 
     const renderContent = () => {
-        if (!searchParams.postcode) {
-            return (
-                <View style={styles.centered}>
-                    <Text style={styles.emptyText}>Add a location to see tutors near you.</Text>
-                </View>
-            );
-        }
-
         if (isLoading && results.length === 0) {
             return (
                 <View style={styles.centered}> <ActivityIndicator size="large" color={colors.primary} /> </View>
@@ -470,43 +462,43 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.cardBorder,
     },
     loadingHint: {
-         fontSize: typography.fontSize.xs,
-         color: colors.neutrals.textSecondary,
-     },
-     loadingMoreRow: {
-         marginTop: spacing.md,
-         flexDirection: 'row',
-         alignItems: 'center',
-         gap: spacing.sm,
-     },
-     loadingMoreText: {
-         color: colors.neutrals.textSecondary,
-         fontSize: typography.fontSize.sm,
-     },
-     countBadge: {
-         paddingHorizontal: spacing.sm,
-         paddingVertical: spacing.xs,
-         borderRadius: borderRadius.full,
-         backgroundColor: colors.neutrals.surfaceAlt,
-         borderWidth: 1,
-         borderColor: colors.neutrals.cardBorder,
-     },
-     countBadgeText: {
-         color: colors.neutrals.textSecondary,
-         fontSize: typography.fontSize.xs,
-         fontWeight: typography.fontWeight.semibold,
-     },
-     footerNote: {
-         marginTop: spacing.md,
-         alignItems: 'center',
-     },
-     footerNoteText: {
-         color: colors.neutrals.textMuted,
-         fontSize: typography.fontSize.sm,
-     },
-     cardStack: {
-         gap: spacing.md,
-     },
+        fontSize: typography.fontSize.xs,
+        color: colors.neutrals.textSecondary,
+    },
+    loadingMoreRow: {
+        marginTop: spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    loadingMoreText: {
+        color: colors.neutrals.textSecondary,
+        fontSize: typography.fontSize.sm,
+    },
+    countBadge: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+    },
+    countBadgeText: {
+        color: colors.neutrals.textSecondary,
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.semibold,
+    },
+    footerNote: {
+        marginTop: spacing.md,
+        alignItems: 'center',
+    },
+    footerNoteText: {
+        color: colors.neutrals.textMuted,
+        fontSize: typography.fontSize.sm,
+    },
+    cardStack: {
+        gap: spacing.md,
+    },
 
     cardWrapper: {
         borderRadius: borderRadius.lg,

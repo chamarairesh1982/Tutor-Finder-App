@@ -15,8 +15,6 @@ export function useMyBookings() {
     });
 }
 
-
-
 export function useBooking(bookingId: string) {
     return useQuery({
         queryKey: ['bookings', bookingId],
@@ -36,15 +34,13 @@ export function useCreateBooking() {
             const response = await apiClient.post<Booking>('/bookings', data);
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+            queryClient.setQueryData(['bookings', data.id], data);
         },
     });
 }
-
-
 
 interface RespondToBookingRequest {
     newStatus: BookingStatus;
@@ -59,10 +55,10 @@ export function useRespondToBooking(bookingId: string) {
             const response = await apiClient.post<Booking>(`/bookings/${bookingId}/respond`, data);
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+            queryClient.setQueryData(['bookings', bookingId], data);
         },
     });
 }
@@ -75,10 +71,10 @@ export function useCancelBooking(bookingId: string) {
             const response = await apiClient.post<Booking>(`/bookings/${bookingId}/cancel`, { message });
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+            queryClient.setQueryData(['bookings', bookingId], data);
         },
     });
 }
@@ -91,10 +87,10 @@ export function useCompleteBooking(bookingId: string) {
             const response = await apiClient.post<Booking>(`/bookings/${bookingId}/complete`, { message });
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+            queryClient.setQueryData(['bookings', bookingId], data);
         },
     });
 }
@@ -115,9 +111,6 @@ export function useSendMessage(bookingId: string) {
             });
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
         },
     });
 }
-
-
