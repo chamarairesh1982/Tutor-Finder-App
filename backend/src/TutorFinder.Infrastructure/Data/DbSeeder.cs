@@ -99,8 +99,12 @@ public class DbSeeder
             PricePerHour = 45.00m,
             TeachingMode = TeachingMode.Both,
             Postcode = "WC2N 5DU",
-            Location = _geometryFactory.CreatePoint(new Coordinate(-0.1283, 51.5073)), 
+            BaseLatitude = 51.5073m,
+            BaseLongitude = -0.1283m,
+            Location = _geometryFactory.CreatePoint(new Coordinate(-0.1283, 51.5073)),
             TravelRadiusMiles = 5,
+            HasDbs = true,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Saturday, 10, 0, 12, 0), (DayOfWeek.Wednesday, 18, 0, 20, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "Piano" }, new() { SubjectName = "Music Theory" } }
         };
         tutors.Add((user1, profile1));
@@ -116,8 +120,12 @@ public class DbSeeder
             PricePerHour = 60.00m,
             TeachingMode = TeachingMode.Online,
             Postcode = "E1 6AN",
+            BaseLatitude = 51.5226m,
+            BaseLongitude = -0.0764m,
             Location = _geometryFactory.CreatePoint(new Coordinate(-0.0764, 51.5226)),
             TravelRadiusMiles = 10,
+            HasCertification = true,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Tuesday, 18, 0, 20, 0), (DayOfWeek.Thursday, 18, 0, 20, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "React" }, new() { SubjectName = "JavaScript" } }
         };
         tutors.Add((user2, profile2));
@@ -133,11 +141,39 @@ public class DbSeeder
             PricePerHour = 35.00m,
             TeachingMode = TeachingMode.Both,
             Postcode = "N1 9GU",
+            BaseLatitude = 51.5332m,
+            BaseLongitude = -0.1130m,
             Location = _geometryFactory.CreatePoint(new Coordinate(-0.1130, 51.5332)),
             TravelRadiusMiles = 8,
+            HasDbs = true,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Saturday, 9, 0, 12, 0), (DayOfWeek.Monday, 17, 0, 19, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "English Lit" }, new() { SubjectName = "Creative Writing" } }
         };
         tutors.Add((user4, profile4));
+
+        // Tutor 7: Maths (London) - new
+        var user7 = new User { Email = "maths@london.com", PasswordHash = _passwordHasher.Hash("Password123!"), DisplayName = "Priya Maths", Role = UserRole.Tutor };
+        var profile7 = new TutorProfile
+        {
+            UserId = user7.Id,
+            FullName = "Priya Shah",
+            Bio = "Qualified maths teacher helping GCSE and A-Level students achieve confident results.",
+            Category = Category.Maths,
+            PricePerHour = 38.00m,
+            TeachingMode = TeachingMode.Both,
+            Postcode = "SW1A 1AA",
+            BaseLatitude = 51.5014m,
+            BaseLongitude = -0.1419m,
+            Location = _geometryFactory.CreatePoint(new Coordinate(-0.1419, 51.5014)),
+            TravelRadiusMiles = 12,
+            HasDbs = true,
+            HasCertification = true,
+            AverageRating = 4.8m,
+            ReviewCount = 6,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Sunday, 11, 0, 14, 0), (DayOfWeek.Wednesday, 16, 0, 18, 0)),
+            Subjects = new List<TutorSubject> { new() { SubjectName = "GCSE Maths" }, new() { SubjectName = "A-Level Maths" } }
+        };
+        tutors.Add((user7, profile7));
 
         return tutors;
     }
@@ -157,8 +193,11 @@ public class DbSeeder
             PricePerHour = 40.00m,
             TeachingMode = TeachingMode.Both,
             Postcode = "M1 1AG",
+            BaseLatitude = 53.4808m,
+            BaseLongitude = -2.2426m,
             Location = _geometryFactory.CreatePoint(new Coordinate(-2.2426, 53.4808)),
             TravelRadiusMiles = 15,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Saturday, 10, 0, 13, 0), (DayOfWeek.Tuesday, 17, 0, 19, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "GCSE Maths" }, new() { SubjectName = "Calculus" } }
         };
         tutors.Add((user3, profile3));
@@ -174,11 +213,38 @@ public class DbSeeder
             PricePerHour = 55.00m,
             TeachingMode = TeachingMode.Online,
             Postcode = "M14 4AS",
+            BaseLatitude = 53.4475m,
+            BaseLongitude = -2.2227m,
             Location = _geometryFactory.CreatePoint(new Coordinate(-2.2227, 53.4475)),
             TravelRadiusMiles = 5,
+            HasCertification = true,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Sunday, 14, 0, 17, 0), (DayOfWeek.Wednesday, 18, 0, 20, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "Biology" }, new() { SubjectName = "Chemistry" } }
         };
         tutors.Add((user5, profile5));
+
+        // Tutor 8: Programming (Manchester) - new
+        var user8 = new User { Email = "dev@mcr.com", PasswordHash = _passwordHasher.Hash("Password123!"), DisplayName = "Tom Dev", Role = UserRole.Tutor };
+        var profile8 = new TutorProfile
+        {
+            UserId = user8.Id,
+            FullName = "Tom Evans",
+            Bio = "Full-stack developer teaching JavaScript, TypeScript and Node.js with project-based lessons.",
+            Category = Category.Programming,
+            PricePerHour = 32.00m,
+            TeachingMode = TeachingMode.Both,
+            Postcode = "M4 1HQ",
+            BaseLatitude = 53.4839m,
+            BaseLongitude = -2.2360m,
+            Location = _geometryFactory.CreatePoint(new Coordinate(-2.2360, 53.4839)),
+            TravelRadiusMiles = 10,
+            HasDbs = true,
+            AverageRating = 4.6m,
+            ReviewCount = 4,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Thursday, 18, 0, 20, 0), (DayOfWeek.Saturday, 11, 0, 13, 0)),
+            Subjects = new List<TutorSubject> { new() { SubjectName = "JavaScript" }, new() { SubjectName = "TypeScript" }, new() { SubjectName = "Node.js" } }
+        };
+        tutors.Add((user8, profile8));
 
         return tutors;
     }
@@ -198,12 +264,50 @@ public class DbSeeder
             PricePerHour = 30.00m,
             TeachingMode = TeachingMode.Both,
             Postcode = "B1 1QU",
+            BaseLatitude = 52.4862m,
+            BaseLongitude = -1.8904m,
             Location = _geometryFactory.CreatePoint(new Coordinate(-1.8904, 52.4862)),
             TravelRadiusMiles = 12,
+            HasDbs = true,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Sunday, 10, 0, 12, 0), (DayOfWeek.Tuesday, 17, 0, 19, 0)),
             Subjects = new List<TutorSubject> { new() { SubjectName = "French" }, new() { SubjectName = "Spanish" } }
         };
         tutors.Add((user6, profile6));
 
+        // Tutor 9: Science (Birmingham) - new
+        var user9 = new User { Email = "science@brum.com", PasswordHash = _passwordHasher.Hash("Password123!"), DisplayName = "Amelia Science", Role = UserRole.Tutor };
+        var profile9 = new TutorProfile
+        {
+            UserId = user9.Id,
+            FullName = "Amelia Brown",
+            Bio = "KS3 and GCSE science tutor making biology and chemistry engaging and simple.",
+            Category = Category.Science,
+            PricePerHour = 28.00m,
+            TeachingMode = TeachingMode.Both,
+            Postcode = "B2 4QA",
+            BaseLatitude = 52.4797m,
+            BaseLongitude = -1.8986m,
+            Location = _geometryFactory.CreatePoint(new Coordinate(-1.8986, 52.4797)),
+            TravelRadiusMiles = 10,
+            HasDbs = true,
+            AverageRating = 4.7m,
+            ReviewCount = 3,
+            AvailabilitySlots = CreateAvailability((DayOfWeek.Saturday, 9, 0, 11, 0), (DayOfWeek.Wednesday, 16, 0, 18, 0)),
+            Subjects = new List<TutorSubject> { new() { SubjectName = "Biology" }, new() { SubjectName = "Chemistry" }, new() { SubjectName = "Physics" } }
+        };
+        tutors.Add((user9, profile9));
+
         return tutors;
     }
+
+    private static List<AvailabilitySlot> CreateAvailability(params (DayOfWeek Day, int StartHour, int StartMinute, int EndHour, int EndMinute)[] slots)
+    {
+        return slots.Select(s => new AvailabilitySlot
+        {
+            DayOfWeek = s.Day,
+            StartTime = new TimeOnly(s.StartHour, s.StartMinute),
+            EndTime = new TimeOnly(s.EndHour, s.EndMinute)
+        }).ToList();
+    }
 }
+

@@ -76,82 +76,113 @@ export default function TutorDetailScreen() {
         );
     }
 
-    const teachingModeLabel = tutor.teachingMode === TeachingMode.Both ? 'In-person & online' : TeachingMode[tutor.teachingMode];
+    const teachingModeLabel = (() => {
+        switch (tutor.teachingMode) {
+            case TeachingMode.InPerson:
+                return 'In-person';
+            case TeachingMode.Online:
+                return 'Online';
+            default:
+                return 'In-person & online';
+        }
+    })();
 
+    const aboutText = tutor.bio?.trim() || 'This tutor is updating their bio.';
+    const qualificationsText = tutor.qualifications?.trim() || 'Qualifications shared after you get in touch.';
+    const teachingStyleText = tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner. Share goals in your booking message for a bespoke plan.';
+    const specialityList = (tutor.specialities?.length ? tutor.specialities : tutor.subjects) ?? [];
+    const specialitiesText = specialityList.length ? specialityList.join(', ') : 'Specialities coming soon.';
+    const locationText = tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.`;
+    const availabilityText = tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.';
     const reviewList = tutor.reviews ?? [];
+    const infoSections = [
+        { title: 'About', body: aboutText },
+        { title: 'Qualifications', body: qualificationsText },
+        { title: 'Teaching style', body: teachingStyleText },
+        { title: 'Specialities', body: specialitiesText },
+        { title: 'Location & mode', body: locationText },
+        { title: 'Availability', body: availabilityText },
+    ];
+    const horizontalPadding = width > layout.contentMaxWidth ? spacing['2xl'] : spacing.lg;
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom']}>
             <ScrollView
-                contentContainerStyle={[styles.scrollContent, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
+                contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={styles.headerCard}>
-                    <View style={styles.headerRow}>
-                        <View style={styles.profileInfo}>
-                            <View style={styles.avatarLarge}>
-                                {tutor.photoUrl ? (
-                                    <Image source={{ uri: tutor.photoUrl }} style={styles.avatarImg} />
-                                ) : (
-                                    <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
-                                )}
-                            </View>
-                            <View style={styles.nameSection}>
-                                <Text style={styles.fullName}>{tutor.fullName}</Text>
-                                <Text style={styles.categoryText}>{Category[tutor.category]}</Text>
-                                <View style={styles.ratingRow}>
-                                    <Text style={styles.ratingStars}>{'★'.repeat(Math.round(tutor.averageRating))}</Text>
-                                    <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
+                <View style={styles.pageContent}>
+                    <View style={styles.headerCard}>
+                        <View style={styles.headerRow}>
+                            <View style={styles.profileInfo}>
+                                <View style={styles.avatarLarge}>
+                                    {tutor.photoUrl ? (
+                                        <Image source={{ uri: tutor.photoUrl }} style={styles.avatarImg} />
+                                    ) : (
+                                        <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
+                                    )}
                                 </View>
-                                <View style={styles.metaRow}>
-                                    <MetaBadge label={`£${tutor.pricePerHour}/hr`} />
-                                    <MetaBadge label={teachingModeLabel} />
-                                    <MetaBadge label={tutor.postcode} />
+                                <View style={styles.nameSection}>
+                                    <Text style={styles.fullName}>{tutor.fullName}</Text>
+                                    <Text style={styles.categoryText}>{Category[tutor.category]}</Text>
+                                    <View style={styles.ratingRow}>
+                                        <Text style={styles.ratingStars}>{'★'.repeat(Math.round(tutor.averageRating))}</Text>
+                                        <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
+                                    </View>
+                                    <View style={styles.metaRow}>
+                                        <MetaBadge label={`£${tutor.pricePerHour}/hr`} />
+                                        <MetaBadge label={teachingModeLabel} />
+                                        <MetaBadge label={tutor.postcode} />
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                        <View style={styles.topCtas}>
-                            <Button title="Request booking" onPress={handleBooking} isLoading={isBookingPending} />
-                            <Button title="Share profile" variant="outline" onPress={() => { }} />
+                            <View style={styles.topCtas}>
+                                <Button title="Request booking" onPress={handleBooking} isLoading={isBookingPending} />
+                                <Button title="Share profile" variant="outline" onPress={() => { }} />
+                            </View>
                         </View>
                     </View>
-                </View>
 
-                <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide]}>
-                    <View style={styles.contentColumn}>
-                        <InfoSection title="About" body={tutor.bio} />
-                        <InfoSection title="Teaching style" body="Practical, confidence-building lessons tailored to each learner. Share goals in your booking message for a bespoke plan." />
-                        <InfoSection title="Specialities" body={tutor.subjects.join(', ')} />
-                        <InfoSection title="Location & mode" body={`Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.`} />
-                        <InfoSection title="Availability" body={tutor.nextAvailableText || 'Share your preferred times in the request.'} />
+                    <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide]}>
+                        <View style={styles.contentColumn}>
+                            {infoSections.map((section) => (
+                                <InfoSection key={section.title} title={section.title} body={section.body} />
+                            ))}
 
-                        <View style={styles.sectionCard}>
-                            <ReviewList
-                                reviews={reviewList}
-                                averageRating={tutor.averageRating}
-                                totalCount={tutor.reviewCount}
-                                sort={reviewSort}
-                                onSortChange={setReviewSort}
+                            <View style={styles.sectionCard}>
+                                <ReviewList
+                                    reviews={reviewList}
+                                    averageRating={tutor.averageRating}
+                                    totalCount={tutor.reviewCount}
+                                    ratingBreakdown={tutor.ratingBreakdown}
+                                    sort={reviewSort}
+                                    onSortChange={setReviewSort}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
+                            <BookingPanel
+                                pricePerHour={tutor.pricePerHour}
+                                mode={preferredMode}
+                                onModeChange={setPreferredMode}
+                                preferredDate={preferredDate}
+                                onPreferredDateChange={setPreferredDate}
+                                message={initialMessage}
+                                onMessageChange={setInitialMessage}
+                                onSubmit={handleBooking}
+                                isSubmitting={isBookingPending}
+                                responseTimeText={tutor.responseTimeText}
                             />
-                        </View>
-                    </View>
-
-                    <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
-                        <BookingPanel
-                            pricePerHour={tutor.pricePerHour}
-                            mode={preferredMode}
-                            onModeChange={setPreferredMode}
-                            preferredDate={preferredDate}
-                            onPreferredDateChange={setPreferredDate}
-                            message={initialMessage}
-                            onMessageChange={setInitialMessage}
-                            onSubmit={handleBooking}
-                            isSubmitting={isBookingPending}
-                            responseTimeText={tutor.responseTimeText}
-                        />
-                        <View style={styles.safetyBox}>
-                            <Text style={styles.safetyTitle}>Safety first</Text>
-                            <Text style={styles.safetyText}>Keep chats inside TutorFinder. We’ll share contact details only after a booking is confirmed.</Text>
+                            <View style={styles.safetyBox}>
+                                <Text style={styles.safetyTitle}>Safety first</Text>
+                                <Text style={styles.safetyText}>Keep chats inside TutorFinder. We’ll share contact details only after a booking is confirmed.</Text>
+                                <View style={styles.safetyLinks}>
+                                    <Text style={styles.safetyLink}>Safety tips</Text>
+                                    <Text style={styles.safetySeparator}>•</Text>
+                                    <Text style={styles.safetyLink}>Staying secure on TutorFinder</Text>
+                                </View>
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -184,6 +215,12 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingVertical: spacing['2xl'],
+        gap: spacing.lg,
+        alignItems: 'center',
+    },
+    pageContent: {
+        width: '100%',
+        maxWidth: layout.wideContentMaxWidth,
         gap: spacing.lg,
     },
     centered: {
@@ -279,21 +316,26 @@ const styles = StyleSheet.create({
     },
     bodyLayout: {
         gap: spacing.lg,
+        width: '100%',
     },
     bodyLayoutWide: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        gap: spacing.xl,
     },
     contentColumn: {
-        flex: 1,
+        flex: 1.2,
         gap: spacing.md,
+        minWidth: 0,
     },
     bookingColumn: {
-        flex: 1,
+        flex: 0.8,
         gap: spacing.md,
+        width: '100%',
     },
     bookingSticky: {
         maxWidth: 420,
+        width: '100%',
         alignSelf: 'flex-start',
         position: 'sticky' as any,
         top: spacing.lg,
@@ -331,6 +373,19 @@ const styles = StyleSheet.create({
     safetyText: {
         color: colors.neutrals.textSecondary,
         lineHeight: 20,
+    },
+    safetyLinks: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    safetyLink: {
+        color: colors.primary,
+        fontWeight: typography.fontWeight.semibold,
+        fontSize: typography.fontSize.sm,
+    },
+    safetySeparator: {
+        color: colors.neutrals.textMuted,
     },
     errorText: {
         fontSize: typography.fontSize.base,

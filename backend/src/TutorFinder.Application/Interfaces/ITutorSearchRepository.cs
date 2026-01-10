@@ -24,8 +24,10 @@ public record TutorSearchRequest(
     TeachingMode? Mode,
     int Page,
     int PageSize,
-    string SortBy // nearest, best, rating, price
-);
+    string SortBy,
+    int? AvailabilityDay
+ );
+
 
 public record TutorSearchResultDto(
     Guid Id,
@@ -37,5 +39,7 @@ public record TutorSearchResultDto(
     decimal AverageRating,
     int ReviewCount,
     double DistanceMiles,
-    string NextAvailableText
+    string NextAvailableText,
+    TeachingMode TeachingMode
 );
+

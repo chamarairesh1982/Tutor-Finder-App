@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { TeachingMode } from '../types';
 import { Input } from './Input';
@@ -36,6 +36,10 @@ export function BookingPanel({
     isSubmitting,
     responseTimeText,
 }: BookingPanelProps) {
+    const handleLinkPress = (url: string) => {
+        Linking.openURL(url).catch(() => {});
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.priceRow}>
@@ -81,9 +85,20 @@ export function BookingPanel({
             />
 
             <Button title="Send booking request" onPress={onSubmit} isLoading={isSubmitting} fullWidth size="lg" />
-            <Text style={styles.helper}>
-                {responseTimeText ?? 'Most tutors reply within 24 hours. We keep your details safe.'}
-            </Text>
+            <View style={styles.helperSection}>
+                <Text style={styles.helper}>
+                    {responseTimeText ?? 'Most tutors reply within 24 hours. We keep your details safe.'}
+                </Text>
+                <View style={styles.helperLinks}>
+                    <TouchableOpacity onPress={() => handleLinkPress('https://www.tutorfinder.uk/safety')} activeOpacity={0.8}>
+                        <Text style={styles.helperLink}>Safety tips</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.helperSeparator}>•</Text>
+                    <TouchableOpacity onPress={() => handleLinkPress('https://www.tutorfinder.uk/help/secure-payments')} activeOpacity={0.8}>
+                        <Text style={styles.helperLink}>Secure payments</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
     );
 }
@@ -163,8 +178,26 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         paddingTop: spacing.sm,
     },
+    helperSection: {
+        gap: spacing.xs,
+    },
     helper: {
         fontSize: typography.fontSize.xs,
         color: colors.neutrals.textSecondary,
+    },
+    helperLinks: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        flexWrap: 'wrap',
+    },
+    helperLink: {
+        fontSize: typography.fontSize.xs,
+        color: colors.primary,
+        fontWeight: typography.fontWeight.semibold,
+    },
+    helperSeparator: {
+        color: colors.neutrals.textMuted,
+        fontSize: typography.fontSize.xs,
     },
 });

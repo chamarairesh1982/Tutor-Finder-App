@@ -94,19 +94,38 @@ public class TutorService : ITutorService
 
     public async Task<Result<PagedResult<TutorSearchResultDto>>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
     {
-        var updatedRequest = request;
+        var normalizedRequest = NormalizeRequest(request);
 
-        if (!string.IsNullOrEmpty(request.Postcode) && (!request.Lat.HasValue || !request.Lng.HasValue))
+        if (!string.IsNullOrEmpty(normalizedRequest.Postcode) && (!normalizedRequest.Lat.HasValue || !normalizedRequest.Lng.HasValue))
         {
-            var coords = await _geocodingService.GeocodePostcodeAsync(request.Postcode, ct);
+            var coords = await _geocodingService.GeocodePostcodeAsync(normalizedRequest.Postcode, ct);
             if (coords.HasValue)
             {
-                updatedRequest = request with { Lat = coords.Value.Lat, Lng = coords.Value.Lng };
+                normalizedRequest = normalizedRequest with { Lat = coords.Value.Lat, Lng = coords.Value.Lng };
             }
         }
 
-        var results = await _searchRepository.SearchAsync(updatedRequest, ct);
+        var results = await _searchRepository.SearchAsync(normalizedRequest, ct);
         return new Result<PagedResult<TutorSearchResultDto>>.Success(results);
+    }
+
+    private static TutorSearchRequest NormalizeRequest(TutorSearchRequest request)
+    {
+        var radiusMiles = request.RadiusMiles <= 0 ? 10 : Math.Min(request.RadiusMiles, 50);
+        var page = request.Page <= 0 ? 1 : request.Page;
+        var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 50);
+        var sort = string.IsNullOrWhiteSpace(request.SortBy) ? "best" : request.SortBy;
+
+        int? availabilityDay = request.AvailabilityDay is >= 0 and <= 6 ? request.AvailabilityDay : null;
+
+        return request with
+        {
+            RadiusMiles = radiusMiles,
+            Page = page,
+            PageSize = pageSize,
+            SortBy = sort,
+            AvailabilityDay = availabilityDay
+        };
     }
 
 

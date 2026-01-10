@@ -9,10 +9,11 @@ import { Booking, BookingStatus } from '../../src/types';
 export default function BookingsScreen() {
     const router = useRouter();
     const { data: bookings, isLoading, isError, refetch } = useMyBookings();
-    const listData = bookings ?? [];
+    const listData = Array.isArray(bookings) ? bookings : (bookings as any)?.items ?? [];
 
-
+ 
     const getStatusColor = (status: BookingStatus) => {
+
         switch (status) {
             case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText };
             case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText };

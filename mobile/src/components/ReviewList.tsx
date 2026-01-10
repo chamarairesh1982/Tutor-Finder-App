@@ -7,18 +7,44 @@ interface ReviewListProps {
     reviews?: Review[];
     averageRating?: number;
     totalCount?: number;
+    ratingBreakdown?: Record<number, number>;
     sort: 'recent' | 'highest';
     onSortChange: (value: 'recent' | 'highest') => void;
 }
 
-export function ReviewList({ reviews = [], averageRating = 0, totalCount = 0, sort, onSortChange }: ReviewListProps) {
+export function ReviewList({ reviews = [], averageRating = 0, totalCount = 0, ratingBreakdown, sort, onSortChange }: ReviewListProps) {
     const breakdown = useMemo(() => {
         const buckets = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } as Record<number, number>;
+
+        if (ratingBreakdown) {
+            Object.entries(ratingBreakdown).forEach(([key, value]) => {
+                const star = Number(key);
+                if (star >= 1 && star <= 5) {
+                    buckets[star] = typeof value === 'number' ? value : 0;
+                }
+            });
+            return buckets;
+        }
+
         reviews.forEach((review) => {
             buckets[review.rating] = (buckets[review.rating] ?? 0) + 1;
         });
         return buckets;
-    }, [reviews]);
+    }, [ratingBreakdown, reviews]);
+
+    const totalBreakdownCount = useMemo(() => Object.values(breakdown).reduce((sum, count) => sum + count, 0), [breakdown]);
+
+    const sortedReviews = useMemo(() => {
+        const list = [...reviews];
+        if (sort === 'highest') {
+            return list.sort((a, b) => {
+                if (b.rating !== a.rating) return b.rating - a.rating;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+        }
+
+        return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [reviews, sort]);
 
     const renderSortPill = (value: 'recent' | 'highest', label: string) => {
         const isActive = sort === value;
@@ -49,11 +75,14 @@ export function ReviewList({ reviews = [], averageRating = 0, totalCount = 0, so
             <View style={styles.breakdownRow}>
                 {([5, 4, 3, 2, 1] as const).map((star) => {
                     const count = breakdown[star];
+                    const barWidth = totalBreakdownCount > 0 ? (count / totalBreakdownCount) * 100 : 0;
+                    const normalizedWidth = Math.min(100, Math.max(barWidth, totalBreakdownCount > 0 ? 4 : 12));
+
                     return (
                         <View key={star} style={styles.breakdownItem}>
                             <Text style={styles.breakdownLabel}>{star}★</Text>
                             <View style={styles.barTrack}>
-                                <View style={[styles.barFill, { flex: Math.max(count, 0) + 0.1 }]} />
+                                <View style={[styles.barFill, { width: `${normalizedWidth}%` }]} />
                             </View>
                             <Text style={styles.breakdownCount}>{count}</Text>
                         </View>
@@ -61,11 +90,11 @@ export function ReviewList({ reviews = [], averageRating = 0, totalCount = 0, so
                 })}
             </View>
 
-            {reviews.length === 0 ? (
+            {sortedReviews.length === 0 ? (
                 <Text style={styles.empty}>No reviews yet. Be the first to leave feedback.</Text>
             ) : (
                 <View style={styles.reviewStack}>
-                    {reviews.map((review) => (
+                    {sortedReviews.map((review) => (
                         <View key={review.id} style={styles.reviewCard}>
                             <View style={styles.reviewHeader}>
                                 <Text style={styles.reviewer}>{review.studentName}</Text>

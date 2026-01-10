@@ -22,6 +22,8 @@ public class TutorSearchRepository : ITutorSearchRepository
 
     public async Task<PagedResult<TutorSearchResultDto>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
     {
+        var radiusMiles = request.RadiusMiles <= 0 ? 10 : Math.Min(request.RadiusMiles, 50);
+
         var query = _context.TutorProfiles
             .Include(t => t.Subjects)
             .Include(t => t.AvailabilitySlots)
@@ -32,8 +34,12 @@ public class TutorSearchRepository : ITutorSearchRepository
         if (request.Lat.HasValue && request.Lng.HasValue)
         {
             searchPoint = _geometryFactory.CreatePoint(new Coordinate(request.Lng.Value, request.Lat.Value));
-            double radiusMeters = request.RadiusMiles * 1609.34;
-            query = query.Where(t => t.Location.Distance(searchPoint) <= radiusMeters);
+            if (radiusMiles > 0)
+            {
+                double radiusMeters = radiusMiles * 1609.34;
+                // Include tutors missing a stored geography point to avoid filtering everything out
+                query = query.Where(t => t.Location == null || t.Location.Distance(searchPoint) <= radiusMeters);
+            }
         }
 
         if (!string.IsNullOrEmpty(request.Subject))
@@ -67,15 +73,15 @@ public class TutorSearchRepository : ITutorSearchRepository
             query = query.Where(t => t.TeachingMode == request.Mode.Value || t.TeachingMode == TeachingMode.Both);
         }
 
+        if (request.AvailabilityDay.HasValue)
+        {
+            var day = (DayOfWeek)request.AvailabilityDay.Value;
+            query = query.Where(t => t.AvailabilitySlots.Any(a => a.DayOfWeek == day));
+        }
+
         var total = await query.CountAsync(ct);
 
-        query = request.SortBy switch
-        {
-            "price" => query.OrderBy(t => t.PricePerHour),
-            "rating" => query.OrderByDescending(t => t.AverageRating),
-            "nearest" when searchPoint != null => query.OrderBy(t => t.Location.Distance(searchPoint)),
-            _ => query.OrderByDescending(t => t.AverageRating)
-        };
+        query = NormalizeSort(request.SortBy, query, searchPoint);
 
         var items = await query
             .Skip((request.Page - 1) * request.PageSize)
@@ -89,12 +95,38 @@ public class TutorSearchRepository : ITutorSearchRepository
                 t.PricePerHour,
                 t.AverageRating,
                 t.ReviewCount,
-                searchPoint != null ? t.Location.Distance(searchPoint) / 1609.34 : 0,
-                ComputeNextAvailableText(t.AvailabilitySlots)
+                searchPoint != null
+                    ? (t.Location != null ? t.Location.Distance(searchPoint) / 1609.34 : 0)
+                    : 0,
+                ComputeNextAvailableText(t.AvailabilitySlots),
+                t.TeachingMode
             ))
             .ToListAsync(ct);
 
         return new PagedResult<TutorSearchResultDto>(items, total, request.Page, request.PageSize);
+    }
+
+    private static IQueryable<TutorProfile> NormalizeSort(string sortBy, IQueryable<TutorProfile> query, Point? searchPoint)
+    {
+        var sort = string.IsNullOrWhiteSpace(sortBy) ? "best" : sortBy.ToLowerInvariant();
+
+        return sort switch
+        {
+            "pricehigh" => query.OrderByDescending(t => t.PricePerHour),
+            "price" or "pricelow" => query.OrderBy(t => t.PricePerHour),
+            "rating" => query.OrderByDescending(t => t.AverageRating).ThenByDescending(t => t.ReviewCount),
+            "nearest" when searchPoint != null => query.OrderBy(t => t.Location.Distance(searchPoint)),
+            _ => searchPoint != null
+                ? query
+                    .OrderByDescending(t => t.AverageRating)
+                    .ThenByDescending(t => t.ReviewCount)
+                    .ThenBy(t => t.PricePerHour)
+                    .ThenBy(t => t.Location.Distance(searchPoint))
+                : query
+                    .OrderByDescending(t => t.AverageRating)
+                    .ThenByDescending(t => t.ReviewCount)
+                    .ThenBy(t => t.PricePerHour)
+        };
     }
 
     private static string ComputeNextAvailableText(ICollection<AvailabilitySlot> slots)

@@ -49,6 +49,9 @@ export interface TutorProfile {
     fullName: string;
     photoUrl?: string;
     bio: string;
+    qualifications?: string;
+    teachingStyle?: string;
+    specialities?: string[];
     category: Category;
     baseLatitude: number;
     baseLongitude: number;
@@ -57,6 +60,8 @@ export interface TutorProfile {
     pricePerHour: number;
     teachingMode: TeachingMode;
     subjects: string[];
+    locationSummary?: string;
+    availabilitySummary?: string;
     averageRating: number;
     reviewCount: number;
     isActive: boolean;
