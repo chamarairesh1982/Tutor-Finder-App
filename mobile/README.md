@@ -39,6 +39,14 @@ This is the cross-platform mobile application for Tutor Finder, built with **Exp
     -   `npm run android` (requires Android Studio / Emulator)
     -   `npm run web` (runs in browser)
 
+### Running for Web Development
+To start the dedicated web development server:
+```bash
+npm install
+npx expo start --web
+```
+This launches the app in your default browser at `http://localhost:8081`.
+
 ## Project Structure
 - `app/`: Expo Router file-based screens and layouts.
 - `src/api/`: API client and shared configurations.

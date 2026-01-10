@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme';
 import { TutorSearchResult, TeachingMode } from '../types';
@@ -18,6 +18,7 @@ const modeLabel: Record<TeachingMode, string> = {
 };
 
 export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }: TutorCardWebProps) {
+    const [isSaved, setIsSaved] = useState(false);
     const badges: string[] = [];
     if (tutor.hasDbsCheck) badges.push('DBS verified');
     if (tutor.badges?.length) badges.push(...tutor.badges);
@@ -102,6 +103,16 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                     </View>
                 </View>
             </View>
+
+            <TouchableOpacity
+                style={styles.saveButton}
+                onPress={(e) => {
+                    e.stopPropagation();
+                    setIsSaved(!isSaved);
+                }}
+            >
+                <Text style={[styles.saveIcon, isSaved && styles.saveIconActive]}>{isSaved ? '♥' : '♡'}</Text>
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 }
@@ -123,6 +134,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         overflow: 'hidden',
+        position: 'relative',
         ...shadows.sm,
         ...Platform.select({
             web: {
@@ -210,6 +222,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         justifyContent: 'space-between',
+        paddingRight: spacing.xl, // Make room for save button
     },
     name: {
         fontSize: typography.fontSize.xl,
@@ -303,5 +316,25 @@ const styles = StyleSheet.create({
     ctaButtons: {
         flexDirection: 'row',
         gap: spacing.sm,
+    },
+    saveButton: {
+        position: 'absolute',
+        top: spacing.lg,
+        right: spacing.lg,
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.neutrals.surface,
+        ...shadows.sm,
+        zIndex: 10,
+    },
+    saveIcon: {
+        fontSize: 20,
+        color: colors.neutrals.textMuted,
+    },
+    saveIconActive: {
+        color: colors.primary,
     },
 });

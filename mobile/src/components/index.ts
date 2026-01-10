@@ -8,4 +8,5 @@ export { FilterSidebar } from './FilterSidebar';
 export { BookingPanel } from './BookingPanel';
 export { ReviewList } from './ReviewList';
 export { MapPanelPlaceholder } from './web/MapPanelPlaceholder';
+export { SkeletonList } from './SkeletonList';
 

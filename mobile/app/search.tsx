@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FilterSidebar, MapPanelPlaceholder, TutorCard, TutorCardWeb, HomeSearchBar } from '../src/components';
+import { FilterSidebar, MapPanelPlaceholder, TutorCard, TutorCardWeb, HomeSearchBar, SkeletonList } from '../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../src/lib/theme';
 import { useBreakpoint } from '../src/lib/responsive';
 import { useSearchTutors } from '../src/hooks/useTutors';
@@ -171,8 +171,11 @@ export default function SearchPage() {
 
     const renderContent = () => {
         if (isLoading && results.length === 0) {
+            // Render specific skeletons based on view mode if needed, but generic list is fine
             return (
-                <View style={styles.centered}> <ActivityIndicator size="large" color={colors.primary} /> </View>
+                <View style={styles.cardStack}>
+                    <SkeletonList />
+                </View>
             );
         }
 
