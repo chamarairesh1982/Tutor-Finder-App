@@ -1,0 +1,58 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace TutorFinder.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddPrecisionAndFilters : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AlterColumn<decimal>(
+                name: "BaseLongitude",
+                table: "TutorProfiles",
+                type: "decimal(9,6)",
+                precision: 9,
+                scale: 6,
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(18,2)");
+
+            migrationBuilder.AlterColumn<decimal>(
+                name: "BaseLatitude",
+                table: "TutorProfiles",
+                type: "decimal(9,6)",
+                precision: 9,
+                scale: 6,
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(18,2)");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AlterColumn<decimal>(
+                name: "BaseLongitude",
+                table: "TutorProfiles",
+                type: "decimal(18,2)",
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(9,6)",
+                oldPrecision: 9,
+                oldScale: 6);
+
+            migrationBuilder.AlterColumn<decimal>(
+                name: "BaseLatitude",
+                table: "TutorProfiles",
+                type: "decimal(18,2)",
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(9,6)",
+                oldPrecision: 9,
+                oldScale: 6);
+        }
+    }
+}

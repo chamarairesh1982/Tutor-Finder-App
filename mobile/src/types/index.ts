@@ -101,6 +101,13 @@ export interface TutorSearchRequest {
     sortBy: 'nearest' | 'best' | 'rating' | 'price';
 }
 
+export interface PagedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
 export interface BookingRequest {
     tutorId: string;
     preferredMode: TeachingMode;
@@ -121,6 +128,7 @@ export interface Booking {
     createdAt: string;
     messages: BookingMessage[];
 }
+
 
 export interface BookingMessage {
     id: string;

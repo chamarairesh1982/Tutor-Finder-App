@@ -31,5 +31,8 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.HasIndex(r => r.TutorProfileId);
         builder.HasIndex(r => r.StudentId);
+
+        builder.HasQueryFilter(r => !r.Student.IsDeleted && !r.Tutor.User.IsDeleted);
     }
 }
+

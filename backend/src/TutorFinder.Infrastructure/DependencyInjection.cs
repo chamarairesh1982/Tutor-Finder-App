@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<DbSeeder>();
         
         services.AddHttpClient<IGeocodingService, GeocodingService>();
@@ -36,3 +37,4 @@ public static class DependencyInjection
         return services;
     }
 }
+

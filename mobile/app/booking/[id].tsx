@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useBooking, useSendMessage, useRespondToBooking } from '../../src/hooks/useBookings';
+import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useCompleteBooking } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { Button } from '../../src/components';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { BookingStatus, UserRole, BookingMessage } from '../../src/types';
+
 
 export default function BookingDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,6 +16,9 @@ export default function BookingDetailScreen() {
     const { data: booking, isLoading, isError, refetch } = useBooking(id!);
     const { mutate: sendMessage, isPending: isSending } = useSendMessage(id!);
     const { mutate: respond, isPending: isResponding } = useRespondToBooking(id!);
+    const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking(id!);
+    const { mutate: completeBooking, isPending: isCompleting } = useCompleteBooking(id!);
+
 
     const [message, setMessage] = useState('');
     const scrollViewRef = useRef<ScrollView>(null);
@@ -44,9 +48,43 @@ export default function BookingDetailScreen() {
 
     const handleStatusChange = (newStatus: BookingStatus) => {
         respond({ newStatus }, {
-            onSuccess: () => Alert.alert('Status Updated', `Booking has been ${BookingStatus[newStatus].toLowerCase()}.`),
+            onSuccess: () => {
+                Alert.alert('Status Updated', `Booking has been ${BookingStatus[newStatus].toLowerCase()}.`);
+                refetch();
+            },
+            onError: (err: any) => {
+                const detail = err?.response?.data?.detail || 'Unable to update status.';
+                Alert.alert('Update failed', detail);
+            }
         });
     };
+
+    const handleCancel = () => {
+        cancelBooking(undefined, {
+            onSuccess: () => {
+                Alert.alert('Cancelled', 'Booking has been cancelled.');
+                refetch();
+            },
+            onError: (err: any) => {
+                const detail = err?.response?.data?.detail || 'Unable to cancel booking.';
+                Alert.alert('Cancel failed', detail);
+            }
+        });
+    };
+
+    const handleComplete = () => {
+        completeBooking(undefined, {
+            onSuccess: () => {
+                Alert.alert('Completed', 'Booking marked as completed.');
+                refetch();
+            },
+            onError: (err: any) => {
+                const detail = err?.response?.data?.detail || 'Unable to complete booking.';
+                Alert.alert('Complete failed', detail);
+            }
+        });
+    };
+
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
@@ -143,9 +181,36 @@ export default function BookingDetailScreen() {
                                 />
                             </View>
                         )}
+
+                        {!isTutor && (booking.status === BookingStatus.Pending || booking.status === BookingStatus.Accepted) && (
+                            <View style={styles.actionButtons}>
+                                <Button
+                                    title="Cancel booking"
+                                    onPress={handleCancel}
+                                    variant="outline"
+                                    size="sm"
+                                    style={{ flex: 1, borderColor: colors.neutrals.border }}
+                                    isLoading={isCancelling}
+                                />
+                            </View>
+                        )}
+
+                        {isTutor && booking.status === BookingStatus.Accepted && (
+                            <View style={styles.actionButtons}>
+                                <Button
+                                    title="Mark completed"
+                                    onPress={handleComplete}
+                                    variant="secondary"
+                                    size="sm"
+                                    style={{ flex: 1 }}
+                                    isLoading={isCompleting}
+                                />
+                            </View>
+                        )}
                     </View>
 
                     <Text style={styles.messageTitle}>Messages</Text>
+
 
                     <View style={styles.messagesList}>
                         {(messages.length ? messages : []).map((msg: BookingMessage) => {

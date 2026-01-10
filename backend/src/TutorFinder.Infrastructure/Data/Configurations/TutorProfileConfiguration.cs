@@ -28,9 +28,16 @@ public class TutorProfileConfiguration : IEntityTypeConfiguration<TutorProfile>
         builder.Property(t => t.AverageRating)
             .HasPrecision(3, 2);
 
+        builder.Property(t => t.BaseLatitude)
+            .HasPrecision(9, 6);
+
+        builder.Property(t => t.BaseLongitude)
+            .HasPrecision(9, 6);
+
         // Geo Configuration
         builder.Property(t => t.Location)
             .HasColumnType("geography");
+
 
         // builder.HasSpatialIndex(t => t.Location);
 
@@ -39,6 +46,9 @@ public class TutorProfileConfiguration : IEntityTypeConfiguration<TutorProfile>
             .WithOne()
             .HasForeignKey<TutorProfile>(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(t => !t.User.IsDeleted);
+
 
         builder.HasMany(t => t.Subjects)
             .WithOne()

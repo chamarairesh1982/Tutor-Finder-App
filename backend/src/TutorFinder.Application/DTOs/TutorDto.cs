@@ -38,5 +38,8 @@ public record TutorProfileResponse(
     List<string> Subjects,
     decimal AverageRating,
     int ReviewCount,
-    bool IsActive
+    bool IsActive,
+    string? NextAvailableText,
+    string? ResponseTimeText
 );
+

@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<BookingRequest> BookingRequests => Set<BookingRequest>();
     public DbSet<BookingMessage> BookingMessages => Set<BookingMessage>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<NotificationOutbox> NotificationOutbox => Set<NotificationOutbox>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,3 +26,4 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
+

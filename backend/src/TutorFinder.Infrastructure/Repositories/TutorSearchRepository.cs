@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
+using TutorFinder.Application.Common;
 using TutorFinder.Application.Interfaces;
 using TutorFinder.Domain.Entities;
 using TutorFinder.Domain.Enums;
 using TutorFinder.Infrastructure.Data;
 
 namespace TutorFinder.Infrastructure.Repositories;
+
 
 public class TutorSearchRepository : ITutorSearchRepository
 {
@@ -18,28 +20,26 @@ public class TutorSearchRepository : ITutorSearchRepository
         _geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     }
 
-    public async Task<List<TutorSearchResultDto>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
+    public async Task<PagedResult<TutorSearchResultDto>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
     {
         var query = _context.TutorProfiles
             .Include(t => t.Subjects)
+            .Include(t => t.AvailabilitySlots)
             .AsNoTracking()
             .Where(t => t.IsActive);
 
-        // Geolocation Filter
         Point? searchPoint = null;
         if (request.Lat.HasValue && request.Lng.HasValue)
         {
             searchPoint = _geometryFactory.CreatePoint(new Coordinate(request.Lng.Value, request.Lat.Value));
-            
-            // PostGIS Distance (meters) - 1 mile = 1609.34 meters
             double radiusMeters = request.RadiusMiles * 1609.34;
             query = query.Where(t => t.Location.Distance(searchPoint) <= radiusMeters);
         }
 
-        // Other Filters
         if (!string.IsNullOrEmpty(request.Subject))
         {
-            query = query.Where(t => t.Subjects.Any(s => s.SubjectName.ToLower().Contains(request.Subject.ToLower())));
+            var subjectLower = request.Subject.ToLower();
+            query = query.Where(t => t.Subjects.Any(s => s.SubjectName.ToLower().Contains(subjectLower)));
         }
 
         if (request.Category.HasValue)
@@ -67,17 +67,17 @@ public class TutorSearchRepository : ITutorSearchRepository
             query = query.Where(t => t.TeachingMode == request.Mode.Value || t.TeachingMode == TeachingMode.Both);
         }
 
-        // Sorting (Simplistic for MVP)
+        var total = await query.CountAsync(ct);
+
         query = request.SortBy switch
         {
             "price" => query.OrderBy(t => t.PricePerHour),
             "rating" => query.OrderByDescending(t => t.AverageRating),
             "nearest" when searchPoint != null => query.OrderBy(t => t.Location.Distance(searchPoint)),
-            _ => query.OrderByDescending(t => t.AverageRating) // Default to rating
+            _ => query.OrderByDescending(t => t.AverageRating)
         };
 
-        // Paging
-        var results = await query
+        var items = await query
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(t => new TutorSearchResultDto(
@@ -89,11 +89,38 @@ public class TutorSearchRepository : ITutorSearchRepository
                 t.PricePerHour,
                 t.AverageRating,
                 t.ReviewCount,
-                searchPoint != null ? t.Location.Distance(searchPoint) / 1609.34 : 0, // Convert to miles
-                "Next available: Today" // Mocked for now
+                searchPoint != null ? t.Location.Distance(searchPoint) / 1609.34 : 0,
+                ComputeNextAvailableText(t.AvailabilitySlots)
             ))
             .ToListAsync(ct);
 
-        return results;
+        return new PagedResult<TutorSearchResultDto>(items, total, request.Page, request.PageSize);
+    }
+
+    private static string ComputeNextAvailableText(ICollection<AvailabilitySlot> slots)
+    {
+        if (slots == null || slots.Count == 0) return "Ask for availability";
+
+        var now = DateTime.UtcNow;
+        var today = now.DayOfWeek;
+
+        var ordered = slots
+            .Select(s => new
+            {
+                Slot = s,
+                OffsetDays = ((int)s.DayOfWeek - (int)today + 7) % 7,
+                s.StartTime
+            })
+            .OrderBy(x => x.OffsetDays)
+            .ThenBy(x => x.StartTime)
+            .FirstOrDefault();
+
+        if (ordered == null) return "Ask for availability";
+
+        var nextDate = now.Date.AddDays(ordered.OffsetDays);
+        return ordered.OffsetDays == 0
+            ? $"Next available today at {ordered.Slot.StartTime:HH:mm}"
+            : $"Next available {nextDate:ddd} at {ordered.Slot.StartTime:HH:mm}";
     }
 }
+

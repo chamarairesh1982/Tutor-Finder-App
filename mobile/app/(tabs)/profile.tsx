@@ -91,25 +91,14 @@ export default function ProfileScreen() {
                     {user.role === UserRole.Tutor && (
                         <TouchableOpacity
                             style={styles.menuItem}
-                            onPress={() => router.push('/profile/tutor-setup')}
+                            onPress={() => router.push('/profile/edit-info')}
                         >
                             <Text style={styles.menuItemText}>Tutor Profile Settings</Text>
                             <Text style={styles.menuItemArrow}>›</Text>
                         </TouchableOpacity>
                     )}
-
-                    )}
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuItemText}>Change Password</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuItemText}>Notifications</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
                 </View>
+
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Support</Text>

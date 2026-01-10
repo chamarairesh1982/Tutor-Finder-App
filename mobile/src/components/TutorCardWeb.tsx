@@ -104,6 +104,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
     );
 }
 
+
 const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
@@ -229,11 +230,14 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textMuted,
     },
     modeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    modeTag: {
+         flexDirection: 'row',
+         alignItems: 'center',
+         gap: spacing.sm,
+         marginTop: spacing.sm,
+         flexWrap: 'wrap',
+     },
+     modeTag: {
+
         paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         backgroundColor: colors.primarySoft,

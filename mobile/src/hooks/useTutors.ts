@@ -1,18 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/client';
-import { TutorSearchResult, TutorSearchRequest, TutorProfile } from '../types';
+import { TutorSearchResult, TutorSearchRequest, TutorProfile, PagedResult } from '../types';
 
 export function useSearchTutors(params: TutorSearchRequest) {
-    return useQuery({
+    return useQuery<PagedResult<TutorSearchResult>, Error>({
         queryKey: ['tutors', 'search', params],
         queryFn: async () => {
-            const response = await apiClient.get<TutorSearchResult[]>('/tutors/search', { params });
+            const response = await apiClient.get<PagedResult<TutorSearchResult>>('/tutors/search', { params });
             return response.data;
         },
         enabled: (params.lat != null && params.lng != null) || !!params.postcode,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 }
+
 
 export function useTutorProfile(tutorId: string) {
     return useQuery({

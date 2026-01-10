@@ -31,6 +31,8 @@ public class BookingConfiguration : IEntityTypeConfiguration<BookingRequest>
         builder.HasIndex(b => b.StudentId);
         builder.HasIndex(b => b.TutorId);
         builder.HasIndex(b => b.Status);
+
+        builder.HasQueryFilter(b => !b.Student.IsDeleted && !b.Tutor.User.IsDeleted);
     }
 }
 
@@ -48,5 +50,8 @@ public class BookingMessageConfiguration : IEntityTypeConfiguration<BookingMessa
             .WithMany()
             .HasForeignKey(m => m.SenderId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(m => !m.Sender.IsDeleted);
     }
 }
+

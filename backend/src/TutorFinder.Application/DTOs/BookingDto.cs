@@ -36,6 +36,15 @@ public record RespondToBookingRequest(
     string? Message
 );
 
+public record CancelBookingRequest(
+    string? Message
+);
+
+public record CompleteBookingRequest(
+    string? Message
+);
+
 public record SendMessageRequest(
     string Content
 );
+

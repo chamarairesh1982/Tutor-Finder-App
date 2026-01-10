@@ -58,10 +58,12 @@ public class TutorsController : ControllerBase
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] TutorSearchRequest request, CancellationToken ct)
     {
-        var result = await _tutorService.SearchAsync(request, ct);
+        var normalized = request with { Page = request.Page <= 0 ? 1 : request.Page, PageSize = request.PageSize <= 0 ? 20 : request.PageSize };
+        var result = await _tutorService.SearchAsync(normalized, ct);
         return result.Match<IActionResult>(
             success => Ok(success),
             failure => Problem(failure.Message, statusCode: failure.StatusCode)
         );
     }
 }
+

@@ -29,6 +29,7 @@ public class BookingRepository : IBookingRepository
         return await _context.BookingRequests
             .Include(b => b.Tutor)
             .Include(b => b.Student)
+            .Include(b => b.Messages)!.ThenInclude(m => m.Sender)
             .Where(b => b.StudentId == studentId)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(ct);
@@ -39,9 +40,19 @@ public class BookingRepository : IBookingRepository
         return await _context.BookingRequests
             .Include(b => b.Student)
             .Include(b => b.Tutor)
+            .Include(b => b.Messages)!.ThenInclude(m => m.Sender)
             .Where(b => b.TutorId == tutorId)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(ct);
+    }
+
+
+    public async Task<bool> HasPendingRequestAsync(Guid studentId, Guid tutorId, CancellationToken ct)
+    {
+        return await _context.BookingRequests
+            .AnyAsync(b => b.StudentId == studentId
+                           && b.TutorId == tutorId
+                           && b.Status == Domain.Enums.BookingStatus.Pending, ct);
     }
 
     public async Task AddAsync(BookingRequest booking, CancellationToken ct)
@@ -65,3 +76,4 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync(ct);
     }
 }
+

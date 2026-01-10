@@ -92,11 +92,10 @@ public class TutorService : ITutorService
         return new Result<TutorProfileResponse>.Success(MapToResponse(profile));
     }
 
-    public async Task<Result<List<TutorSearchResultDto>>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
+    public async Task<Result<PagedResult<TutorSearchResultDto>>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
     {
         var updatedRequest = request;
 
-        // Geocode postcode if provided and lat/lng are missing
         if (!string.IsNullOrEmpty(request.Postcode) && (!request.Lat.HasValue || !request.Lng.HasValue))
         {
             var coords = await _geocodingService.GeocodePostcodeAsync(request.Postcode, ct);
@@ -107,8 +106,9 @@ public class TutorService : ITutorService
         }
 
         var results = await _searchRepository.SearchAsync(updatedRequest, ct);
-        return new Result<List<TutorSearchResultDto>>.Success(results);
+        return new Result<PagedResult<TutorSearchResultDto>>.Success(results);
     }
+
 
     private static TutorProfileResponse MapToResponse(TutorProfile profile)
     {
@@ -128,7 +128,36 @@ public class TutorService : ITutorService
             profile.Subjects.Select(s => s.SubjectName).ToList(),
             profile.AverageRating,
             profile.ReviewCount,
-            profile.IsActive
+            profile.IsActive,
+            ComputeNextAvailableText(profile.AvailabilitySlots),
+            "Typically responds within a few hours"
         );
     }
+
+    private static string? ComputeNextAvailableText(ICollection<AvailabilitySlot> slots)
+    {
+        if (slots == null || slots.Count == 0) return null;
+
+        var now = DateTime.UtcNow;
+        var today = now.DayOfWeek;
+
+        var ordered = slots
+            .Select(s => new
+            {
+                Slot = s,
+                OffsetDays = ((int)s.DayOfWeek - (int)today + 7) % 7,
+                s.StartTime
+            })
+            .OrderBy(x => x.OffsetDays)
+            .ThenBy(x => x.StartTime)
+            .FirstOrDefault();
+
+        if (ordered == null) return null;
+
+        var nextDate = now.Date.AddDays(ordered.OffsetDays);
+        return ordered.OffsetDays == 0
+            ? $"Next available today at {ordered.Slot.StartTime:HH:mm}"
+            : $"Next available {nextDate:ddd} at {ordered.Slot.StartTime:HH:mm}";
+    }
 }
+

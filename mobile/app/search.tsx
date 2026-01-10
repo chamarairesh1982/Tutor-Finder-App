@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FilterSidebar, MapPanelPlaceholder, TutorCard, TutorCardWeb, HomeSearchBar } from '../src/components';
@@ -35,6 +35,8 @@ export default function SearchPage() {
         quickFilters: quickDefaults,
     });
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(20);
 
     useEffect(() => {
         setViewMode(isLg ? 'split' : 'list');
@@ -48,27 +50,63 @@ export default function SearchPage() {
         minRating: filters.minRating,
         priceMin: filters.priceMin,
         priceMax: filters.priceMax,
-        page: 1,
-        pageSize: 20,
+        page,
+        pageSize,
         sortBy,
-    }), [subject, location, filters, sortBy]);
+    }), [subject, location, filters, sortBy, page, pageSize]);
 
-    const { data: tutors, isLoading, isError, refetch, isFetching } = useSearchTutors(searchParams);
+    const { data: tutorsPage, isLoading, isError, refetch, isFetching } = useSearchTutors(searchParams);
 
-    const resultsCount = tutors?.length ?? 0;
+    const [allResults, setAllResults] = useState<TutorSearchResult[]>([]);
+    const results = allResults;
+    const resultsCount = tutorsPage?.total ?? 0;
+    const hasMore = tutorsPage ? results.length < tutorsPage.total : false;
 
     const handleCardPress = (tutor: TutorSearchResult) => {
         router.push(`/tutor/${tutor.id}`);
     };
 
     const handleSearch = () => {
+        setPage(1);
         refetch();
+    };
+
+    useEffect(() => {
+        setPage(1);
+        setAllResults([]);
+    }, [subject, location, filters, sortBy]);
+
+    useEffect(() => {
+        if (!tutorsPage) return;
+        setAllResults((prev) => {
+            if (searchParams.page === 1) return tutorsPage.items ?? [];
+            const incoming = tutorsPage.items ?? [];
+            const existingIds = new Set(prev.map((p) => p.id));
+            const merged = [...prev, ...incoming.filter((i: TutorSearchResult) => !existingIds.has(i.id))];
+            return merged;
+        });
+    }, [tutorsPage, searchParams.page]);
+
+    const handleLoadMore = () => {
+        if (!hasMore || isFetching) return;
+        setPage((prev) => prev + 1);
+    };
+
+    const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+        const paddingToBottom = 200;
+        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+            handleLoadMore();
+        }
     };
 
     const renderTopBar = () => (
         <View style={styles.topBar}>
             <Text style={styles.resultCount}>{resultsCount} tutors</Text>
             <View style={styles.topBarRight}>
+                <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>{results.length}/{resultsCount}</Text>
+                </View>
                 <View style={styles.sortMenu}>
                     <TouchableOpacity style={styles.sortTrigger} onPress={() => setSortOpen((prev) => !prev)}>
                         <Text style={styles.sortLabel}>Sort</Text>
@@ -108,7 +146,7 @@ export default function SearchPage() {
 
     const renderList = () => (
         <View style={styles.cardStack}>
-            {tutors?.map((tutor) => (
+            {results.map((tutor) => (
                 <View key={tutor.id} style={styles.cardWrapper}>
                     {isMd ? (
                         <TutorCardWeb
@@ -134,9 +172,20 @@ export default function SearchPage() {
             );
         }
 
-        if (isLoading && !tutors) {
+        if (isLoading && results.length === 0) {
             return (
                 <View style={styles.centered}> <ActivityIndicator size="large" color={colors.primary} /> </View>
+            );
+        }
+
+        if (!hasMore && results.length > 0) {
+            return (
+                <View>
+                    {renderList()}
+                    <View style={styles.footerNote}>
+                        <Text style={styles.footerNoteText}>End of results</Text>
+                    </View>
+                </View>
             );
         }
 
@@ -149,7 +198,7 @@ export default function SearchPage() {
             );
         }
 
-        if (!tutors || tutors.length === 0) {
+        if (!results || results.length === 0) {
             return (
                 <View style={styles.centered}>
                     <Text style={styles.emptyText}>No tutors match these filters yet.</Text>
@@ -158,7 +207,7 @@ export default function SearchPage() {
         }
 
         if (viewMode === 'map' && !isLg) {
-            return <MapPanelPlaceholder tutors={tutors} />;
+            return <MapPanelPlaceholder tutors={results} />;
         }
 
         if (viewMode === 'split' && isLg) {
@@ -166,7 +215,7 @@ export default function SearchPage() {
                 <View style={styles.splitLayout}>
                     <View style={styles.splitList}>{renderList()}</View>
                     <View style={styles.splitMap}>
-                        <MapPanelPlaceholder tutors={tutors} />
+                        <MapPanelPlaceholder tutors={results} />
                     </View>
                 </View>
             );
@@ -179,6 +228,8 @@ export default function SearchPage() {
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
                 showsVerticalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={250}
             >
                 <View style={styles.navbar}>
                     <Text style={styles.brand}>TutorFinder</Text>
@@ -215,8 +266,14 @@ export default function SearchPage() {
                     <View style={styles.resultsColumn}>
                         {renderTopBar()}
                         <View style={styles.divider} />
-                        {isFetching && tutors && <Text style={styles.loadingHint}>Updating results…</Text>}
+                        {isFetching && results.length > 0 && <Text style={styles.loadingHint}>Updating results…</Text>}
                         {renderContent()}
+                        {isFetching && hasMore && (
+                            <View style={styles.loadingMoreRow}>
+                                <ActivityIndicator size="small" color={colors.primary} />
+                                <Text style={styles.loadingMoreText}>Loading more…</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -413,12 +470,44 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.cardBorder,
     },
     loadingHint: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textSecondary,
-    },
-    cardStack: {
-        gap: spacing.md,
-    },
+         fontSize: typography.fontSize.xs,
+         color: colors.neutrals.textSecondary,
+     },
+     loadingMoreRow: {
+         marginTop: spacing.md,
+         flexDirection: 'row',
+         alignItems: 'center',
+         gap: spacing.sm,
+     },
+     loadingMoreText: {
+         color: colors.neutrals.textSecondary,
+         fontSize: typography.fontSize.sm,
+     },
+     countBadge: {
+         paddingHorizontal: spacing.sm,
+         paddingVertical: spacing.xs,
+         borderRadius: borderRadius.full,
+         backgroundColor: colors.neutrals.surfaceAlt,
+         borderWidth: 1,
+         borderColor: colors.neutrals.cardBorder,
+     },
+     countBadgeText: {
+         color: colors.neutrals.textSecondary,
+         fontSize: typography.fontSize.xs,
+         fontWeight: typography.fontWeight.semibold,
+     },
+     footerNote: {
+         marginTop: spacing.md,
+         alignItems: 'center',
+     },
+     footerNoteText: {
+         color: colors.neutrals.textMuted,
+         fontSize: typography.fontSize.sm,
+     },
+     cardStack: {
+         gap: spacing.md,
+     },
+
     cardWrapper: {
         borderRadius: borderRadius.lg,
         overflow: 'hidden',

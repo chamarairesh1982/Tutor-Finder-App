@@ -1,7 +1,31 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text, Platform } from 'react-native';
-import { colors } from '../../src/lib/theme';
+import { Text, Platform, View } from 'react-native';
+import { colors, spacing, borderRadius, typography } from '../../src/lib/theme';
+import { useMyBookings } from '../../src/hooks/useBookings';
+
+function BookingBadge() {
+    const { data } = useMyBookings();
+
+    const list = Array.isArray(data) ? data : [];
+    const pending = list.filter((b) => b.status === 0).length;
+    if (!pending) return null;
+
+    return (
+        <View style={{
+            minWidth: 20,
+            paddingHorizontal: spacing.xs,
+            paddingVertical: 2,
+            backgroundColor: colors.error,
+            borderRadius: borderRadius.full,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: 6,
+        }}>
+            <Text style={{ color: colors.neutrals.background, fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.bold }}>{pending}</Text>
+        </View>
+    );
+}
 
 export default function TabsLayout() {
     return (
@@ -60,7 +84,12 @@ export default function TabsLayout() {
                 name="bookings"
                 options={{
                     title: 'Bookings',
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>📅</Text>,
+                    tabBarIcon: ({ color }) => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 24, color }}>📅</Text>
+                            <BookingBadge />
+                        </View>
+                    ),
                 }}
             />
             <Tabs.Screen
@@ -73,3 +102,4 @@ export default function TabsLayout() {
         </Tabs>
     );
 }
+

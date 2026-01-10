@@ -1,7 +1,9 @@
 using FluentValidation;
 using TutorFinder.Application.DTOs;
+using TutorFinder.Domain.Enums;
 
 namespace TutorFinder.Application.Validators;
+
 
 public class TutorProfileRequestValidator : AbstractValidator<TutorProfileRequest>
 {
@@ -31,6 +33,33 @@ public class CreateBookingRequestValidator : AbstractValidator<CreateBookingRequ
     }
 }
 
+public class RespondToBookingRequestValidator : AbstractValidator<RespondToBookingRequest>
+{
+    public RespondToBookingRequestValidator()
+    {
+        RuleFor(x => x.NewStatus)
+            .Must(s => s == BookingStatus.Accepted || s == BookingStatus.Declined)
+            .WithMessage("Only Accepted or Declined are allowed.");
+        RuleFor(x => x.Message).MaximumLength(2000);
+    }
+}
+
+public class CancelBookingRequestValidator : AbstractValidator<CancelBookingRequest>
+{
+    public CancelBookingRequestValidator()
+    {
+        RuleFor(x => x.Message).MaximumLength(2000);
+    }
+}
+
+public class CompleteBookingRequestValidator : AbstractValidator<CompleteBookingRequest>
+{
+    public CompleteBookingRequestValidator()
+    {
+        RuleFor(x => x.Message).MaximumLength(2000);
+    }
+}
+
 public class CreateReviewRequestValidator : AbstractValidator<CreateReviewRequest>
 {
     public CreateReviewRequestValidator()
@@ -40,3 +69,4 @@ public class CreateReviewRequestValidator : AbstractValidator<CreateReviewReques
         RuleFor(x => x.Comment).NotEmpty().MaximumLength(1000);
     }
 }
+

@@ -62,6 +62,28 @@ public class BookingsController : ControllerBase
         );
     }
 
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> CancelBooking(Guid id, [FromBody] CancelBookingRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var result = await _bookingService.CancelBookingAsync(userId, id, request ?? new CancelBookingRequest(null), ct);
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
+    [HttpPost("{id}/complete")]
+    public async Task<IActionResult> CompleteBooking(Guid id, [FromBody] CompleteBookingRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var result = await _bookingService.CompleteBookingAsync(userId, id, request ?? new CompleteBookingRequest(null), ct);
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
     [HttpPost("{id}/messages")]
     public async Task<IActionResult> SendMessage(Guid id, [FromBody] SendMessageRequest request, CancellationToken ct)
     {
@@ -80,3 +102,4 @@ public class BookingsController : ControllerBase
         throw new UnauthorizedAccessException();
     }
 }
+

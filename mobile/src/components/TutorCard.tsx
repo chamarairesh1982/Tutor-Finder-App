@@ -75,10 +75,22 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
 
             <View style={styles.footer}>
                 <Text style={styles.availability}>{tutor.nextAvailableText}</Text>
+                <View style={styles.badgeRow}>
+                    <View style={styles.badgePrimary}>
+                        <Text style={styles.badgePrimaryText}>{tutor.teachingMode === undefined ? 'Flexible' : tutor.teachingMode === 0 ? 'In person' : tutor.teachingMode === 1 ? 'Online' : 'Hybrid'}</Text>
+                    </View>
+                    {tutor.responseTimeText && (
+                        <View style={styles.badgeSecondary}>
+                            <Text style={styles.badgeSecondaryText}>{tutor.responseTimeText}</Text>
+                        </View>
+                    )}
+                </View>
             </View>
         </TouchableOpacity>
     );
 }
+
+
 
 const styles = StyleSheet.create({
     card: {
@@ -195,17 +207,45 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.medium,
     },
     footer: {
-        borderTopWidth: 1,
-        borderTopColor: colors.neutrals.surfaceAlt,
-        paddingHorizontal: spacing.md,
-        paddingVertical: 10,
-        backgroundColor: colors.neutrals.surface,
-        borderBottomLeftRadius: borderRadius.lg,
-        borderBottomRightRadius: borderRadius.lg,
-    },
-    availability: {
-        fontSize: 12,
-        color: colors.secondaryDark,
-        fontWeight: typography.fontWeight.semibold,
-    },
+         borderTopWidth: 1,
+         borderTopColor: colors.neutrals.surfaceAlt,
+         paddingHorizontal: spacing.md,
+         paddingVertical: 10,
+         backgroundColor: colors.neutrals.surface,
+         borderBottomLeftRadius: borderRadius.lg,
+         borderBottomRightRadius: borderRadius.lg,
+     },
+     availability: {
+         fontSize: 12,
+         color: colors.secondaryDark,
+         fontWeight: typography.fontWeight.semibold,
+     },
+     badgeRow: {
+         flexDirection: 'row',
+         gap: spacing.xs,
+         marginTop: spacing.xs,
+     },
+     badgePrimary: {
+         paddingHorizontal: spacing.sm,
+         paddingVertical: 4,
+         backgroundColor: colors.primarySoft,
+         borderRadius: borderRadius.full,
+     },
+     badgePrimaryText: {
+         color: colors.primaryDark,
+         fontSize: typography.fontSize.xs,
+         fontWeight: typography.fontWeight.semibold,
+     },
+     badgeSecondary: {
+         paddingHorizontal: spacing.sm,
+         paddingVertical: 4,
+         backgroundColor: colors.neutrals.surfaceAlt,
+         borderRadius: borderRadius.full,
+     },
+     badgeSecondaryText: {
+         color: colors.neutrals.textSecondary,
+         fontSize: typography.fontSize.xs,
+         fontWeight: typography.fontWeight.medium,
+     },
 });
+

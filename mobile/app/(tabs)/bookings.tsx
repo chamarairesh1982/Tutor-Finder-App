@@ -61,9 +61,14 @@ export default function BookingsScreen() {
                 </View>
 
                 <View style={styles.cardFooter}>
-                    <Text style={styles.messagePreview} numberOfLines={1}>
-                        {item.messages && item.messages.length > 0 ? item.messages[item.messages.length - 1].content : 'No messages'}
-                    </Text>
+                    <View style={styles.footerLeft}>
+                        <View style={[styles.inlineBadge, { backgroundColor: statusStyles.bg }]}> 
+                            <Text style={[styles.inlineBadgeText, { color: statusStyles.text }]}>{getStatusLabel(item.status)}</Text>
+                        </View>
+                        <Text style={styles.messagePreview} numberOfLines={1}>
+                            {item.messages && item.messages.length > 0 ? item.messages[item.messages.length - 1].content : 'No messages'}
+                        </Text>
+                    </View>
                     <Text style={styles.arrow}>›</Text>
                 </View>
 
@@ -83,6 +88,13 @@ export default function BookingsScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <Text style={styles.title}>My Bookings</Text>
+                {!!listData.filter((b) => b.status === BookingStatus.Pending).length && (
+                    <View style={styles.pendingPill}>
+                        <Text style={styles.pendingPillText}>
+                            {listData.filter((b) => b.status === BookingStatus.Pending).length} pending
+                        </Text>
+                    </View>
+                )}
             </View>
 
             {listData.length === 0 ? (
@@ -109,10 +121,16 @@ export default function BookingsScreen() {
                             <Text style={styles.emptyText}>You don't have any bookings yet.</Text>
                         </View>
                     )}
+                    ListFooterComponent={
+                        <View style={styles.footerNote}>
+                            <Text style={styles.footerNoteText}>Pull to refresh bookings</Text>
+                        </View>
+                    }
                 />
 
             )}
         </SafeAreaView>
+
     );
 }
 
@@ -125,10 +143,24 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     title: {
-        fontSize: typography.fontSize['2xl'],
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
+         fontSize: typography.fontSize['2xl'],
+         fontWeight: typography.fontWeight.bold,
+         color: colors.neutrals.textPrimary,
+     },
+     pendingPill: {
+         marginLeft: spacing.md,
+         alignSelf: 'center',
+         backgroundColor: colors.statusPending,
+         paddingHorizontal: spacing.sm,
+         paddingVertical: 4,
+         borderRadius: borderRadius.full,
+     },
+     pendingPillText: {
+         color: colors.statusPendingText,
+         fontSize: typography.fontSize.xs,
+         fontWeight: typography.fontWeight.semibold,
+     },
+
     listContent: {
         padding: spacing.md,
         paddingBottom: spacing.xl,
@@ -181,12 +213,35 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.medium,
     },
     cardFooter: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: colors.neutrals.border,
-        paddingTop: spacing.sm,
-    },
+         flexDirection: 'row',
+         alignItems: 'center',
+         justifyContent: 'space-between',
+         borderTopWidth: 1,
+         borderTopColor: colors.neutrals.surfaceAlt,
+         paddingTop: spacing.sm,
+         gap: spacing.sm,
+     },
+     footerLeft: {
+         flexDirection: 'row',
+         alignItems: 'center',
+         gap: spacing.sm,
+         flex: 1,
+     },
+     inlineBadge: {
+         paddingHorizontal: spacing.sm,
+         paddingVertical: 4,
+         borderRadius: borderRadius.full,
+     },
+     inlineBadgeText: {
+         fontSize: typography.fontSize.xs,
+         fontWeight: typography.fontWeight.bold,
+     },
+     messagePreview: {
+         flex: 1,
+         color: colors.neutrals.textSecondary,
+         fontSize: typography.fontSize.sm,
+     },
+
     messagePreview: {
         flex: 1,
         fontSize: typography.fontSize.sm,
@@ -194,16 +249,25 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
     arrow: {
-        fontSize: typography.fontSize.xl,
-        color: colors.neutrals.textMuted,
-        marginLeft: spacing.sm,
-    },
-    centered: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.xl,
-    },
+         fontSize: typography.fontSize.xl,
+         color: colors.neutrals.textMuted,
+         marginLeft: spacing.sm,
+     },
+     footerNote: {
+         paddingVertical: spacing.md,
+         alignItems: 'center',
+     },
+     footerNoteText: {
+         color: colors.neutrals.textMuted,
+         fontSize: typography.fontSize.sm,
+     },
+     centered: {
+         flex: 1,
+         alignItems: 'center',
+         justifyContent: 'center',
+         padding: spacing.xl,
+     },
+
     emptyText: {
         fontSize: typography.fontSize.base,
         color: colors.neutrals.textSecondary,

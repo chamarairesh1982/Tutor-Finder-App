@@ -1,3 +1,4 @@
+using TutorFinder.Application.Common;
 using TutorFinder.Application.DTOs;
 using TutorFinder.Domain.Entities;
 using TutorFinder.Domain.Enums;
@@ -6,10 +7,11 @@ namespace TutorFinder.Application.Interfaces;
 
 public interface ITutorSearchRepository
 {
-    Task<List<TutorSearchResultDto>> SearchAsync(TutorSearchRequest request, CancellationToken ct);
+    Task<PagedResult<TutorSearchResultDto>> SearchAsync(TutorSearchRequest request, CancellationToken ct);
 }
 
 public record TutorSearchRequest(
+
     double? Lat,
     double? Lng,
     string? Postcode,

@@ -3,7 +3,7 @@ import apiClient from '../api/client';
 import { Booking, BookingRequest, BookingMessage, BookingStatus } from '../types';
 
 export function useMyBookings() {
-    return useQuery({
+    return useQuery<Booking[]>({
         queryKey: ['bookings'],
         queryFn: async () => {
             const response = await apiClient.get<Booking[]>('/bookings');
@@ -11,8 +11,10 @@ export function useMyBookings() {
         },
         staleTime: 1000 * 30,
         refetchOnWindowFocus: false,
+        initialData: [],
     });
 }
+
 
 
 export function useBooking(bookingId: string) {
@@ -36,9 +38,13 @@ export function useCreateBooking() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
         },
     });
 }
+
+
 
 interface RespondToBookingRequest {
     newStatus: BookingStatus;
@@ -55,6 +61,39 @@ export function useRespondToBooking(bookingId: string) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+        },
+    });
+}
+
+export function useCancelBooking(bookingId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (message?: string) => {
+            const response = await apiClient.post<Booking>(`/bookings/${bookingId}/cancel`, { message });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+        },
+    });
+}
+
+export function useCompleteBooking(bookingId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (message?: string) => {
+            const response = await apiClient.post<Booking>(`/bookings/${bookingId}/complete`, { message });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
         },
     });
@@ -69,14 +108,16 @@ export function useSendMessage(bookingId: string) {
             return response.data;
         },
         onSuccess: (message) => {
-            // Optimistically append message to the booking detail cache
             queryClient.setQueryData<Booking | undefined>(['bookings', bookingId], (prev) => {
                 if (!prev) return prev;
                 const nextMessages = [...(prev.messages ?? []), message];
                 return { ...prev, messages: nextMessages } as Booking;
             });
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['bookings', 'count'] });
             queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
         },
     });
 }
+
 
