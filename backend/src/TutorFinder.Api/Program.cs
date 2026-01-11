@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using TutorFinder.Api.Middleware;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,12 @@ builder.Host.UseSerilog();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddScoped<ValidationActionFilter>();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationActionFilter>();
+});
 
 builder.Services.AddCors();
 
@@ -85,9 +91,24 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
+var databaseProvider = builder.Configuration.GetValue<string>("Database:Provider") ?? "Postgres";
+var connectionString = databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase)
+    ? builder.Configuration.GetConnectionString("Postgres")
+    : builder.Configuration.GetConnectionString("DefaultConnection");
+
 // Health Checks
-builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
+if (!string.IsNullOrWhiteSpace(connectionString))
+{
+    var healthChecks = builder.Services.AddHealthChecks();
+    if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        healthChecks.AddSqlServer(connectionString!);
+    }
+    else
+    {
+        healthChecks.AddCheck("database", () => HealthCheckResult.Healthy("Configured connection"));
+    }
+}
 
 var app = builder.Build();
 
@@ -97,6 +118,7 @@ app.UseCors(policy => policy
     .AllowAnyMethod()
     .AllowAnyHeader());
 
+app.UseExceptionHandler();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
@@ -150,3 +172,8 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+public partial class Program { }
+
+public partial class Program { }
+

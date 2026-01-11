@@ -1,4 +1,5 @@
-# .NET Backend Architecture — Clean Architecture (.NET 10)
+# .NET Backend Architecture — Clean Architecture (.NET 8)
+
 
 > Scalable, testable, maintainable API for TutorFinder UK.
 
