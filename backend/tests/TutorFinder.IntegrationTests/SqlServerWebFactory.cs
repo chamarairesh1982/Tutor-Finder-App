@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,11 +13,28 @@ namespace TutorFinder.IntegrationTests;
 
 public class SqlServerWebFactory : WebApplicationFactory<Program>
 {
+    private const string ConnectionEnvVar = "TF_TEST_SQLSERVER_CONNECTION";
+
     private readonly string _connectionString;
 
     public SqlServerWebFactory()
     {
+        var baseConnectionString = Environment.GetEnvironmentVariable(ConnectionEnvVar);
+
         var dbName = $"TutorFinderIntegrationTests_{Guid.NewGuid():N}";
+
+        if (!string.IsNullOrWhiteSpace(baseConnectionString))
+        {
+            var builder = new SqlConnectionStringBuilder(baseConnectionString)
+            {
+                InitialCatalog = dbName
+            };
+
+            _connectionString = builder.ConnectionString;
+            return;
+        }
+
+        // Windows dev default
         _connectionString = $"Server=(localdb)\\mssqllocaldb;Database={dbName};Trusted_Connection=True;MultipleActiveResultSets=true";
     }
 

@@ -8,15 +8,44 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: YourStrong!Passw0rd
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'YourStrong!Passw0rd' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
       - name: Restore
         run: dotnet restore backend/TutorFinder.sln
+
       - name: Build
         run: dotnet build backend/TutorFinder.sln --configuration Release --no-restore
+
+      - name: Wait for SQL Server
+        run: |
+          for i in {1..30}; do
+            (echo > /dev/tcp/127.0.0.1/1433) >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          exit 1
+
       - name: Test
+        env:
+          TF_TEST_SQLSERVER_CONNECTION: "Server=127.0.0.1,1433;User ID=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true"
         run: dotnet test backend/TutorFinder.sln --configuration Release --no-build
