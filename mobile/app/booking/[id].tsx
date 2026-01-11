@@ -4,10 +4,13 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useCompleteBooking } from '../../src/hooks/useBookings';
+import { useCreateReview } from '../../src/hooks/useReviews';
 import { useAuthStore } from '../../src/store/authStore';
-import { Button } from '../../src/components';
+import { useNotificationStore } from '../../src/store/notificationStore';
+import { Button, ReviewComposer } from '../../src/components';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { BookingStatus, UserRole, BookingMessage } from '../../src/types';
+
 
 
 export default function BookingDetailScreen() {
@@ -19,9 +22,14 @@ export default function BookingDetailScreen() {
     const { mutate: respond, isPending: isResponding } = useRespondToBooking(id!);
     const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking(id!);
     const { mutate: completeBooking, isPending: isCompleting } = useCompleteBooking(id!);
-
+    const { mutate: createReview, isPending: isReviewing } = useCreateReview();
+    const notify = useNotificationStore((s) => s.addToast);
 
     const [message, setMessage] = useState('');
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
     const scrollViewRef = useRef<ScrollView>(null);
 
     const messages = booking?.messages ?? [];
@@ -41,7 +49,7 @@ export default function BookingDetailScreen() {
             onSuccess: () => setMessage(''),
             onError: (err: any) => {
                 const detail = err?.response?.data?.detail || 'Unable to send message.';
-                Alert.alert('Send failed', detail);
+                notify({ type: 'error', title: 'Send failed', message: detail });
             },
         });
     };
@@ -50,12 +58,12 @@ export default function BookingDetailScreen() {
     const handleStatusChange = (newStatus: BookingStatus) => {
         respond({ newStatus }, {
             onSuccess: () => {
-                Alert.alert('Status Updated', `Booking has been ${BookingStatus[newStatus].toLowerCase()}.`);
+                notify({ type: 'success', title: 'Status updated', message: `Booking is now ${BookingStatus[newStatus]}.` });
                 refetch();
             },
             onError: (err: any) => {
                 const detail = err?.response?.data?.detail || 'Unable to update status.';
-                Alert.alert('Update failed', detail);
+                notify({ type: 'error', title: 'Update failed', message: detail });
             }
         });
     };
@@ -63,12 +71,12 @@ export default function BookingDetailScreen() {
     const handleCancel = () => {
         cancelBooking(undefined, {
             onSuccess: () => {
-                Alert.alert('Cancelled', 'Booking has been cancelled.');
+                notify({ type: 'success', title: 'Cancelled', message: 'Booking has been cancelled.' });
                 refetch();
             },
             onError: (err: any) => {
                 const detail = err?.response?.data?.detail || 'Unable to cancel booking.';
-                Alert.alert('Cancel failed', detail);
+                notify({ type: 'error', title: 'Cancel failed', message: detail });
             }
         });
     };
@@ -76,12 +84,12 @@ export default function BookingDetailScreen() {
     const handleComplete = () => {
         completeBooking(undefined, {
             onSuccess: () => {
-                Alert.alert('Completed', 'Booking marked as completed.');
+                notify({ type: 'success', title: 'Completed', message: 'Booking marked as completed.' });
                 refetch();
             },
             onError: (err: any) => {
                 const detail = err?.response?.data?.detail || 'Unable to complete booking.';
-                Alert.alert('Complete failed', detail);
+                notify({ type: 'error', title: 'Complete failed', message: detail });
             }
         });
     };
@@ -119,6 +127,43 @@ export default function BookingDetailScreen() {
     const modeLabel = booking.preferredMode === 0 ? 'In Person' : booking.preferredMode === 1 ? 'Online' : 'Flexible';
     const priceLabel = booking.pricePerHour ? `£${booking.pricePerHour}/hr` : '£—/hr';
     const dateLabel = booking.preferredDate || 'Flexible Date';
+
+    const showReview = !isTutor && (booking.status === BookingStatus.Accepted || booking.status === BookingStatus.Completed);
+    const reviewEnabled = !isTutor && booking.status === BookingStatus.Completed && !reviewSubmitted;
+
+    const handleSubmitReview = () => {
+        if (!showReview) return;
+
+        if (!reviewEnabled) {
+            notify({
+                type: 'info',
+                title: 'Review locked',
+                message: 'Reviews unlock once the booking is marked completed.',
+            });
+            return;
+        }
+
+        const trimmed = reviewComment.trim();
+        if (!trimmed) {
+            notify({ type: 'error', title: 'Comment required', message: 'Please add a short review comment.' });
+            return;
+        }
+
+        createReview(
+            { bookingRequestId: booking.id, rating: reviewRating, comment: trimmed },
+            {
+                onSuccess: () => {
+                    setReviewSubmitted(true);
+                    notify({ type: 'success', title: 'Review submitted', message: 'Thanks for helping the community.' });
+                },
+                onError: (err: any) => {
+                    const detail = err?.response?.data?.detail || 'Unable to submit review.';
+                    notify({ type: 'error', title: 'Review failed', message: detail });
+                },
+            }
+        );
+    };
+
 
 
     return (
@@ -216,9 +261,36 @@ export default function BookingDetailScreen() {
                             })
                         )}
                     </View>
+
+                    {showReview && (
+                        <View style={{ marginTop: spacing.lg }}>
+                            {reviewSubmitted ? (
+                                <View style={styles.reviewThanks}>
+                                    <Text style={styles.reviewThanksTitle}>Review submitted</Text>
+                                    <Text style={styles.reviewThanksBody}>Thanks — your feedback helps students choose confidently.</Text>
+                                </View>
+                            ) : (
+                                <ReviewComposer
+                                    rating={reviewRating}
+                                    onRatingChange={setReviewRating}
+                                    comment={reviewComment}
+                                    onCommentChange={setReviewComment}
+                                    onSubmit={handleSubmitReview}
+                                    isSubmitting={isReviewing}
+                                    isEnabled={reviewEnabled}
+                                    helperText={
+                                        booking.status === BookingStatus.Accepted
+                                            ? 'Review unlocks once the booking is completed.'
+                                            : undefined
+                                    }
+                                />
+                            )}
+                        </View>
+                    )}
                 </ScrollView>
 
                 <View style={styles.inputContainer}>
+
                     <TouchableOpacity style={styles.attachButton}>
                         <Ionicons name="add-circle-outline" size={28} color={colors.neutrals.textMuted} />
                     </TouchableOpacity>
@@ -361,7 +433,26 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
         color: colors.neutrals.textSecondary,
     },
+    reviewThanks: {
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: borderRadius.lg,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+    },
+    reviewThanksTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+        marginBottom: 4,
+    },
+    reviewThanksBody: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textSecondary,
+        lineHeight: 20,
+    },
     messageRow: {
+
         width: '100%',
         flexDirection: 'row',
         marginBottom: 8,

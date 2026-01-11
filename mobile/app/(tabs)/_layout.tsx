@@ -4,9 +4,11 @@ import { Text, Platform, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../../src/lib/theme';
 import { useMyBookings } from '../../src/hooks/useBookings';
+import { useAuthStore } from '../../src/store/authStore';
 
 function BookingBadge() {
-    const { data } = useMyBookings();
+    const { isAuthenticated } = useAuthStore();
+    const { data } = useMyBookings(isAuthenticated);
 
     const list = Array.isArray(data) ? data : [];
     const pending = list.filter((b) => b.status === 0).length;

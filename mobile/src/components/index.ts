@@ -7,6 +7,8 @@ export { TutorCardWeb } from './TutorCardWeb';
 export { FilterSidebar } from './FilterSidebar';
 export { BookingPanel } from './BookingPanel';
 export { ReviewList } from './ReviewList';
+export { ReviewComposer } from './ReviewComposer';
+export { ToastHost } from './ToastHost';
 export { MapPanelPlaceholder } from './web/MapPanelPlaceholder';
 export { SkeletonList } from './SkeletonList';
 

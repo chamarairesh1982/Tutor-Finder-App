@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, Text, ScrollView, Image, Alert, ActivityIndicator, Platform, Modal, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTutorProfile } from '../../src/hooks/useTutors';
-import { useCreateBooking } from '../../src/hooks/useBookings';
+import { useCreateBooking, useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
+import { useNotificationStore } from '../../src/store/notificationStore';
 import { BookingPanel, ReviewList } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
-import { Category, TeachingMode } from '../../src/types';
+import { BookingStatus, Category, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { Button } from '../../src/components/Button';
 
@@ -15,7 +16,10 @@ export default function TutorDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
+    const notify = useNotificationStore((s) => s.addToast);
+
     const { data: tutor, isLoading, isError } = useTutorProfile(id!);
+    const { data: myBookings } = useMyBookings(isAuthenticated);
     const { mutate: createBooking, isPending: isBookingPending } = useCreateBooking();
     const { isLg, width } = useBreakpoint();
 
@@ -25,14 +29,37 @@ export default function TutorDetailScreen() {
     const [reviewSort, setReviewSort] = useState<'recent' | 'highest'>('recent');
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
+    const activeBooking = useMemo(() => {
+        const list = Array.isArray(myBookings) ? myBookings : [];
+        const relevant = list
+            .filter((b) => b.tutorId === id)
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        return relevant.find((b) =>
+            b.status === BookingStatus.Pending ||
+            b.status === BookingStatus.Accepted ||
+            b.status === BookingStatus.Completed
+        );
+    }, [id, myBookings]);
+
     const handleBooking = () => {
         if (!isAuthenticated) {
             router.push('/(auth)/login');
             return;
         }
 
+        if (activeBooking) {
+            notify({
+                type: 'info',
+                title: 'You already have a booking',
+                message: 'Open the existing request to message or check status.',
+            });
+            router.push(`/booking/${activeBooking.id}`);
+            return;
+        }
+
         if (!initialMessage.trim()) {
-            Alert.alert('Message Required', 'Please enter a message for the tutor.');
+            notify({ type: 'error', title: 'Message required', message: 'Please add a short message for the tutor.' });
             return;
         }
 
@@ -44,18 +71,16 @@ export default function TutorDetailScreen() {
                 initialMessage: initialMessage.trim(),
             },
             {
-                onSuccess: () => {
+                onSuccess: (booking) => {
                     setBookingModalOpen(false);
-                    Alert.alert('Request Sent', 'Your booking request has been sent to the tutor.', [
-                        { text: 'View Bookings', onPress: () => router.push('/bookings') },
-                        { text: 'OK' }
-                    ]);
+                    notify({ type: 'success', title: 'Request sent', message: 'The tutor will reply soon.' });
                     setInitialMessage('');
                     setPreferredDate('');
+                    router.push(`/booking/${booking.id}`);
                 },
                 onError: (error: any) => {
-                    const msg = error.response?.data?.detail || 'Failed to send booking request.';
-                    Alert.alert('Error', msg);
+                    const msg = error?.response?.data?.detail || 'Failed to send booking request.';
+                    notify({ type: 'error', title: 'Request failed', message: msg });
                 }
             }
         );
@@ -66,6 +91,17 @@ export default function TutorDetailScreen() {
             router.push('/(auth)/login');
             return;
         }
+
+        if (activeBooking) {
+            notify({
+                type: 'info',
+                title: 'Booking already in progress',
+                message: 'Open your booking to continue the chat.',
+            });
+            router.push(`/booking/${activeBooking.id}`);
+            return;
+        }
+
         setBookingModalOpen(true);
     }
 
@@ -103,6 +139,27 @@ export default function TutorDetailScreen() {
     const locationText = tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.`;
     const availabilityText = tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.';
     const reviewList = tutor.reviews ?? [];
+
+    const bookingCta = (() => {
+        if (!activeBooking) {
+            return {
+                title: 'Request booking',
+                onPress: openBookingModal,
+                badge: null as null | string,
+            };
+        }
+
+        switch (activeBooking.status) {
+            case BookingStatus.Pending:
+                return { title: 'View request', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Pending' };
+            case BookingStatus.Accepted:
+                return { title: 'Message tutor', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Accepted' };
+            case BookingStatus.Completed:
+                return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Completed' };
+            default:
+                return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: null };
+        }
+    })();
 
     const infoSections = [
         {
@@ -179,7 +236,7 @@ export default function TutorDetailScreen() {
                             {isLg && (
                                 <View style={styles.topCtas}>
                                     <Text style={styles.headerPrice}>£{tutor.pricePerHour}<Text style={styles.headerPriceUnit}>/hr</Text></Text>
-                                    <Button title="Book a Session" onPress={openBookingModal} isLoading={isBookingPending} size="lg" />
+                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} size="lg" />
                                 </View>
                             )}
                         </View>
@@ -205,18 +262,33 @@ export default function TutorDetailScreen() {
                         </View>
 
                         <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
-                            <BookingPanel
-                                pricePerHour={tutor.pricePerHour}
-                                mode={preferredMode}
-                                onModeChange={setPreferredMode}
-                                preferredDate={preferredDate}
-                                onPreferredDateChange={setPreferredDate}
-                                message={initialMessage}
-                                onMessageChange={setInitialMessage}
-                                onSubmit={handleBooking}
-                                isSubmitting={isBookingPending}
-                                responseTimeText={tutor.responseTimeText}
-                            />
+                            {activeBooking ? (
+                                <View style={styles.bookingStatusCard}>
+                                    <View style={styles.bookingStatusTop}>
+                                        <Text style={styles.bookingStatusLabel}>Booking status</Text>
+                                        {!!bookingCta.badge && (
+                                            <View style={styles.bookingStatusBadge}>
+                                                <Text style={styles.bookingStatusBadgeText}>{bookingCta.badge.toUpperCase()}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={styles.bookingStatusHint}>You can message, cancel, or leave a review from your booking.</Text>
+                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} size="lg" />
+                                </View>
+                            ) : (
+                                <BookingPanel
+                                    pricePerHour={tutor.pricePerHour}
+                                    mode={preferredMode}
+                                    onModeChange={setPreferredMode}
+                                    preferredDate={preferredDate}
+                                    onPreferredDateChange={setPreferredDate}
+                                    message={initialMessage}
+                                    onMessageChange={setInitialMessage}
+                                    onSubmit={handleBooking}
+                                    isSubmitting={isBookingPending}
+                                    responseTimeText={tutor.responseTimeText}
+                                />
+                            )}
                         </View>
                     </View>
                 </View>
@@ -229,7 +301,7 @@ export default function TutorDetailScreen() {
                             <Text style={styles.mobilePrice}>£{tutor.pricePerHour}<Text style={styles.mobilePriceUnit}>/hr</Text></Text>
                             <Text style={styles.mobilePriceCaption}>Secure booking</Text>
                         </View>
-                        <Button title="Book Now" onPress={openBookingModal} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
+                        <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
                     </View>
 
                     <Modal visible={bookingModalOpen} animationType="slide" onRequestClose={() => setBookingModalOpen(false)}>
@@ -453,6 +525,46 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         position: 'sticky' as any,
         top: spacing.lg,
+    },
+    bookingStatusCard: {
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: borderRadius.lg,
+        padding: spacing.xl,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        ...shadows.sm,
+        gap: spacing.md,
+    },
+    bookingStatusTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    bookingStatusLabel: {
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    bookingStatusBadge: {
+        backgroundColor: colors.primarySoft,
+        borderRadius: borderRadius.full,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    bookingStatusBadgeText: {
+        fontSize: 10,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.primaryDark,
+        letterSpacing: 0.5,
+    },
+    bookingStatusHint: {
+        fontSize: typography.fontSize.sm,
+        color: colors.neutrals.textSecondary,
+        lineHeight: 20,
     },
     sectionCard: {
         backgroundColor: colors.neutrals.surface,

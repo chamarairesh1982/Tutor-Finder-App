@@ -27,7 +27,7 @@ function resolveBaseUrl() {
     return 'http://localhost:5270/api/v1';
 }
 
-const API_BASE_URL = resolveBaseUrl();
+export const API_BASE_URL = resolveBaseUrl();
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,

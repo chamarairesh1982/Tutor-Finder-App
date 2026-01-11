@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/store/authStore';
+import { ToastHost } from '../src/components/ToastHost';
 import { colors, spacing, layout } from '../src/lib/theme';
 
 const queryClient = new QueryClient({
@@ -62,7 +63,9 @@ export default function RootLayout() {
                     <View style={styles.webContainer}>
                         <View style={styles.appWrapper}>
                             <RootLayoutNav />
+                            <ToastHost />
                         </View>
+
                     </View>
                 </QueryClientProvider>
             </SafeAreaProvider>

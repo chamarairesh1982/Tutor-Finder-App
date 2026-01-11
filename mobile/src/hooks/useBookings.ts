@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/client';
 import { Booking, BookingRequest, BookingMessage, BookingStatus } from '../types';
 
-export function useMyBookings() {
+export function useMyBookings(enabled: boolean = true) {
     return useQuery<Booking[]>({
         queryKey: ['bookings'],
         queryFn: async () => {
@@ -12,6 +12,7 @@ export function useMyBookings() {
         staleTime: 1000 * 30,
         refetchOnWindowFocus: false,
         initialData: [],
+        enabled,
     });
 }
 

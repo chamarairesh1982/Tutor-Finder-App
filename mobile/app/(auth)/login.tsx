@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+
 import { useRouter, Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Button } from '../../src/components';
 import { useLogin } from '../../src/hooks/useAuth';
+import { useNotificationStore } from '../../src/store/notificationStore';
+import { getFriendlyApiError } from '../../src/lib/networkError';
 import { colors, spacing, typography } from '../../src/lib/theme';
+
 
 export default function LoginScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { mutate: login, isPending } = useLogin();
+    const notify = useNotificationStore((s) => s.addToast);
+
 
     const handleLogin = () => {
         if (!email || !password) {
-            Alert.alert('Error', 'Please enter both email and password');
+            notify({ type: 'error', title: 'Missing details', message: 'Please enter both email and password.' });
             return;
         }
+
 
         login(
             { email, password },
             {
                 onSuccess: () => {
+                    notify({ type: 'success', title: 'Welcome back', message: 'Signed in successfully.' });
                     router.replace('/(tabs)');
                 },
                 onError: (error: any) => {
-                    const message = error.response?.data?.detail || 'Invalid email or password';
-                    Alert.alert('Login Failed', message);
+                    const friendly = getFriendlyApiError(error);
+                    notify({ type: 'error', title: friendly.title, message: friendly.message });
                 },
+
             }
         );
     };

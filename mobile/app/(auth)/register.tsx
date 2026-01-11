@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+
 import { useRouter, Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Button } from '../../src/components';
 import { useRegister } from '../../src/hooks/useAuth';
+import { useNotificationStore } from '../../src/store/notificationStore';
+import { getFriendlyApiError } from '../../src/lib/networkError';
 import { colors, spacing, typography, borderRadius } from '../../src/lib/theme';
+
 import { UserRole } from '../../src/types';
 
 export default function RegisterScreen() {
@@ -14,28 +18,33 @@ export default function RegisterScreen() {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<UserRole>(UserRole.Student);
     const { mutate: register, isPending } = useRegister();
+    const notify = useNotificationStore((s) => s.addToast);
+
 
     const handleRegister = () => {
         if (!displayName || !email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+            notify({ type: 'error', title: 'Missing details', message: 'Please fill in all fields.' });
             return;
         }
 
         if (password.length < 6) {
-            Alert.alert('Error', 'Password must be at least 6 characters');
+            notify({ type: 'error', title: 'Weak password', message: 'Password must be at least 6 characters.' });
             return;
         }
+
 
         register(
             { displayName, email, password, role },
             {
                 onSuccess: () => {
+                    notify({ type: 'success', title: 'Account created', message: 'Welcome to TutorFinder.' });
                     router.replace('/(tabs)');
                 },
                 onError: (error: any) => {
-                    const message = error.response?.data?.detail || 'Registration failed';
-                    Alert.alert('Error', message);
+                    const friendly = getFriendlyApiError(error);
+                    notify({ type: 'error', title: friendly.title, message: friendly.message });
                 },
+
             }
         );
     };

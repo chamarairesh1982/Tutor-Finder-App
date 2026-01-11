@@ -4,12 +4,16 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMyBookings } from '../../src/hooks/useBookings';
+import { useAuthStore } from '../../src/store/authStore';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { Booking, BookingStatus } from '../../src/types';
 
+
 export default function BookingsScreen() {
     const router = useRouter();
-    const { data: bookings, isLoading, isError, refetch } = useMyBookings();
+    const { isAuthenticated } = useAuthStore();
+    const { data: bookings, isLoading, isError, refetch } = useMyBookings(isAuthenticated);
+
     const listData = (Array.isArray(bookings) ? bookings : (bookings as any)?.items ?? []) as Booking[];
 
     const getStatusColor = (status: BookingStatus) => {
@@ -82,6 +86,24 @@ export default function BookingsScreen() {
 
     const pendingCount = listData.filter((b) => b.status === BookingStatus.Pending).length;
 
+    if (!isAuthenticated) {
+        return (
+            <SafeAreaView style={styles.container} edges={['top']}>
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="lock-closed-outline" size={64} color={colors.neutrals.surfaceAlt} />
+                    <Text style={styles.emptyTitle}>Sign in to view bookings</Text>
+                    <Text style={styles.emptyText}>Booking requests and chat live here once you’re signed in.</Text>
+                    <TouchableOpacity
+                        style={styles.browseButton}
+                        onPress={() => router.push('/(auth)/login')}
+                    >
+                        <Text style={styles.browseButtonText}>Sign In</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     if (isLoading && !listData.length) {
         return (
             <View style={styles.centered}>
@@ -89,6 +111,7 @@ export default function BookingsScreen() {
             </View>
         );
     }
+
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>

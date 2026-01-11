@@ -16,6 +16,9 @@ interface BookingPanelProps {
     onSubmit: () => void;
     isSubmitting?: boolean;
     responseTimeText?: string;
+    ctaTitle?: string;
+    ctaDisabled?: boolean;
+    onCtaPress?: () => void;
 }
 
 const modeLabels = [
@@ -35,6 +38,9 @@ export function BookingPanel({
     onSubmit,
     isSubmitting,
     responseTimeText,
+    ctaTitle,
+    ctaDisabled,
+    onCtaPress,
 }: BookingPanelProps) {
     const handleLinkPress = (url: string) => {
         Linking.openURL(url).catch(() => { });
@@ -96,11 +102,12 @@ export function BookingPanel({
             />
 
             <Button
-                title="Request Booking"
-                onPress={onSubmit}
+                title={ctaTitle ?? "Request Booking"}
+                onPress={onCtaPress ?? onSubmit}
                 isLoading={isSubmitting}
                 fullWidth
                 size="lg"
+                disabled={!!ctaDisabled}
             />
 
             <View style={styles.footer}>
