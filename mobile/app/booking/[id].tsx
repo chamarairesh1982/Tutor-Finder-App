@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useCompleteBooking } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { Button } from '../../src/components';
@@ -88,10 +89,10 @@ export default function BookingDetailScreen() {
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
-            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText };
-            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText };
-            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText };
-            default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary };
+            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText, icon: "time-outline" };
+            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText, icon: "checkmark-circle-outline" };
+            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText, icon: "close-circle-outline" };
+            default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary, icon: "help-circle-outline" };
         }
     };
 
@@ -107,154 +108,139 @@ export default function BookingDetailScreen() {
         return (
             <View style={styles.centered}>
                 <Text style={styles.errorText}>Booking not found.</Text>
+                <Button title="Go Back" onPress={() => router.back()} variant="outline" style={{ marginTop: spacing.md }} />
             </View>
         );
     }
 
     const isTutor = user?.role === UserRole.Tutor;
+    const counterpartName = isTutor ? booking.studentName : booking.tutorName;
     const statusStyles = getStatusColor(booking.status);
     const modeLabel = booking.preferredMode === 0 ? 'In Person' : booking.preferredMode === 1 ? 'Online' : 'Flexible';
     const priceLabel = booking.pricePerHour ? `£${booking.pricePerHour}/hr` : '£—/hr';
-    const dateLabel = booking.preferredDate || 'Flexible';
+    const dateLabel = booking.preferredDate || 'Flexible Date';
 
 
     return (
-        <SafeAreaView style={styles.container} edges={['bottom']}>
+        <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+            <Stack.Screen options={{
+                title: 'Chat & Details',
+                headerShadowVisible: false,
+                headerStyle: { backgroundColor: colors.neutrals.background },
+            }} />
+
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                <ScrollView
-                    ref={scrollViewRef}
-                    contentContainerStyle={styles.scrollContent}
-                >
+                <View style={styles.headerContainer}>
                     <View style={styles.infoCard}>
-                        <View style={styles.headerRow}>
-                            <View>
+                        <View style={styles.topRow}>
+                            <View style={styles.avatarContainer}>
+                                <Text style={styles.avatarText}>{counterpartName.charAt(0).toUpperCase()}</Text>
+                            </View>
+                            <View style={styles.headerInfo}>
                                 <Text style={styles.headerLabel}>{isTutor ? 'Student' : 'Tutor'}</Text>
-                                <Text style={styles.headerValue}>{isTutor ? booking.studentName : booking.tutorName}</Text>
+                                <Text style={styles.headerName}>{counterpartName}</Text>
                             </View>
                             <View style={[styles.statusBadge, { backgroundColor: statusStyles.bg }]}>
+                                <Ionicons name={statusStyles.icon as any} size={14} color={statusStyles.text} style={{ marginRight: 4 }} />
                                 <Text style={[styles.statusText, { color: statusStyles.text }]}>
                                     {BookingStatus[booking.status]}
                                 </Text>
                             </View>
                         </View>
 
-                        <View style={styles.detailsRow}>
-                            <View style={styles.detailItem}>
-                                <Text style={styles.detailLabel}>Date</Text>
-                                <Text style={styles.detailValue}>{dateLabel}</Text>
-                            </View>
-                            <View style={styles.detailItem}>
-                                <Text style={styles.detailLabel}>Mode</Text>
-                                <Text style={styles.detailValue}>
-                                    {modeLabel}
-                                </Text>
-                            </View>
-                            <View style={styles.detailItem}>
-                                <Text style={styles.detailLabel}>Price</Text>
-                                <Text style={styles.detailValue}>{priceLabel}</Text>
-                            </View>
+                        <View style={styles.divider} />
 
+                        <View style={styles.metaRow}>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="calendar-outline" size={16} color={colors.neutrals.textSecondary} />
+                                <Text style={styles.metaText}>{dateLabel}</Text>
+                            </View>
+                            <View style={styles.metaItem}>
+                                <Ionicons name={booking.preferredMode === 1 ? "videocam-outline" : "location-outline"} size={16} color={colors.neutrals.textSecondary} />
+                                <Text style={styles.metaText}>{modeLabel}</Text>
+                            </View>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="cash-outline" size={16} color={colors.neutrals.textSecondary} />
+                                <Text style={styles.metaText}>{priceLabel}</Text>
+                            </View>
                         </View>
 
-                        {isTutor && booking.status === BookingStatus.Pending && (
+                        {/* Action Buttons Area */}
+                        {(isTutor && booking.status === BookingStatus.Pending) && (
                             <View style={styles.actionButtons}>
-                                <Button
-                                    title="Accept"
-                                    onPress={() => handleStatusChange(BookingStatus.Accepted)}
-                                    variant="secondary"
-                                    size="sm"
-                                    style={{ flex: 1 }}
-                                    isLoading={isResponding}
-                                />
-                                <Button
-                                    title="Decline"
-                                    onPress={() => handleStatusChange(BookingStatus.Declined)}
-                                    variant="outline"
-                                    size="sm"
-                                    style={{ flex: 1, borderColor: colors.error }}
-                                    textStyle={{ color: colors.error }}
-                                    isLoading={isResponding}
-                                />
+                                <Button title="Accept" onPress={() => handleStatusChange(BookingStatus.Accepted)} variant="secondary" size="sm" style={{ flex: 1 }} isLoading={isResponding} />
+                                <Button title="Decline" onPress={() => handleStatusChange(BookingStatus.Declined)} variant="outline" size="sm" style={{ flex: 1, borderColor: colors.error }} textStyle={{ color: colors.error }} isLoading={isResponding} />
                             </View>
                         )}
-
-                        {!isTutor && (booking.status === BookingStatus.Pending || booking.status === BookingStatus.Accepted) && (
+                        {(!isTutor && (booking.status === BookingStatus.Pending || booking.status === BookingStatus.Accepted)) && (
                             <View style={styles.actionButtons}>
-                                <Button
-                                    title="Cancel booking"
-                                    onPress={handleCancel}
-                                    variant="outline"
-                                    size="sm"
-                                    style={{ flex: 1, borderColor: colors.neutrals.border }}
-                                    isLoading={isCancelling}
-                                />
+                                <Button title="Cancel Booking" onPress={handleCancel} variant="outline" size="sm" style={{ flex: 1 }} isLoading={isCancelling} />
                             </View>
                         )}
-
-                        {isTutor && booking.status === BookingStatus.Accepted && (
+                        {(isTutor && booking.status === BookingStatus.Accepted) && (
                             <View style={styles.actionButtons}>
-                                <Button
-                                    title="Mark completed"
-                                    onPress={handleComplete}
-                                    variant="secondary"
-                                    size="sm"
-                                    style={{ flex: 1 }}
-                                    isLoading={isCompleting}
-                                />
+                                <Button title="Mark Completed" onPress={handleComplete} variant="primary" size="sm" style={{ flex: 1 }} isLoading={isCompleting} />
                             </View>
                         )}
                     </View>
+                </View>
 
-                    <Text style={styles.messageTitle}>Messages</Text>
-
-
-                    <View style={styles.messagesList}>
-                        {(messages.length ? messages : []).map((msg: BookingMessage) => {
-                            const isMe = msg.senderId === user?.id;
-                            return (
-                                <View
-                                    key={msg.id}
-                                    style={[styles.messageBubble, isMe ? styles.messageMe : styles.messageOther]}
-                                >
-                                    {!isMe && <Text style={styles.senderName}>{msg.senderName}</Text>}
-                                    <Text style={[styles.messageText, isMe && styles.messageTextMe]}>{msg.content}</Text>
-                                    <Text style={[styles.messageTime, isMe && styles.messageTimeMe]}>
-                                        {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                        {!messages.length && (
-                            <Text style={styles.emptyMessage}>No messages yet. Start the conversation.</Text>
+                <ScrollView
+                    ref={scrollViewRef}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.messagesContainer}>
+                        {messages.length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <Ionicons name="chatbubbles-outline" size={48} color={colors.neutrals.surfaceAlt} />
+                                <Text style={styles.emptyText}>Start the conversation...</Text>
+                            </View>
+                        ) : (
+                            messages.map((msg: BookingMessage) => {
+                                const isMe = msg.senderId === user?.id;
+                                return (
+                                    <View key={msg.id} style={[styles.messageRow, isMe ? styles.rowMe : styles.rowOther]}>
+                                        <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
+                                            <Text style={[styles.messageText, isMe ? styles.textMe : styles.textOther]}>{msg.content}</Text>
+                                            <Text style={[styles.timestamp, isMe ? styles.timeMe : styles.timeOther]}>
+                                                {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                );
+                            })
                         )}
                     </View>
-
                 </ScrollView>
 
-                <View style={styles.inputArea}>
+                <View style={styles.inputContainer}>
+                    <TouchableOpacity style={styles.attachButton}>
+                        <Ionicons name="add-circle-outline" size={28} color={colors.neutrals.textMuted} />
+                    </TouchableOpacity>
                     <TextInput
                         style={styles.input}
                         placeholder="Type a message..."
+                        placeholderTextColor={colors.neutrals.textMuted}
                         value={message}
                         onChangeText={setMessage}
                         multiline
                     />
                     <TouchableOpacity
-                        style={[styles.sendBtn, (!message.trim() || isSending) && styles.sendBtnDisabled]}
+                        style={[styles.sendButton, (!message.trim() || isSending) && styles.sendButtonDisabled]}
                         onPress={handleSend}
                         disabled={!message.trim() || isSending}
                     >
                         {isSending ? (
-                            <ActivityIndicator color={colors.neutrals.background} size="small" />
+                            <ActivityIndicator color="#fff" size="small" />
                         ) : (
-                            <Text style={styles.sendBtnText}>Send</Text>
+                            <Ionicons name="send" size={20} color="#fff" style={{ marginLeft: 2 }} />
                         )}
                     </TouchableOpacity>
-
                 </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -264,163 +250,211 @@ export default function BookingDetailScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutrals.surface,
+        backgroundColor: colors.neutrals.background,
     },
     centered: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    scrollContent: {
-        padding: spacing.md,
+    headerContainer: {
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.sm,
+        backgroundColor: colors.neutrals.background,
+        zIndex: 10,
     },
     infoCard: {
-        backgroundColor: colors.neutrals.background,
-        padding: spacing.md,
+        backgroundColor: colors.neutrals.surface,
         borderRadius: borderRadius.lg,
+        padding: spacing.md,
         ...shadows.sm,
-        marginBottom: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
     },
-    headerRow: {
+    topRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: spacing.lg,
+        alignItems: 'center',
+    },
+    avatarContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: colors.primarySoft,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.md,
+    },
+    avatarText: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.primary,
+    },
+    headerInfo: {
+        flex: 1,
     },
     headerLabel: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
+        fontSize: 10,
         textTransform: 'uppercase',
+        color: colors.neutrals.textMuted,
+        fontWeight: typography.fontWeight.bold,
+        letterSpacing: 0.5,
     },
-    headerValue: {
-        fontSize: typography.fontSize.xl,
+    headerName: {
+        fontSize: typography.fontSize.lg,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
     },
     statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
-        borderRadius: borderRadius.sm,
+        borderRadius: borderRadius.full,
     },
     statusText: {
-        fontSize: typography.fontSize.xs,
+        fontSize: 10,
         fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
     },
-    detailsRow: {
+    divider: {
+        height: 1,
+        backgroundColor: colors.neutrals.cardBorder,
+        marginVertical: spacing.md,
+    },
+    metaRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingTop: spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: colors.neutrals.surfaceAlt,
     },
-    detailItem: {
+    metaItem: {
+        flexDirection: 'row',
         alignItems: 'center',
+        gap: 6,
     },
-    detailLabel: {
+    metaText: {
         fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
-    },
-    detailValue: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.neutrals.textPrimary,
+        color: colors.neutrals.textSecondary,
+        fontWeight: typography.fontWeight.medium,
     },
     actionButtons: {
         flexDirection: 'row',
         gap: spacing.md,
-        marginTop: spacing.lg,
+        marginTop: spacing.md,
     },
-    messageTitle: {
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.bold,
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.md,
+    },
+    messagesContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        paddingTop: spacing.lg,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.xl,
+        opacity: 0.6,
+    },
+    emptyText: {
+        marginTop: spacing.sm,
         color: colors.neutrals.textSecondary,
-        marginBottom: spacing.md,
-        textTransform: 'uppercase',
     },
-    messagesList: {
-        marginBottom: spacing.md,
+    messageRow: {
+        width: '100%',
+        flexDirection: 'row',
+        marginBottom: 8,
     },
-    emptyMessage: {
-        color: colors.neutrals.textSecondary,
-        fontSize: typography.fontSize.sm,
-        marginBottom: spacing.md,
+    rowMe: {
+        justifyContent: 'flex-end',
     },
-
-    messageBubble: {
-        padding: spacing.md,
-        borderRadius: borderRadius.lg,
-        marginBottom: spacing.sm,
-        maxWidth: '85%',
+    rowOther: {
+        justifyContent: 'flex-start',
     },
-    messageMe: {
-        alignSelf: 'flex-end',
+    bubble: {
+        maxWidth: '80%',
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 18,
+    },
+    bubbleMe: {
         backgroundColor: colors.primary,
-        borderBottomRightRadius: 2,
+        borderBottomRightRadius: 4,
     },
-    messageOther: {
-        alignSelf: 'flex-start',
-        backgroundColor: colors.neutrals.background,
-        borderBottomLeftRadius: 2,
-        ...shadows.sm,
-    },
-    senderName: {
-        fontSize: 10,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primary,
-        marginBottom: 4,
+    bubbleOther: {
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        borderBottomLeftRadius: 4,
     },
     messageText: {
-        fontSize: typography.fontSize.base,
+        fontSize: 15,
+        lineHeight: 22,
+    },
+    textMe: {
+        color: '#fff',
+    },
+    textOther: {
         color: colors.neutrals.textPrimary,
     },
-    messageTextMe: {
-        color: colors.neutrals.background,
-    },
-    messageTime: {
-        fontSize: 10,
-        color: colors.neutrals.textMuted,
+    timestamp: {
+        fontSize: 9,
         marginTop: 4,
         alignSelf: 'flex-end',
     },
-    messageTimeMe: {
-        color: colors.primaryLight,
+    timeMe: {
+        color: 'rgba(255,255,255,0.7)',
     },
-    inputArea: {
+    timeOther: {
+        color: colors.neutrals.textMuted,
+    },
+    inputContainer: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
-        padding: spacing.md,
+        alignItems: 'center',
+        padding: spacing.sm,
+        paddingBottom: Platform.OS === 'ios' ? 0 : spacing.sm,
         backgroundColor: colors.neutrals.background,
         borderTopWidth: 1,
-        borderTopColor: colors.neutrals.border,
+        borderTopColor: colors.neutrals.cardBorder,
+    },
+    attachButton: {
+        padding: spacing.sm,
     },
     input: {
         flex: 1,
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        paddingTop: spacing.sm,
+        minHeight: 40,
         maxHeight: 100,
-        fontSize: typography.fontSize.base,
-        marginRight: spacing.sm,
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: 20,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        marginHorizontal: spacing.xs,
+        fontSize: 15,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
     },
-    sendBtn: {
+    sendButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: colors.primary,
-        width: 60,
-        height: 48,
-        borderRadius: borderRadius.lg,
         alignItems: 'center',
         justifyContent: 'center',
+        marginLeft: spacing.xs,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    sendBtnDisabled: {
-        opacity: 0.5,
-    },
-    sendBtnText: {
-        color: colors.neutrals.background,
-        fontWeight: typography.fontWeight.bold,
+    sendButtonDisabled: {
+        backgroundColor: colors.neutrals.surfaceAlt,
+        shadowOpacity: 0,
+        elevation: 0,
     },
     errorText: {
-        fontSize: typography.fontSize.base,
         color: colors.error,
-    },
+        marginBottom: spacing.md,
+    }
 });
