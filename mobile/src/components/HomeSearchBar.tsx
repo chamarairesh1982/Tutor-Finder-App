@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { useBreakpoint } from '../lib/responsive';
-import { Input } from './Input';
-import { Button } from './Button';
 import { TeachingMode } from '../types';
 
 interface HomeSearchBarProps {
@@ -47,14 +45,14 @@ export function HomeSearchBar({
             <View style={[styles.mainRow, stacked && styles.mainRowStacked]}>
                 <View style={styles.inputContainer}>
                     <Text style={styles.innerLabel}>What do you want to learn?</Text>
-                    <Input
+                    <TextInput
                         placeholder="e.g. Maths, Piano, GCSE Chemistry"
+                        placeholderTextColor={colors.neutrals.textMuted}
                         value={subject}
                         onChangeText={onSubjectChange}
                         autoCapitalize="words"
                         returnKeyType="search"
-                        containerStyle={styles.borderlessInput}
-                        style={{ fontSize: 15, paddingLeft: 0 }}
+                        style={styles.textInput}
                     />
                 </View>
 
@@ -63,14 +61,14 @@ export function HomeSearchBar({
                 <View style={[styles.inputContainer, styles.locationContainer]}>
                     <Text style={styles.innerLabel}>Where?</Text>
                     <View style={styles.locationRow}>
-                        <Input
+                        <TextInput
                             placeholder="Postcode or town"
+                            placeholderTextColor={colors.neutrals.textMuted}
                             value={location}
                             onChangeText={onLocationChange}
                             autoCapitalize="characters"
                             returnKeyType="search"
-                            containerStyle={[styles.borderlessInput, { flex: 1 }]}
-                            style={{ fontSize: 15, paddingLeft: 0 }}
+                            style={[styles.textInput, { flex: 1 }]}
                         />
                         <View style={styles.radiusControlWrapper}>
                             <TouchableOpacity
@@ -136,13 +134,13 @@ const styles = StyleSheet.create({
     mainRow: {
         flexDirection: 'row',
         backgroundColor: colors.neutrals.surface,
-        borderRadius: 32, // More rounded like the screenshot
+        borderRadius: 32,
         padding: 6,
         paddingLeft: spacing.xl,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        ...shadows.lg, // Stronger shadow
+        ...shadows.lg,
     },
     mainRowStacked: {
         flexDirection: 'column',
@@ -154,6 +152,7 @@ const styles = StyleSheet.create({
         flex: 1.2,
         justifyContent: 'center',
         paddingVertical: spacing.xs,
+        paddingRight: spacing.sm,
     },
     locationContainer: {
         flex: 1,
@@ -164,11 +163,15 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textMuted,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
-        marginBottom: -4,
+        marginBottom: 2,
         paddingLeft: Platform.OS === 'web' ? 0 : spacing.xs,
     },
-    borderlessInput: {
-        borderWidth: 0,
+    textInput: {
+        fontSize: 15,
+        paddingVertical: 0,
+        paddingHorizontal: Platform.OS === 'web' ? 0 : spacing.xs,
+        height: 24,
+        color: colors.neutrals.textPrimary,
         backgroundColor: 'transparent',
     },
     divider: {
@@ -204,26 +207,28 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.semibold,
         color: colors.neutrals.textPrimary,
     },
-    chevron: {
-        fontSize: 10,
-        color: colors.neutrals.textMuted,
-    },
     radiusMenu: {
         position: 'absolute',
-        top: '100%',
+        top: '110%',
         marginTop: spacing.xs,
         right: 0,
-        width: 120,
-        backgroundColor: colors.neutrals.surface,
+        width: 140, // Slightly wider
+        backgroundColor: colors.neutrals.surface, // Essential: Solid white background
         borderRadius: borderRadius.md,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        zIndex: 200,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2, // Consistent shadow
+        shadowRadius: 12,
+        elevation: 10,
+        zIndex: 9999, // Super high z-index
+        padding: 4,
     },
     radiusOpt: {
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.sm,
     },
     radiusOptActive: {
         backgroundColor: colors.primarySoft,

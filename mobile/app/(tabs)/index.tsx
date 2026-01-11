@@ -218,6 +218,7 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 800,
         marginTop: spacing.md,
+        zIndex: 10,
     },
     trustBadges: {
         flexDirection: 'row',
