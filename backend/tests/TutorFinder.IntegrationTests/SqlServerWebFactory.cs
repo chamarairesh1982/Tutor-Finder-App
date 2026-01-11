@@ -40,6 +40,7 @@ public class SqlServerWebFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((context, config) =>
         {
             var overrides = new Dictionary<string, string?>

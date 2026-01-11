@@ -28,7 +28,12 @@ public class ReviewService : IReviewService
         if (booking == null) return new Result<ReviewResponse>.Failure("Booking not found", 404);
 
         if (booking.StudentId != studentId) return new Result<ReviewResponse>.Failure("Unauthorized", 403);
-        if (booking.Status != BookingStatus.Completed) return new Result<ReviewResponse>.Failure("Can only review completed bookings", 400);
+        if (booking.Status is not (BookingStatus.Accepted or BookingStatus.Completed))
+            return new Result<ReviewResponse>.Failure("Can only review accepted bookings", 400);
+
+        var existingReview = await _reviewRepository.GetByBookingRequestIdAsync(request.BookingRequestId, ct);
+        if (existingReview != null)
+            return new Result<ReviewResponse>.Failure("Booking already reviewed", 409);
 
         var review = new Review
         {

@@ -47,7 +47,6 @@ public class TutorProfileConfiguration : IEntityTypeConfiguration<TutorProfile>
             .HasForeignKey<TutorProfile>(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasQueryFilter(t => !t.User.IsDeleted);
 
 
         builder.HasMany(t => t.Subjects)

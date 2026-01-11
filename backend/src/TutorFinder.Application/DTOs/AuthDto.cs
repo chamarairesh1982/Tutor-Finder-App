@@ -22,6 +22,14 @@ public record AuthResponse(
     string Token
 );
 
+public record MeResponse(
+    Guid Id,
+    string Email,
+    string DisplayName,
+    UserRole Role
+);
+
+
 public record UpdateProfileRequest(
     string DisplayName,
     string Email

@@ -21,6 +21,13 @@ public class ReviewRepository : IReviewRepository
             .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
 
+    public async Task<Review?> GetByBookingRequestIdAsync(Guid bookingRequestId, CancellationToken ct)
+    {
+        return await _context.Reviews
+            .Include(r => r.Student)
+            .FirstOrDefaultAsync(r => r.BookingRequestId == bookingRequestId, ct);
+    }
+
     public async Task<List<Review>> GetByTutorIdAsync(Guid tutorId, CancellationToken ct)
     {
         return await _context.Reviews

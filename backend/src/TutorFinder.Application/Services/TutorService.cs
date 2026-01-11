@@ -25,6 +25,54 @@ public class TutorService : ITutorService
         _geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     }
 
+    public async Task<Result<TutorProfileResponse>> CreateProfileAsync(Guid userId, TutorProfileRequest request, CancellationToken ct)
+    {
+        var existing = await _tutorRepository.GetByUserIdAsync(userId, ct);
+        if (existing != null) return new Result<TutorProfileResponse>.Failure("Tutor profile already exists", 409);
+
+        return await UpsertProfileAsync(userId, request, ct);
+    }
+
+    public async Task<Result<TutorProfileResponse>> UpdateProfileAsync(Guid userId, Guid tutorProfileId, TutorProfileRequest request, CancellationToken ct)
+    {
+        var profile = await _tutorRepository.GetByIdAsync(tutorProfileId, ct);
+        if (profile == null) return new Result<TutorProfileResponse>.Failure("Profile not found", 404);
+
+        if (profile.UserId != userId) return new Result<TutorProfileResponse>.Failure("Unauthorized", 403);
+
+        // Re-use upsert mapping logic by operating on the tracked entity
+        profile.FullName = request.FullName;
+        profile.Bio = request.Bio;
+        profile.Category = request.Category;
+        profile.BaseLatitude = request.BaseLatitude;
+        profile.BaseLongitude = request.BaseLongitude;
+        profile.Postcode = request.Postcode;
+        profile.TravelRadiusMiles = request.TravelRadiusMiles;
+        profile.PricePerHour = request.PricePerHour;
+        profile.TeachingMode = request.TeachingMode;
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        profile.Location = _geometryFactory.CreatePoint(new Coordinate((double)request.BaseLongitude, (double)request.BaseLatitude));
+
+        await _tutorRepository.UpdateAsync(profile, ct);
+        await _tutorRepository.SaveChangesAsync(ct);
+
+        await _tutorRepository.ReplaceSubjectsAsync(profile.Id, request.Subjects, ct);
+
+        var slots = request.Availability.Select(a => new AvailabilitySlot
+        {
+            DayOfWeek = a.DayOfWeek,
+            StartTime = a.StartTime,
+            EndTime = a.EndTime
+        }).ToList();
+        await _tutorRepository.ReplaceAvailabilityAsync(profile.Id, slots, ct);
+
+        await _tutorRepository.SaveChangesAsync(ct);
+
+        var reloaded = await _tutorRepository.GetByIdAsync(profile.Id, ct);
+        return new Result<TutorProfileResponse>.Success(MapToResponse(reloaded!));
+    }
+
     public async Task<Result<TutorProfileResponse>> UpsertProfileAsync(Guid userId, TutorProfileRequest request, CancellationToken ct)
     {
         var profile = await _tutorRepository.GetByUserIdAsync(userId, ct);
@@ -49,19 +97,6 @@ public class TutorService : ITutorService
         // Update Location Point
         profile.Location = _geometryFactory.CreatePoint(new Coordinate((double)request.BaseLongitude, (double)request.BaseLatitude));
 
-        // Update Subjects (Simple clear and re-add for MVP)
-        profile.Subjects.Clear();
-        profile.Subjects.AddRange(request.Subjects.Select(s => new TutorSubject { SubjectName = s }));
-
-        // Update Availability (Simple clear and re-add for MVP)
-        profile.AvailabilitySlots.Clear();
-        profile.AvailabilitySlots.AddRange(request.Availability.Select(a => new AvailabilitySlot
-        {
-            DayOfWeek = a.DayOfWeek,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime
-        }));
-
         if (isNew)
         {
             await _tutorRepository.AddAsync(profile, ct);
@@ -73,7 +108,20 @@ public class TutorService : ITutorService
 
         await _tutorRepository.SaveChangesAsync(ct);
 
-        return new Result<TutorProfileResponse>.Success(MapToResponse(profile));
+        await _tutorRepository.ReplaceSubjectsAsync(profile.Id, request.Subjects, ct);
+
+        var slots = request.Availability.Select(a => new AvailabilitySlot
+        {
+            DayOfWeek = a.DayOfWeek,
+            StartTime = a.StartTime,
+            EndTime = a.EndTime
+        }).ToList();
+        await _tutorRepository.ReplaceAvailabilityAsync(profile.Id, slots, ct);
+
+        await _tutorRepository.SaveChangesAsync(ct);
+
+        var reloaded = await _tutorRepository.GetByIdAsync(profile.Id, ct);
+        return new Result<TutorProfileResponse>.Success(MapToResponse(reloaded!));
     }
 
     public async Task<Result<TutorProfileResponse>> GetProfileByUserIdAsync(Guid userId, CancellationToken ct)

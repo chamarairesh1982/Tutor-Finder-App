@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TutorFinder.Application.DTOs;
 using TutorFinder.Application.Interfaces;
 
@@ -31,6 +33,20 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginAsync(request, ct);
 
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me(CancellationToken ct)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+
+        var result = await _authService.MeAsync(userId, ct);
         return result.Match<IActionResult>(
             success => Ok(success),
             failure => Problem(failure.Message, statusCode: failure.StatusCode)

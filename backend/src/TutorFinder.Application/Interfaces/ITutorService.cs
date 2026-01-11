@@ -5,9 +5,13 @@ namespace TutorFinder.Application.Interfaces;
 
 public interface ITutorService
 {
+    Task<Result<TutorProfileResponse>> CreateProfileAsync(Guid userId, TutorProfileRequest request, CancellationToken ct);
+    Task<Result<TutorProfileResponse>> UpdateProfileAsync(Guid userId, Guid tutorProfileId, TutorProfileRequest request, CancellationToken ct);
+
     Task<Result<TutorProfileResponse>> UpsertProfileAsync(Guid userId, TutorProfileRequest request, CancellationToken ct);
     Task<Result<TutorProfileResponse>> GetProfileByUserIdAsync(Guid userId, CancellationToken ct);
     Task<Result<TutorProfileResponse>> GetProfileByIdAsync(Guid tutorId, CancellationToken ct);
     Task<Result<PagedResult<TutorSearchResultDto>>> SearchAsync(TutorSearchRequest request, CancellationToken ct);
 }
+
 

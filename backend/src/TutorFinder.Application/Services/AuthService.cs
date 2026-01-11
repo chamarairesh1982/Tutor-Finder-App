@@ -69,4 +69,17 @@ public class AuthService : IAuthService
             token
         ));
     }
+
+    public async Task<Result<MeResponse>> MeAsync(Guid userId, CancellationToken ct)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, ct);
+        if (user == null) return new Result<MeResponse>.Failure("User not found", 404);
+
+        return new Result<MeResponse>.Success(new MeResponse(
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            user.Role
+        ));
+    }
 }

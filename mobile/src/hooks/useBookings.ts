@@ -11,7 +11,7 @@ export function useMyBookings(enabled: boolean = true) {
         },
         staleTime: 1000 * 30,
         refetchOnWindowFocus: false,
-        initialData: [],
+        placeholderData: [],
         enabled,
     });
 }

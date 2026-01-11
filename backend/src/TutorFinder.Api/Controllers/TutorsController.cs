@@ -31,19 +31,50 @@ public class TutorsController : ControllerBase
         );
     }
 
-    [HttpPost("profile")]
+    // New, spec-aligned endpoints (keep /profile for backward compatibility)
+
+    [HttpPost]
     [Authorize(Policy = "TutorOnly")]
-    public async Task<IActionResult> UpdateProfile([FromBody] TutorProfileRequest request, CancellationToken ct)
+    public async Task<IActionResult> CreateProfile([FromBody] TutorProfileRequest request, CancellationToken ct)
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
 
+        var result = await _tutorService.CreateProfileAsync(userId, request, ct);
+        return result.Match<IActionResult>(
+            success => CreatedAtAction(nameof(GetProfile), new { id = success.Id }, success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Policy = "TutorOnly")]
+    public async Task<IActionResult> UpdateProfile(Guid id, [FromBody] TutorProfileRequest request, CancellationToken ct)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+
+        var result = await _tutorService.UpdateProfileAsync(userId, id, request, ct);
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
+    [HttpPost("profile")]
+    [Authorize(Policy = "TutorOnly")]
+    public async Task<IActionResult> UpsertProfile([FromBody] TutorProfileRequest request, CancellationToken ct)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+ 
         var result = await _tutorService.UpsertProfileAsync(userId, request, ct);
         return result.Match<IActionResult>(
             success => Ok(success),
             failure => Problem(failure.Message, statusCode: failure.StatusCode)
         );
     }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProfile(Guid id, CancellationToken ct)
