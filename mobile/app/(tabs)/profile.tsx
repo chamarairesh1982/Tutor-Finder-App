@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useLogout } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
@@ -22,20 +23,36 @@ export default function ProfileScreen() {
 
     const renderAuthRequired = () => (
         <View style={styles.centered}>
+            <View style={styles.authIconContainer}>
+                <Ionicons name="person-circle-outline" size={80} color={colors.neutrals.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>Create a Profile</Text>
             <Text style={styles.emptyText}>Sign in to view your profile and manage bookings.</Text>
             <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => router.push('/(auth)/login')}
+                activeOpacity={0.8}
             >
                 <Text style={styles.actionButtonText}>Sign In / Register</Text>
             </TouchableOpacity>
         </View>
     );
 
-    const handleSoon = (title: string) => {
-        alert(`${title} coming soon`);
-    };
-
+    const MenuItem = ({ icon, label, onPress, isLast = false, color }: { icon: string, label: string, onPress: () => void, isLast?: boolean, color?: string }) => (
+        <TouchableOpacity
+            style={[styles.menuItem, isLast && styles.menuItemLast]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: color ? `${color}15` : colors.neutrals.surfaceAlt }]}>
+                    <Ionicons name={icon as any} size={20} color={color || colors.primary} />
+                </View>
+                <Text style={[styles.menuItemText, color && { color }]}>{label}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.neutrals.textMuted} />
+        </TouchableOpacity>
+    );
 
     if (!isAuthenticated || !user) {
         return (
@@ -50,79 +67,87 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Profile</Text>
-                </View>
+            <View style={styles.header}>
+                <Text style={styles.title}>Profile</Text>
+            </View>
 
-                    <View style={styles.profileCard}>
-                        <View style={styles.avatarLarge}>
-                            <Text style={styles.avatarInitialLarge}>{(user.displayName || user.email || '?').charAt(0).toUpperCase()}</Text>
-                        </View>
-                        <Text style={styles.userName}>{user.displayName || 'Account'}</Text>
-                        <Text style={styles.userEmail}>{user.email || ''}</Text>
-                        <View style={styles.roleBadge}>
-                            <Text style={styles.roleText}>
-                                {user.role === UserRole.Tutor ? 'TUTOR' : user.role === UserRole.Admin ? 'ADMIN' : 'STUDENT'}
-                            </Text>
-                        </View>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <View style={styles.profileCard}>
+                    <View style={styles.avatarLarge}>
+                        <Text style={styles.avatarInitialLarge}>{(user.displayName || user.email || '?').charAt(0).toUpperCase()}</Text>
                     </View>
+                    <Text style={styles.userName}>{user.displayName || 'Account'}</Text>
+                    <Text style={styles.userEmail}>{user.email || ''}</Text>
+                    <View style={styles.roleBadge}>
+                        <Text style={styles.roleText}>
+                            {user.role === UserRole.Tutor ? 'TUTOR' : user.role === UserRole.Admin ? 'ADMIN' : 'STUDENT'}
+                        </Text>
+                    </View>
+                </View>
 
-
-                <View style={styles.section}>
+                <View style={styles.sectionContainer}>
                     <Text style={styles.sectionTitle}>Account Settings</Text>
-
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/edit-info')}>
-                        <Text style={styles.menuItemText}>Edit Personal Info</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/change-password')}>
-                        <Text style={styles.menuItemText}>Change Password</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/notifications')}>
-                        <Text style={styles.menuItemText}>Notifications</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-
-
-                    {user.role === UserRole.Tutor && (
-                        <TouchableOpacity
-                            style={styles.menuItem}
+                    <View style={styles.sectionCard}>
+                        <MenuItem
+                            icon="person-outline"
+                            label="Edit Personal Info"
                             onPress={() => router.push('/profile/edit-info')}
-                        >
-                            <Text style={styles.menuItemText}>Tutor Profile Settings</Text>
-                            <Text style={styles.menuItemArrow}>›</Text>
-                        </TouchableOpacity>
-                    )}
+                        />
+                        <MenuItem
+                            icon="lock-closed-outline"
+                            label="Change Password"
+                            onPress={() => router.push('/profile/change-password')}
+                        />
+                        <MenuItem
+                            icon="notifications-outline"
+                            label="Notifications"
+                            onPress={() => router.push('/profile/notifications')}
+                            isLast={user.role !== UserRole.Tutor}
+                        />
+                        {user.role === UserRole.Tutor && (
+                            <MenuItem
+                                icon="school-outline"
+                                label="Tutor Profile Settings"
+                                onPress={() => router.push('/profile/edit-info')}
+                                isLast
+                            />
+                        )}
+                    </View>
                 </View>
 
-
-                <View style={styles.section}>
+                <View style={styles.sectionContainer}>
                     <Text style={styles.sectionTitle}>Support</Text>
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/help-center')}>
-                        <Text style={styles.menuItemText}>Help Center</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/privacy')}>
-                        <Text style={styles.menuItemText}>Privacy Policy</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/profile/terms')}>
-                        <Text style={styles.menuItemText}>Terms of Service</Text>
-                        <Text style={styles.menuItemArrow}>›</Text>
-                    </TouchableOpacity>
-
+                    <View style={styles.sectionCard}>
+                        <MenuItem
+                            icon="help-circle-outline"
+                            label="Help Center"
+                            onPress={() => router.push('/profile/help-center')}
+                        />
+                        <MenuItem
+                            icon="shield-checkmark-outline"
+                            label="Privacy Policy"
+                            onPress={() => router.push('/profile/privacy')}
+                        />
+                        <MenuItem
+                            icon="document-text-outline"
+                            label="Terms of Service"
+                            onPress={() => router.push('/profile/terms')}
+                            isLast
+                        />
+                    </View>
                 </View>
 
-                <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                >
-                    <Text style={styles.logoutButtonText}>Log Out</Text>
-                </TouchableOpacity>
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionCard}>
+                        <MenuItem
+                            icon="log-out-outline"
+                            label="Log Out"
+                            onPress={handleLogout}
+                            color={colors.error}
+                            isLast
+                        />
+                    </View>
+                </View>
 
                 <Text style={styles.versionText}>Version 1.0.0</Text>
             </ScrollView>
@@ -133,38 +158,52 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutrals.surface,
-    },
-    scrollContent: {
-        paddingBottom: spacing.xl,
+        backgroundColor: colors.neutrals.surfaceAlt, // Slightly darker background for contrast
     },
     header: {
-        padding: spacing.md,
-        backgroundColor: colors.neutrals.background,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.neutrals.surfaceAlt,
     },
     title: {
-        fontSize: typography.fontSize['2xl'],
+        fontSize: typography.fontSize['3xl'],
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
+        letterSpacing: -0.5,
+    },
+    scrollContent: {
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing['4xl'],
     },
     profileCard: {
         backgroundColor: colors.neutrals.background,
         alignItems: 'center',
         padding: spacing.xl,
-        marginBottom: spacing.md,
-        ...shadows.sm,
+        borderRadius: borderRadius.xl, // More rounded corners
+        marginBottom: spacing.lg,
+        // Softer shadow
+        shadowColor: 'rgba(0,0,0,0.05)',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 12,
+        elevation: 2,
     },
     avatarLarge: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         backgroundColor: colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.md,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 6,
     },
     avatarInitialLarge: {
-        fontSize: 32,
+        fontSize: 36,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.background,
     },
@@ -172,37 +211,47 @@ const styles = StyleSheet.create({
         fontSize: typography.fontSize.xl,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
+        marginBottom: 4,
     },
     userEmail: {
-        fontSize: typography.fontSize.base,
+        fontSize: typography.fontSize.sm,
         color: colors.neutrals.textSecondary,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.md,
     },
     roleBadge: {
-        backgroundColor: colors.neutrals.surfaceAlt,
+        backgroundColor: colors.primarySoft,
         paddingHorizontal: spacing.md,
-        paddingVertical: 4,
+        paddingVertical: 6,
         borderRadius: borderRadius.full,
     },
     roleText: {
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textSecondary,
+        color: colors.primaryDark,
         letterSpacing: 1,
     },
-    section: {
+    sectionContainer: {
+        marginBottom: spacing.lg,
+    },
+    sectionCard: {
         backgroundColor: colors.neutrals.background,
-        marginBottom: spacing.md,
-        paddingVertical: spacing.sm,
-        ...shadows.sm,
+        borderRadius: borderRadius.lg,
+        overflow: 'hidden',
+        // Softer shadow
+        shadowColor: 'rgba(0,0,0,0.03)',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+        elevation: 1,
     },
     sectionTitle: {
-        fontSize: typography.fontSize.sm,
+        fontSize: typography.fontSize.xs,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textMuted,
-        marginLeft: spacing.md,
-        marginVertical: spacing.sm,
+        marginLeft: spacing.sm,
+        marginBottom: spacing.sm,
         textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     menuItem: {
         flexDirection: 'row',
@@ -211,29 +260,28 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.surface,
+        borderBottomColor: colors.neutrals.surfaceAlt,
+        backgroundColor: colors.neutrals.background,
+    },
+    menuItemLast: {
+        borderBottomWidth: 0,
+    },
+    menuItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     menuItemText: {
         fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
         color: colors.neutrals.textPrimary,
-    },
-    menuItemArrow: {
-        fontSize: typography.fontSize.xl,
-        color: colors.neutrals.textMuted,
-    },
-    logoutButton: {
-        margin: spacing.md,
-        padding: spacing.md,
-        backgroundColor: colors.neutrals.background,
-        borderRadius: borderRadius.md,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.error,
-    },
-    logoutButtonText: {
-        color: colors.error,
-        fontWeight: typography.fontWeight.bold,
-        fontSize: typography.fontSize.base,
     },
     versionText: {
         textAlign: 'center',
@@ -247,17 +295,33 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: spacing.xl,
     },
+    authIconContainer: {
+        marginBottom: spacing.lg,
+        opacity: 0.5,
+    },
+    emptyTitle: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textPrimary,
+        marginBottom: spacing.xs,
+    },
     emptyText: {
         fontSize: typography.fontSize.base,
         color: colors.neutrals.textSecondary,
         textAlign: 'center',
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xl,
+        maxWidth: 300,
     },
     actionButton: {
         backgroundColor: colors.primary,
         paddingHorizontal: spacing.xl,
         paddingVertical: spacing.md,
-        borderRadius: borderRadius.md,
+        borderRadius: borderRadius.full,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     actionButtonText: {
         color: colors.neutrals.background,

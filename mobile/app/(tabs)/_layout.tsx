@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Text, Platform, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../../src/lib/theme';
 import { useMyBookings } from '../../src/hooks/useBookings';
 
@@ -13,16 +14,25 @@ function BookingBadge() {
 
     return (
         <View style={{
-            minWidth: 20,
-            paddingHorizontal: spacing.xs,
-            paddingVertical: 2,
+            position: 'absolute',
+            top: -5,
+            right: -10,
+            minWidth: 16,
+            height: 16,
+            paddingHorizontal: 4,
             backgroundColor: colors.error,
             borderRadius: borderRadius.full,
             alignItems: 'center',
             justifyContent: 'center',
-            marginLeft: 6,
         }}>
-            <Text style={{ color: colors.neutrals.background, fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.bold }}>{pending}</Text>
+            <Text style={{
+                color: colors.neutrals.background,
+                fontSize: 10,
+                fontWeight: 'bold',
+                lineHeight: 12
+            }}>
+                {pending}
+            </Text>
         </View>
     );
 }
@@ -77,16 +87,18 @@ export default function TabsLayout() {
                 name="index"
                 options={{
                     title: 'Discover',
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>🔍</Text>,
+                    tabBarIcon: ({ color, focused }) => (
+                        <Ionicons name={focused ? "search" : "search-outline"} size={24} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
                 name="bookings"
                 options={{
                     title: 'Bookings',
-                    tabBarIcon: ({ color }) => (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={{ fontSize: 24, color }}>📅</Text>
+                    tabBarIcon: ({ color, focused }) => (
+                        <View>
+                            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={24} color={color} />
                             <BookingBadge />
                         </View>
                     ),
@@ -96,7 +108,9 @@ export default function TabsLayout() {
                 name="profile"
                 options={{
                     title: 'Profile',
-                    tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>👤</Text>,
+                    tabBarIcon: ({ color, focused }) => (
+                        <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+                    ),
                 }}
             />
         </Tabs>

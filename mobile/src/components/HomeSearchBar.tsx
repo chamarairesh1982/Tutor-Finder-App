@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { useBreakpoint } from '../lib/responsive';
 import { Input } from './Input';
@@ -53,6 +54,7 @@ export function HomeSearchBar({
                         autoCapitalize="words"
                         returnKeyType="search"
                         containerStyle={styles.borderlessInput}
+                        style={{ fontSize: 15, paddingLeft: 0 }}
                     />
                 </View>
 
@@ -68,6 +70,7 @@ export function HomeSearchBar({
                             autoCapitalize="characters"
                             returnKeyType="search"
                             containerStyle={[styles.borderlessInput, { flex: 1 }]}
+                            style={{ fontSize: 15, paddingLeft: 0 }}
                         />
                         <View style={styles.radiusControlWrapper}>
                             <TouchableOpacity
@@ -76,7 +79,7 @@ export function HomeSearchBar({
                                 onPress={() => setRadiusOpen(!radiusOpen)}
                             >
                                 <Text style={styles.radiusText}>{radius} mi</Text>
-                                <Text style={styles.chevron}>{radiusOpen ? '▲' : '▼'}</Text>
+                                <Ionicons name={radiusOpen ? "caret-up" : "caret-down"} size={10} color={colors.neutrals.textMuted} />
                             </TouchableOpacity>
 
                             {radiusOpen && (
@@ -100,7 +103,7 @@ export function HomeSearchBar({
                 </View>
 
                 <TouchableOpacity style={styles.searchButton} onPress={onSubmit} activeOpacity={0.9}>
-                    <Text style={styles.searchButtonIcon}>🔍</Text>
+                    <Ionicons name="search" size={20} color={colors.neutrals.surface} />
                     {isLg && <Text style={styles.searchButtonText}>Search</Text>}
                 </TouchableOpacity>
             </View>
@@ -133,13 +136,13 @@ const styles = StyleSheet.create({
     mainRow: {
         flexDirection: 'row',
         backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.full,
-        padding: spacing.xs,
+        borderRadius: 32, // More rounded like the screenshot
+        padding: 6,
         paddingLeft: spacing.xl,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        ...shadows.md,
+        ...shadows.lg, // Stronger shadow
     },
     mainRowStacked: {
         flexDirection: 'column',
