@@ -6,7 +6,7 @@ import { useTutorProfile } from '../../src/hooks/useTutors';
 import { useCreateBooking, useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { BookingPanel, ReviewList } from '../../src/components';
+import { BookingPanel, ReviewList, AvailabilitySchedule } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { BookingStatus, Category, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
@@ -197,7 +197,8 @@ export default function TutorDetailScreen() {
         {
             title: 'Availability',
             icon: '🕒',
-            body: availabilityText
+            body: availabilityText,
+            slots: tutor.availabilitySlots
         },
         {
             title: 'Response Time',
@@ -349,7 +350,11 @@ function InfoSection({ section }: { section: any }) {
                 <Text style={styles.sectionTitle}>{section.title}</Text>
             </View>
 
-            {section.body && <Text style={styles.sectionBody}>{section.body}</Text>}
+            {section.body && <Text style={[styles.sectionBody, section.slots && { marginBottom: spacing.md }]}>{section.body}</Text>}
+
+            {section.title === 'Availability' && section.slots && (
+                <AvailabilitySchedule slots={section.slots} />
+            )}
 
             {section.isChecklist && (
                 <View style={styles.checklist}>

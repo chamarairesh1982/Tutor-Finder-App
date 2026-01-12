@@ -14,6 +14,8 @@ interface HomeSearchBarProps {
     onLocationChange: (value: string) => void;
     onRadiusChange: (value: number) => void;
     onModeChange: (value: TeachingMode) => void;
+    availabilityDay?: number;
+    onAvailabilityDayChange?: (value: number | undefined) => void;
     onSubmit: () => void;
 }
 
@@ -22,6 +24,17 @@ const modeOptions: { label: string; value: TeachingMode }[] = [
     { label: 'In-person', value: TeachingMode.InPerson },
     { label: 'Online', value: TeachingMode.Online },
     { label: 'Both', value: TeachingMode.Both },
+];
+
+const dayOptions = [
+    { label: 'Any day', value: undefined },
+    { label: 'Mon', value: 1 },
+    { label: 'Tue', value: 2 },
+    { label: 'Wed', value: 3 },
+    { label: 'Thu', value: 4 },
+    { label: 'Fri', value: 5 },
+    { label: 'Sat', value: 6 },
+    { label: 'Sun', value: 0 },
 ];
 
 export function HomeSearchBar({
@@ -33,10 +46,13 @@ export function HomeSearchBar({
     onLocationChange,
     onRadiusChange,
     onModeChange,
+    availabilityDay,
+    onAvailabilityDayChange,
     onSubmit,
 }: HomeSearchBarProps) {
     const { isLg } = useBreakpoint();
     const [radiusOpen, setRadiusOpen] = useState(false);
+    const [dayOpen, setDayOpen] = useState(false);
 
     const stacked = !isLg;
 
@@ -97,6 +113,39 @@ export function HomeSearchBar({
                                 </View>
                             )}
                         </View>
+                    </View>
+                </View>
+
+                <View style={[styles.inputContainer, { flex: 0.6 }]}>
+                    <Text style={styles.innerLabel}>When?</Text>
+                    <View style={styles.radiusControlWrapper}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.radiusToggle}
+                            onPress={() => setDayOpen(!dayOpen)}
+                        >
+                            <Text style={styles.radiusText}>
+                                {dayOptions.find(d => d.value === availabilityDay)?.label || 'Any day'}
+                            </Text>
+                            <Ionicons name={dayOpen ? "caret-up" : "caret-down"} size={10} color={colors.neutrals.textMuted} />
+                        </TouchableOpacity>
+
+                        {dayOpen && (
+                            <View style={[styles.radiusMenu, { left: 0, right: 'auto' }]}>
+                                {dayOptions.map((opt) => (
+                                    <TouchableOpacity
+                                        key={String(opt.value)}
+                                        style={[styles.radiusOpt, opt.value === availabilityDay && styles.radiusOptActive]}
+                                        onPress={() => {
+                                            onAvailabilityDayChange?.(opt.value);
+                                            setDayOpen(false);
+                                        }}
+                                    >
+                                        <Text style={[styles.radiusOptText, opt.value === availabilityDay && styles.radiusOptTextActive]}>{opt.label}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                     </View>
                 </View>
 

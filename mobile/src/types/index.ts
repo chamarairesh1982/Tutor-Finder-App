@@ -108,6 +108,7 @@ export interface TutorSearchRequest {
     page: number;
     pageSize: number;
     sortBy: 'nearest' | 'best' | 'rating' | 'price';
+    availabilityDay?: number;
 }
 
 export interface PagedResult<T> {

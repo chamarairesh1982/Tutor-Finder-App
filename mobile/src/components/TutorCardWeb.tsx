@@ -12,6 +12,8 @@ interface TutorCardWebProps {
     onPress?: () => void;
     onRequestBooking?: () => void;
     onViewProfile?: () => void;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 const modeLabel: Record<TeachingMode, string> = {
@@ -20,7 +22,7 @@ const modeLabel: Record<TeachingMode, string> = {
     [TeachingMode.Both]: 'In-person & Online',
 };
 
-export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }: TutorCardWebProps) {
+export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile, onMouseEnter, onMouseLeave }: TutorCardWebProps) {
     const { isAuthenticated, user } = useAuthStore();
     const { addToast } = useNotificationStore();
     const { data: favoriteData } = useIsFavorite(tutor.id);
@@ -65,6 +67,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
             style={styles.card}
             activeOpacity={0.9}
             onPress={onPress}
+            {...(Platform.OS === 'web' ? { onMouseEnter, onMouseLeave } : {})}
         >
             <View style={styles.accentBar} />
             <View style={styles.cardMain}>

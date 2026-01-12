@@ -13,14 +13,16 @@ import { useAuthStore } from '../src/store/authStore';
 export default function SearchPage() {
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
-    const params = useLocalSearchParams<{ subject?: string; location?: string; radius?: string; mode?: string; rating45?: string; midPrice?: string; dbs?: string; weekends?: string }>();
+    const params = useLocalSearchParams<{ subject?: string; location?: string; radius?: string; mode?: string; rating45?: string; midPrice?: string; dbs?: string; weekends?: string; availabilityDay?: string }>();
     const { isLg, isMd, width } = useBreakpoint();
 
     const [subject, setSubject] = useState(params.subject ?? '');
     const [location, setLocation] = useState(params.location ?? '');
     const [sortBy, setSortBy] = useState<TutorSearchRequest['sortBy']>('best');
+    const [availabilityDay, setAvailabilityDay] = useState<number | undefined>(params.availabilityDay ? Number(params.availabilityDay) : undefined);
     const [sortOpen, setSortOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>(isLg ? 'split' : 'list');
+    const [hoveredTutorId, setHoveredTutorId] = useState<string | undefined>(undefined);
 
     const quickDefaults = {
         dbs: params.dbs === '1',
@@ -56,7 +58,8 @@ export default function SearchPage() {
         page,
         pageSize,
         sortBy,
-    }), [subject, location, filters, sortBy, page, pageSize]);
+        availabilityDay,
+    }), [subject, location, filters, sortBy, page, pageSize, availabilityDay]);
 
     const { data: tutorsPage, isLoading, isError, refetch, isFetching } = useSearchTutors(searchParams);
 
@@ -162,6 +165,8 @@ export default function SearchPage() {
                             onPress={() => handleCardPress(tutor)}
                             onViewProfile={() => handleCardPress(tutor)}
                             onRequestBooking={() => handleCardPress(tutor)}
+                            onMouseEnter={() => setHoveredTutorId(tutor.id)}
+                            onMouseLeave={() => setHoveredTutorId(undefined)}
                         />
                     ) : (
                         <TutorCard tutor={tutor} onPress={() => handleCardPress(tutor)} />
@@ -204,7 +209,7 @@ export default function SearchPage() {
         }
 
         if (viewMode === 'map' && !isLg) {
-            return <MapPanelPlaceholder tutors={results} />;
+            return <MapPanelPlaceholder tutors={results} activeTutorId={hoveredTutorId} />;
         }
 
         if (viewMode === 'split' && isLg) {
@@ -212,7 +217,7 @@ export default function SearchPage() {
                 <View style={styles.splitLayout}>
                     <View style={styles.splitList}>{renderList()}</View>
                     <View style={styles.splitMap}>
-                        <MapPanelPlaceholder tutors={results} />
+                        <MapPanelPlaceholder tutors={results} activeTutorId={hoveredTutorId} />
                     </View>
                 </View>
             );
@@ -256,10 +261,12 @@ export default function SearchPage() {
                         location={location}
                         radius={filters.radiusMiles}
                         mode={filters.mode ?? TeachingMode.Both}
+                        availabilityDay={availabilityDay}
                         onSubjectChange={setSubject}
                         onLocationChange={setLocation}
                         onRadiusChange={(val) => setFilters((prev) => ({ ...prev, radiusMiles: val }))}
                         onModeChange={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
+                        onAvailabilityDayChange={setAvailabilityDay}
                         onSubmit={handleSearch}
                     />
                 </View>

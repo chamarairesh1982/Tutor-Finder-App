@@ -28,6 +28,7 @@ export default function DiscoverScreen() {
     const [location, setLocation] = useState('');
     const [radius, setRadius] = useState(10);
     const [mode, setMode] = useState<TeachingMode>(TeachingMode.Both);
+    const [availabilityDay, setAvailabilityDay] = useState<number | undefined>(undefined);
 
     const { data: featuredData, isLoading: isLoadingFeatured } = useSearchTutors({
         lat: undefined, lng: undefined, postcode: undefined, radiusMiles: 50,
@@ -45,7 +46,8 @@ export default function DiscoverScreen() {
                 subject,
                 location,
                 radius: radius.toString(),
-                mode: mode.toString()
+                mode: mode.toString(),
+                availabilityDay: availabilityDay !== undefined ? availabilityDay.toString() : undefined
             }
         });
     };
@@ -103,10 +105,12 @@ export default function DiscoverScreen() {
                             location={location}
                             radius={radius}
                             mode={mode}
+                            availabilityDay={availabilityDay}
                             onSubjectChange={setSubject}
                             onLocationChange={setLocation}
                             onRadiusChange={setRadius}
                             onModeChange={setMode}
+                            onAvailabilityDayChange={setAvailabilityDay}
                             onSubmit={handleSearch}
                         />
                     </View>

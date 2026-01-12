@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ImageBackground } from 'react-native';
 import { colors, spacing, typography, borderRadius, shadows } from '../../lib/theme';
 import { TutorSearchResult } from '../../types';
 
@@ -11,14 +10,42 @@ interface MapPanelPlaceholderProps {
 export function MapPanelPlaceholder({ tutors, activeTutorId }: MapPanelPlaceholderProps) {
     return (
         <View style={styles.container}>
-            <View style={styles.headerRow}>
-                <Text style={styles.title}>Map preview</Text>
-                <Text style={styles.caption}>Web map coming soon</Text>
-            </View>
-            <View style={styles.grid}>
-                {Array.from({ length: 6 }).map((_, idx) => (
-                    <View key={idx} style={styles.mapCell} />
-                ))}
+            <View style={styles.mapVisualContainer}>
+                <ImageBackground
+                    source={require('../../../assets/map_placeholder.png')}
+                    style={styles.mapBackground}
+                    resizeMode="cover"
+                >
+                    {/* Simulated Pins - Aligned to map geography */}
+                    {tutors.slice(0, 4).map((tutor, idx) => {
+                        const positions: { top: any; left: any }[] = [
+                            { top: '35%', left: '48%' }, // Higher central
+                            { top: '55%', left: '42%' }, // Lower central
+                            { top: '48%', left: '62%' }, // Right
+                            { top: '22%', left: '25%' }, // Upper left
+                        ];
+                        const pos = positions[idx % positions.length];
+                        const isActive = tutor.id === activeTutorId;
+
+                        return (
+                            <View key={tutor.id} style={[styles.mapPin, pos, isActive && styles.mapPinActive]}>
+                                <View style={[styles.pinCore, isActive && styles.pinCoreActive]} />
+                                {isActive && <View style={styles.pinPulse} />}
+                                {isActive && (
+                                    <View style={styles.pinLabel}>
+                                        <Text style={styles.pinLabelText}>{tutor.fullName}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        );
+                    })}
+                </ImageBackground>
+
+                <View style={styles.mapOverlay}>
+                    <View style={styles.overlayBadge}>
+                        <Text style={styles.overlayText}>Interactive Map Feature Coming Soon</Text>
+                    </View>
+                </View>
             </View>
             <FlatList
                 data={tutors.slice(0, 6)}
@@ -32,7 +59,9 @@ export function MapPanelPlaceholder({ tutors, activeTutorId }: MapPanelPlacehold
                             <View style={styles.pinTextWrapper}>
                                 <Text style={styles.pinTitle} numberOfLines={1}>{item.fullName}</Text>
                                 <Text style={styles.pinMeta} numberOfLines={1}>
-                                    {item.distanceMiles ? `${item.distanceMiles.toFixed(1)} mi` : 'Distance coming soon'} · {item.nextAvailableText}
+                                    {item.distanceMiles > 0
+                                        ? `${item.distanceMiles.toFixed(1)} miles away`
+                                        : 'Distance unavailable'} · {item.nextAvailableText}
                                 </Text>
                             </View>
                         </View>
@@ -48,41 +77,98 @@ export function MapPanelPlaceholder({ tutors, activeTutorId }: MapPanelPlacehold
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        padding: spacing.lg,
+        borderRadius: borderRadius.xl,
+        padding: spacing.xl,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        minHeight: 360,
+        ...shadows.lg,
+        minHeight: 480,
     },
-    headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    mapVisualContainer: {
+        height: 200,
+        backgroundColor: '#f8fafc',
+        borderRadius: borderRadius.lg,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        marginBottom: spacing.xl,
+        position: 'relative',
+    },
+    mapBackground: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    mapPin: {
+        position: 'absolute',
+        width: 16,
+        height: 16,
         alignItems: 'center',
-        marginBottom: spacing.md,
+        justifyContent: 'center',
     },
-    title: {
-        fontSize: typography.fontSize.lg,
+    mapPinActive: {
+        zIndex: 50,
+    },
+    pinCore: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: colors.primary,
+        borderWidth: 2,
+        borderColor: '#fff',
+        ...shadows.sm,
+    },
+    pinCoreActive: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: colors.primary,
+        borderWidth: 3,
+    },
+    pinPulse: {
+        position: 'absolute',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.primary,
+        opacity: 0.2,
+    },
+    pinLabel: {
+        position: 'absolute',
+        bottom: '120%',
+        backgroundColor: colors.neutrals.surface,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: borderRadius.sm,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        ...shadows.md,
+    },
+    pinLabelText: {
+        fontSize: 10,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
     },
-    caption: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
+    mapOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        pointerEvents: 'none' as any,
     },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.xs,
-        marginBottom: spacing.md,
-    },
-    mapCell: {
-        width: '31%',
-        aspectRatio: 1,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.primarySoft,
+    overlayBadge: {
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.full,
+        ...shadows.sm,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
+    },
+    overlayText: {
+        fontSize: 11,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textSecondary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     listContent: {
         paddingBottom: spacing.sm,
@@ -90,19 +176,19 @@ const styles = StyleSheet.create({
     pinRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.xs,
-        borderRadius: borderRadius.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.lg,
     },
     pinRowActive: {
         backgroundColor: colors.primarySoft,
     },
     pinDot: {
-        width: 10,
-        height: 10,
-        borderRadius: borderRadius.full,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
         backgroundColor: colors.neutrals.textMuted,
-        marginRight: spacing.sm,
+        marginRight: spacing.lg,
     },
     pinDotActive: {
         backgroundColor: colors.primary,
@@ -111,17 +197,18 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     pinTitle: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
+        marginBottom: 2,
     },
     pinMeta: {
         fontSize: typography.fontSize.xs,
         color: colors.neutrals.textSecondary,
+        fontWeight: typography.fontWeight.medium,
     },
     separator: {
         height: 1,
-        backgroundColor: colors.neutrals.border,
-        opacity: 0.6,
+        backgroundColor: colors.neutrals.surfaceAlt,
     },
 });
