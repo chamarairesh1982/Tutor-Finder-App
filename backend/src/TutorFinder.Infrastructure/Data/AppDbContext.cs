@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<BookingMessage> BookingMessages => Set<BookingMessage>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<NotificationOutbox> NotificationOutbox => Set<NotificationOutbox>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

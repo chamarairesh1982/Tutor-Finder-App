@@ -70,3 +70,12 @@ public class CreateReviewRequestValidator : AbstractValidator<CreateReviewReques
     }
 }
 
+public class AddFavoriteRequestValidator : AbstractValidator<AddFavoriteRequest>
+{
+    public AddFavoriteRequestValidator()
+    {
+        RuleFor(x => x.TutorProfileId)
+            .NotEmpty()
+            .WithMessage("Tutor profile ID is required.");
+    }
+}

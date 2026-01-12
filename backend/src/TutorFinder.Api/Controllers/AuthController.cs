@@ -39,6 +39,28 @@ public class AuthController : ControllerBase
         );
     }
 
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken ct)
+    {
+        var result = await _authService.RefreshTokenAsync(request, ct);
+
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request, CancellationToken ct)
+    {
+        var result = await _authService.LogoutAsync(request.RefreshToken, ct);
+
+        return result.Match<IActionResult>(
+            success => Ok(),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> Me(CancellationToken ct)

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme';
 import { TutorSearchResult, Category } from '../types';
+import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
 
 interface TutorCardProps {
     tutor: TutorSearchResult;
@@ -10,15 +11,26 @@ interface TutorCardProps {
 
 const categoryLabels: Record<Category, string> = {
     [Category.Music]: 'Music',
-    [Category.Maths]: 'Maths',
-    [Category.English]: 'English',
-    [Category.Science]: 'Science',
-    [Category.Languages]: 'Languages',
-    [Category.Programming]: 'Programming',
-    [Category.Other]: 'Other',
+    [Category.Sports]: 'Sports',
+    [Category.Education]: 'Education',
 };
 
 export function TutorCard({ tutor, onPress }: TutorCardProps) {
+    const { data: favoriteData } = useIsFavorite(tutor.id);
+    const addFavorite = useAddFavorite();
+    const removeFavorite = useRemoveFavorite();
+
+    const isFavorite = favoriteData?.isFavorite ?? false;
+
+    const toggleFavorite = (e: any) => {
+        e.stopPropagation();
+        if (isFavorite) {
+            removeFavorite.mutate(tutor.id);
+        } else {
+            addFavorite.mutate(tutor.id);
+        }
+    };
+
     const renderStars = (rating: number) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
@@ -45,7 +57,14 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
                 </View>
 
                 <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
+                    <View style={styles.nameRow}>
+                        <Text style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
+                        <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
+                            <Text style={[styles.heart, isFavorite && styles.heartFilled]}>
+                                {isFavorite ? '♥' : '♡'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
 
                     <View style={styles.ratingRow}>
                         <View style={styles.stars}>{renderStars(tutor.averageRating)}</View>
@@ -54,7 +73,7 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
 
                     <View style={styles.chipRow}>
                         <View style={styles.chip}>
-                            <Text style={styles.chipText}>{categoryLabels[tutor.category]}</Text>
+                            <Text style={styles.chipText}>{categoryLabels[tutor.category] || 'General'}</Text>
                         </View>
                         {tutor.subjects.slice(0, 2).map((subject, idx) => (
                             <View key={idx} style={[styles.chip, styles.subjectChip]}>
@@ -74,7 +93,17 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.availability}>{tutor.nextAvailableText}</Text>
+                <View style={styles.footerTop}>
+                    <Text style={styles.availability}>{tutor.nextAvailableText}</Text>
+                    <View style={styles.verificationBadges}>
+                        {tutor.hasDbs && (
+                            <View style={styles.verifBadge}><Text style={styles.verifText}>🛡️ DBS</Text></View>
+                        )}
+                        {tutor.hasCertification && (
+                            <View style={styles.verifBadge}><Text style={styles.verifText}>📜 Cert</Text></View>
+                        )}
+                    </View>
+                </View>
                 <View style={styles.badgeRow}>
                     <View style={styles.badgePrimary}>
                         <Text style={styles.badgePrimaryText}>{tutor.teachingMode === undefined ? 'Flexible' : tutor.teachingMode === 0 ? 'In person' : tutor.teachingMode === 1 ? 'Online' : 'Hybrid'}</Text>
@@ -89,8 +118,6 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
         </TouchableOpacity>
     );
 }
-
-
 
 const styles = StyleSheet.create({
     card: {
@@ -131,11 +158,27 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
     },
+    nameRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 2,
+    },
     name: {
         fontSize: typography.fontSize.lg,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
-        marginBottom: 2,
+        flex: 1,
+    },
+    favoriteButton: {
+        padding: spacing.xs,
+    },
+    heart: {
+        fontSize: 22,
+        color: colors.neutrals.textMuted,
+    },
+    heartFilled: {
+        color: colors.primary,
     },
     ratingRow: {
         flexDirection: 'row',
@@ -207,45 +250,64 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.medium,
     },
     footer: {
-         borderTopWidth: 1,
-         borderTopColor: colors.neutrals.surfaceAlt,
-         paddingHorizontal: spacing.md,
-         paddingVertical: 10,
-         backgroundColor: colors.neutrals.surface,
-         borderBottomLeftRadius: borderRadius.lg,
-         borderBottomRightRadius: borderRadius.lg,
-     },
-     availability: {
-         fontSize: 12,
-         color: colors.secondaryDark,
-         fontWeight: typography.fontWeight.semibold,
-     },
-     badgeRow: {
-         flexDirection: 'row',
-         gap: spacing.xs,
-         marginTop: spacing.xs,
-     },
-     badgePrimary: {
-         paddingHorizontal: spacing.sm,
-         paddingVertical: 4,
-         backgroundColor: colors.primarySoft,
-         borderRadius: borderRadius.full,
-     },
-     badgePrimaryText: {
-         color: colors.primaryDark,
-         fontSize: typography.fontSize.xs,
-         fontWeight: typography.fontWeight.semibold,
-     },
-     badgeSecondary: {
-         paddingHorizontal: spacing.sm,
-         paddingVertical: 4,
-         backgroundColor: colors.neutrals.surfaceAlt,
-         borderRadius: borderRadius.full,
-     },
-     badgeSecondaryText: {
-         color: colors.neutrals.textSecondary,
-         fontSize: typography.fontSize.xs,
-         fontWeight: typography.fontWeight.medium,
-     },
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.surfaceAlt,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 10,
+        backgroundColor: colors.neutrals.surface,
+        borderBottomLeftRadius: borderRadius.lg,
+        borderBottomRightRadius: borderRadius.lg,
+    },
+    footerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    availability: {
+        fontSize: 12,
+        color: colors.secondaryDark,
+        fontWeight: typography.fontWeight.semibold,
+    },
+    verificationBadges: {
+        flexDirection: 'row',
+        gap: spacing.xs,
+    },
+    verifBadge: {
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    verifText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#15803d',
+    },
+    badgeRow: {
+        flexDirection: 'row',
+        gap: spacing.xs,
+        marginTop: spacing.xs,
+    },
+    badgePrimary: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        backgroundColor: colors.primarySoft,
+        borderRadius: borderRadius.full,
+    },
+    badgePrimaryText: {
+        color: colors.primaryDark,
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.semibold,
+    },
+    badgeSecondary: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: borderRadius.full,
+    },
+    badgeSecondaryText: {
+        color: colors.neutrals.textSecondary,
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+    },
 });
-

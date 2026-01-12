@@ -26,7 +26,8 @@ export function useLogin() {
         onSuccess: async (data) => {
             await setAuth(
                 { id: data.id, email: data.email, displayName: data.displayName, role: data.role },
-                data.token
+                data.token,
+                data.refreshToken
             );
         },
     });
@@ -43,18 +44,26 @@ export function useRegister() {
         onSuccess: async (data) => {
             await setAuth(
                 { id: data.id, email: data.email, displayName: data.displayName, role: data.role },
-                data.token
+                data.token,
+                data.refreshToken
             );
         },
     });
 }
 
 export function useLogout() {
-    const { clearAuth } = useAuthStore();
+    const { clearAuth, refreshToken } = useAuthStore();
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async () => {
+            if (refreshToken) {
+                try {
+                    await apiClient.post('/auth/logout', { refreshToken });
+                } catch (e) {
+                    console.warn('Logout on server failed', e);
+                }
+            }
             await clearAuth();
             queryClient.clear();
         },

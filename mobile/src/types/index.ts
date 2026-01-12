@@ -6,12 +6,8 @@ export enum UserRole {
 
 export enum Category {
     Music = 0,
-    Maths = 1,
-    English = 2,
-    Science = 3,
-    Languages = 4,
-    Programming = 5,
-    Other = 99,
+    Sports = 1,
+    Education = 2,
 }
 
 export enum TeachingMode {
@@ -41,6 +37,8 @@ export interface AuthResponse {
     displayName: string;
     role: UserRole;
     token: string;
+    refreshToken?: string;
+    refreshTokenExpiresAt?: string;
 }
 
 export interface TutorProfile {
@@ -71,7 +69,6 @@ export interface TutorProfile {
     nextAvailableText?: string;
 }
 
-
 export interface TutorSearchResult {
     id: string;
     fullName: string;
@@ -85,10 +82,10 @@ export interface TutorSearchResult {
     nextAvailableText: string;
     teachingMode?: TeachingMode;
     responseTimeText?: string;
-    hasDbsCheck?: boolean;
+    hasDbs: boolean;
+    hasCertification: boolean;
     badges?: string[];
 }
-
 
 export interface TutorSearchRequest {
     lat?: number;
@@ -134,7 +131,6 @@ export interface Booking {
     messages: BookingMessage[];
 }
 
-
 export interface BookingMessage {
     id: string;
     senderId: string;
@@ -157,4 +153,20 @@ export interface AvailabilitySlot {
     dayOfWeek: number;
     startTime: string;
     endTime: string;
+}
+
+// Favorites feature types
+export interface Favorite {
+    id: string;
+    userId: string;
+    tutorProfileId: string;
+    tutorName: string;
+    tutorPhotoUrl?: string;
+    tutorCategory: Category;
+    tutorPricePerHour: number;
+    tutorAverageRating: number;
+    tutorReviewCount: number;
+    hasDbs: boolean;
+    hasCertification: boolean;
+    createdAt: string;
 }

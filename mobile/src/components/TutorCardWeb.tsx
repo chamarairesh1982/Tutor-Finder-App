@@ -20,7 +20,8 @@ const modeLabel: Record<TeachingMode, string> = {
 export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }: TutorCardWebProps) {
     const [isSaved, setIsSaved] = useState(false);
     const badges: string[] = [];
-    if (tutor.hasDbsCheck) badges.push('DBS verified');
+    if (tutor.hasDbs) badges.push('DBS verified');
+    if (tutor.hasCertification) badges.push('Certified');
     if (tutor.badges?.length) badges.push(...tutor.badges);
     if (badges.length === 0) badges.push('Profile verified');
 

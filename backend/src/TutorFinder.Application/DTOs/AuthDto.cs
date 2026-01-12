@@ -19,7 +19,13 @@ public record AuthResponse(
     string Email,
     string DisplayName,
     UserRole Role,
-    string Token
+    string Token,
+    string? RefreshToken = null,
+    DateTime? RefreshTokenExpiresAt = null
+);
+
+public record RefreshTokenRequest(
+    string RefreshToken
 );
 
 public record MeResponse(

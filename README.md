@@ -62,7 +62,7 @@ Make finding and booking a trusted local tutor as easy as ordering a coffee. Bol
 
 | Layer | Technology |
 |-------|------------|
-| **Backend** | .NET 8 Web API, EF Core 9, SQL Server 2022 |
+| **Backend** | .NET 8 Web API, EF Core 8, SQL Server 2022 |
 
 | **Auth** | JWT Bearer tokens with custom middleware |
 | **Mobile** | React Native (Expo SDK 54), TypeScript 5.9 |

@@ -40,6 +40,8 @@ public record TutorSearchResultDto(
     int ReviewCount,
     double DistanceMiles,
     string NextAvailableText,
-    TeachingMode TeachingMode
+    TeachingMode TeachingMode,
+    bool HasDbs,
+    bool HasCertification
 );
 

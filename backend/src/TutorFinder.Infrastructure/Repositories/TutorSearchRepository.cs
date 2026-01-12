@@ -99,7 +99,9 @@ public class TutorSearchRepository : ITutorSearchRepository
                     ? (t.Location != null ? t.Location.Distance(searchPoint) / 1609.34 : 0)
                     : 0,
                 ComputeNextAvailableText(t.AvailabilitySlots),
-                t.TeachingMode
+                t.TeachingMode,
+                t.HasDbs,
+                t.HasCertification
             ))
             .ToListAsync(ct);
 
