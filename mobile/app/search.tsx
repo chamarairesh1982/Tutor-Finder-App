@@ -8,9 +8,11 @@ import { useBreakpoint } from '../src/lib/responsive';
 import { useSearchTutors } from '../src/hooks/useTutors';
 import { SearchFiltersState } from '../src/components/FilterSidebar';
 import { TeachingMode, TutorSearchRequest, TutorSearchResult } from '../src/types';
+import { useAuthStore } from '../src/store/authStore';
 
 export default function SearchPage() {
     const router = useRouter();
+    const { isAuthenticated } = useAuthStore();
     const params = useLocalSearchParams<{ subject?: string; location?: string; radius?: string; mode?: string; rating45?: string; midPrice?: string; dbs?: string; weekends?: string }>();
     const { isLg, isMd, width } = useBreakpoint();
 
@@ -228,10 +230,16 @@ export default function SearchPage() {
                         <Text style={styles.brand}>TutorMatch UK</Text>
                     </TouchableOpacity>
                     <View style={styles.navActions}>
-                        <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                            <Text style={styles.navCtaText}>Sign up</Text>
-                        </TouchableOpacity>
+                        {isAuthenticated ? (
+                            <TouchableOpacity onPress={() => router.push('/profile')}><Text style={styles.navLink}>My Profile</Text></TouchableOpacity>
+                        ) : (
+                            <>
+                                <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
+                                <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
+                                    <Text style={styles.navCtaText}>Sign up</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 </View>
             </View>

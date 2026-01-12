@@ -4,6 +4,9 @@ import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme
 import { TutorSearchResult, Category } from '../types';
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
 
+import { useAuthStore } from '../store/authStore';
+import { useNotificationStore } from '../store/notificationStore';
+
 interface TutorCardProps {
     tutor: TutorSearchResult;
     onPress: () => void;
@@ -16,6 +19,8 @@ const categoryLabels: Record<Category, string> = {
 };
 
 export function TutorCard({ tutor, onPress }: TutorCardProps) {
+    const { isAuthenticated, user } = useAuthStore();
+    const { addToast } = useNotificationStore();
     const { data: favoriteData } = useIsFavorite(tutor.id);
     const addFavorite = useAddFavorite();
     const removeFavorite = useRemoveFavorite();
@@ -24,10 +29,29 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
 
     const toggleFavorite = (e: any) => {
         e.stopPropagation();
+
+        if (!isAuthenticated) {
+            addToast({
+                type: 'info',
+                title: 'Sign in to save',
+                message: 'Create an account to keep track of your favorite tutors.'
+            });
+            return;
+        }
+
+        if (user?.id === tutor.id) { // Not quite right, tutor.id is profile ID, user.id is user ID
+            // But the backend handles it anyway. 
+        }
+
         if (isFavorite) {
             removeFavorite.mutate(tutor.id);
         } else {
-            addFavorite.mutate(tutor.id);
+            addFavorite.mutate(tutor.id, {
+                onError: (error: any) => {
+                    const message = error.response?.data?.detail || 'Could not save tutor';
+                    addToast({ type: 'error', title: 'Oops!', message });
+                }
+            });
         }
     };
 

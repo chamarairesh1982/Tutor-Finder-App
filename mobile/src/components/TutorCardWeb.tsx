@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme';
 import { TutorSearchResult, TeachingMode } from '../types';
 import { Button } from './Button';
+import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
+import { useAuthStore } from '../store/authStore';
+import { useNotificationStore } from '../store/notificationStore';
 
 interface TutorCardWebProps {
     tutor: TutorSearchResult;
@@ -18,7 +21,37 @@ const modeLabel: Record<TeachingMode, string> = {
 };
 
 export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }: TutorCardWebProps) {
-    const [isSaved, setIsSaved] = useState(false);
+    const { isAuthenticated, user } = useAuthStore();
+    const { addToast } = useNotificationStore();
+    const { data: favoriteData } = useIsFavorite(tutor.id);
+    const addFavorite = useAddFavorite();
+    const removeFavorite = useRemoveFavorite();
+
+    const isFavorite = favoriteData?.isFavorite ?? false;
+
+    const toggleFavorite = (e: any) => {
+        e.stopPropagation();
+
+        if (!isAuthenticated) {
+            addToast({
+                type: 'info',
+                title: 'Sign in to save',
+                message: 'Create an account to keep track of your favorite tutors.'
+            });
+            return;
+        }
+
+        if (isFavorite) {
+            removeFavorite.mutate(tutor.id);
+        } else {
+            addFavorite.mutate(tutor.id, {
+                onError: (error: any) => {
+                    const message = error.response?.data?.detail || 'Could not save tutor';
+                    addToast({ type: 'error', title: 'Oops!', message });
+                }
+            });
+        }
+    };
     const badges: string[] = [];
     if (tutor.hasDbs) badges.push('DBS verified');
     if (tutor.hasCertification) badges.push('Certified');
@@ -107,12 +140,9 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
 
             <TouchableOpacity
                 style={styles.saveButton}
-                onPress={(e) => {
-                    e.stopPropagation();
-                    setIsSaved(!isSaved);
-                }}
+                onPress={toggleFavorite}
             >
-                <Text style={[styles.saveIcon, isSaved && styles.saveIconActive]}>{isSaved ? '♥' : '♡'}</Text>
+                <Text style={[styles.saveIcon, isFavorite && styles.saveIconActive]}>{isFavorite ? '♥' : '♡'}</Text>
             </TouchableOpacity>
         </TouchableOpacity>
     );

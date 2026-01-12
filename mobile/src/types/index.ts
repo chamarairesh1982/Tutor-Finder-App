@@ -166,6 +166,7 @@ export interface Favorite {
     tutorPricePerHour: number;
     tutorAverageRating: number;
     tutorReviewCount: number;
+    subjects: string[];
     hasDbs: boolean;
     hasCertification: boolean;
     createdAt: string;

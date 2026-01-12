@@ -98,6 +98,7 @@ public class FavoriteService : IFavoriteService
             tutor.PricePerHour,
             tutor.AverageRating,
             tutor.ReviewCount,
+            tutor.Subjects.Select(s => s.SubjectName).ToList(),
             tutor.HasDbs,
             tutor.HasCertification,
             favorite.CreatedAt

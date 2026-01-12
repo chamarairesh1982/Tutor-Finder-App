@@ -11,6 +11,7 @@ public record FavoriteResponse(
     decimal TutorPricePerHour,
     decimal TutorAverageRating,
     int TutorReviewCount,
+    List<string> Subjects,
     bool HasDbs,
     bool HasCertification,
     DateTime CreatedAt

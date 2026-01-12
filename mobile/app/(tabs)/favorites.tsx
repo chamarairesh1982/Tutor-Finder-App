@@ -9,7 +9,14 @@ import { TutorSearchResult, TeachingMode } from '../../src/types';
 
 export default function FavoritesScreen() {
     const { data: favorites, isLoading, isError, refetch } = useFavorites();
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
     const router = useRouter();
+
+    const onRefresh = async () => {
+        setIsRefreshing(true);
+        await refetch();
+        setIsRefreshing(false);
+    };
 
     const renderEmpty = () => (
         <View style={styles.centered}>
@@ -31,7 +38,7 @@ export default function FavoritesScreen() {
             fullName: item.tutorName,
             photoUrl: item.tutorPhotoUrl,
             category: item.tutorCategory,
-            subjects: [], // DTO doesn't have subjects but card handles empty array
+            subjects: item.subjects,
             pricePerHour: item.tutorPricePerHour,
             averageRating: item.tutorAverageRating,
             reviewCount: item.tutorReviewCount,
@@ -76,6 +83,8 @@ export default function FavoritesScreen() {
                         contentContainerStyle={styles.listContent}
                         ListEmptyComponent={renderEmpty}
                         showsVerticalScrollIndicator={false}
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
                     />
                 )}
             </View>
