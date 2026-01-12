@@ -19,6 +19,8 @@ interface BookingPanelProps {
     ctaTitle?: string;
     ctaDisabled?: boolean;
     onCtaPress?: () => void;
+    availabilitySlots?: any[];
+    onSelectFromSchedule?: () => void;
 }
 
 const modeLabels = [
@@ -41,6 +43,8 @@ export function BookingPanel({
     ctaTitle,
     ctaDisabled,
     onCtaPress,
+    availabilitySlots,
+    onSelectFromSchedule,
 }: BookingPanelProps) {
     const handleLinkPress = (url: string) => {
         Linking.openURL(url).catch(() => { });
@@ -84,12 +88,22 @@ export function BookingPanel({
                 </View>
             </View>
 
-            <Input
-                label="When would you like to meet?"
-                placeholder="e.g. Weekdays after 5pm"
-                value={preferredDate ?? ''}
-                onChangeText={onPreferredDateChange}
-            />
+            <View style={styles.formGroup}>
+                <View style={styles.labelRow}>
+                    <Text style={styles.label}>When would you like to meet?</Text>
+                    {availabilitySlots && availabilitySlots.length > 0 && (
+                        <TouchableOpacity onPress={onSelectFromSchedule}>
+                            <Text style={styles.scheduleLink}>Pick from schedule</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+                <Input
+                    placeholder="e.g. Tuesday at 18:00"
+                    value={preferredDate ?? ''}
+                    onChangeText={onPreferredDateChange}
+                    style={styles.dateInput}
+                />
+            </View>
 
             <Input
                 label="Message to tutor"
@@ -192,13 +206,26 @@ const styles = StyleSheet.create({
     formGroup: {
         marginBottom: spacing.md,
     },
+    labelRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.xs,
+    },
     label: {
         fontSize: typography.fontSize.xs,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
-        marginBottom: spacing.xs,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
+    },
+    scheduleLink: {
+        fontSize: typography.fontSize.xs,
+        color: colors.primary,
+        fontWeight: typography.fontWeight.bold,
+    },
+    dateInput: {
+        marginTop: 0,
     },
     modeRow: {
         flexDirection: 'row',

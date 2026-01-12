@@ -12,4 +12,5 @@ export { ToastHost } from './ToastHost';
 export { MapPanelPlaceholder } from './web/MapPanelPlaceholder';
 export { SkeletonList } from './SkeletonList';
 export { AvailabilitySchedule } from './AvailabilitySchedule';
+export { SchedulePickerModal } from './SchedulePickerModal';
 

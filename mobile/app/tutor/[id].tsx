@@ -6,7 +6,7 @@ import { useTutorProfile } from '../../src/hooks/useTutors';
 import { useCreateBooking, useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { BookingPanel, ReviewList, AvailabilitySchedule } from '../../src/components';
+import { BookingPanel, ReviewList, AvailabilitySchedule, SchedulePickerModal } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { BookingStatus, Category, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
@@ -28,6 +28,7 @@ export default function TutorDetailScreen() {
     const [preferredDate, setPreferredDate] = useState('');
     const [reviewSort, setReviewSort] = useState<'recent' | 'highest'>('recent');
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
+    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
     const activeBooking = useMemo(() => {
         const list = Array.isArray(myBookings) ? myBookings : [];
@@ -73,6 +74,7 @@ export default function TutorDetailScreen() {
             {
                 onSuccess: (booking) => {
                     setBookingModalOpen(false);
+                    setScheduleModalOpen(false);
                     notify({ type: 'success', title: 'Request sent', message: 'The tutor will reply soon.' });
                     setInitialMessage('');
                     setPreferredDate('');
@@ -104,6 +106,16 @@ export default function TutorDetailScreen() {
 
         setBookingModalOpen(true);
     }
+
+    const handleSlotSelect = (day: string, time: string) => {
+        const formatted = `${day} at ${time.substring(0, 5)}`;
+        setPreferredDate(formatted);
+        setScheduleModalOpen(false);
+        // If we picked a slot, we probably want to make sure the user sees the booking panel
+        if (!isLg && !bookingModalOpen) {
+            setBookingModalOpen(true);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -295,6 +307,8 @@ export default function TutorDetailScreen() {
                                     onSubmit={handleBooking}
                                     isSubmitting={isBookingPending}
                                     responseTimeText={tutor.responseTimeText}
+                                    availabilitySlots={tutor.availabilitySlots}
+                                    onSelectFromSchedule={() => setScheduleModalOpen(true)}
                                 />
                             )}
                         </View>
@@ -332,11 +346,29 @@ export default function TutorDetailScreen() {
                                     onSubmit={handleBooking}
                                     isSubmitting={isBookingPending}
                                     responseTimeText={tutor.responseTimeText}
+                                    availabilitySlots={tutor.availabilitySlots}
+                                    onSelectFromSchedule={() => setScheduleModalOpen(true)}
                                 />
                             </ScrollView>
                         </SafeAreaView>
                     </Modal>
+
+                    <SchedulePickerModal
+                        visible={scheduleModalOpen}
+                        onClose={() => setScheduleModalOpen(false)}
+                        slots={tutor.availabilitySlots || []}
+                        onSelect={handleSlotSelect}
+                    />
                 </>
+            )}
+
+            {isLg && (
+                <SchedulePickerModal
+                    visible={scheduleModalOpen}
+                    onClose={() => setScheduleModalOpen(false)}
+                    slots={tutor.availabilitySlots || []}
+                    onSelect={handleSlotSelect}
+                />
             )}
         </SafeAreaView>
     );
