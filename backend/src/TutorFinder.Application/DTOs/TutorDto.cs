@@ -4,6 +4,7 @@ namespace TutorFinder.Application.DTOs;
 
 public record TutorProfileRequest(
     string FullName,
+    string? PhotoUrl,
     string Bio,
     Category Category,
     decimal BaseLatitude,
@@ -12,14 +13,16 @@ public record TutorProfileRequest(
     int TravelRadiusMiles,
     decimal PricePerHour,
     TeachingMode TeachingMode,
+    bool HasDbs,
+    bool HasCertification,
     List<string> Subjects,
     List<AvailabilitySlotRequest> Availability
 );
 
 public record AvailabilitySlotRequest(
     DayOfWeek DayOfWeek,
-    TimeOnly StartTime,
-    TimeOnly EndTime
+    string StartTime,
+    string EndTime
 );
 
 public record TutorProfileResponse(
@@ -42,6 +45,13 @@ public record TutorProfileResponse(
     bool HasDbs,
     bool HasCertification,
     string? NextAvailableText,
-    string? ResponseTimeText
+    string? ResponseTimeText,
+    List<AvailabilitySlotResponse> AvailabilitySlots
+);
+
+public record AvailabilitySlotResponse(
+    DayOfWeek DayOfWeek,
+    string StartTime,
+    string EndTime
 );
 

@@ -31,8 +31,6 @@ public class TutorsController : ControllerBase
         );
     }
 
-    // New, spec-aligned endpoints (keep /profile for backward compatibility)
-
     [HttpPost]
     [Authorize(Policy = "TutorOnly")]
     public async Task<IActionResult> CreateProfile([FromBody] TutorProfileRequest request, CancellationToken ct)
@@ -97,4 +95,3 @@ public class TutorsController : ControllerBase
         );
     }
 }
-

@@ -41,6 +41,7 @@ public class TutorProfileCrudTests : IClassFixture<SqlServerWebFactory>
 
         var createRequest = new TutorProfileRequest(
             "Tutor User",
+            null,
             "Bio",
             Category.Maths,
             51.5014m,
@@ -49,6 +50,8 @@ public class TutorProfileCrudTests : IClassFixture<SqlServerWebFactory>
             10,
             40m,
             TeachingMode.Both,
+            true,
+            false,
             new List<string> { "GCSE Maths" },
             new List<AvailabilitySlotRequest>
             {

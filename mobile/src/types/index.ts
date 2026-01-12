@@ -6,8 +6,12 @@ export enum UserRole {
 
 export enum Category {
     Music = 0,
-    Sports = 1,
-    Education = 2,
+    Maths = 1,
+    English = 2,
+    Science = 3,
+    Languages = 4,
+    Programming = 5,
+    Other = 99
 }
 
 export enum TeachingMode {
@@ -69,6 +73,7 @@ export interface TutorProfile {
     reviews?: Review[];
     ratingBreakdown?: Record<number, number>;
     nextAvailableText?: string;
+    availabilitySlots?: AvailabilitySlot[];
 }
 
 export interface TutorSearchResult {

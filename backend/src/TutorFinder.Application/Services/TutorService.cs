@@ -42,6 +42,7 @@ public class TutorService : ITutorService
 
         // Re-use upsert mapping logic by operating on the tracked entity
         profile.FullName = request.FullName;
+        profile.PhotoUrl = request.PhotoUrl;
         profile.Bio = request.Bio;
         profile.Category = request.Category;
         profile.BaseLatitude = request.BaseLatitude;
@@ -50,6 +51,8 @@ public class TutorService : ITutorService
         profile.TravelRadiusMiles = request.TravelRadiusMiles;
         profile.PricePerHour = request.PricePerHour;
         profile.TeachingMode = request.TeachingMode;
+        profile.HasDbs = request.HasDbs;
+        profile.HasCertification = request.HasCertification;
         profile.UpdatedAt = DateTime.UtcNow;
 
         profile.Location = _geometryFactory.CreatePoint(new Coordinate((double)request.BaseLongitude, (double)request.BaseLatitude));
@@ -62,8 +65,8 @@ public class TutorService : ITutorService
         var slots = request.Availability.Select(a => new AvailabilitySlot
         {
             DayOfWeek = a.DayOfWeek,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime
+            StartTime = TimeOnly.Parse(a.StartTime),
+            EndTime = TimeOnly.Parse(a.EndTime)
         }).ToList();
         await _tutorRepository.ReplaceAvailabilityAsync(profile.Id, slots, ct);
 
@@ -84,6 +87,7 @@ public class TutorService : ITutorService
         }
 
         profile!.FullName = request.FullName;
+        profile.PhotoUrl = request.PhotoUrl;
         profile.Bio = request.Bio;
         profile.Category = request.Category;
         profile.BaseLatitude = request.BaseLatitude;
@@ -92,6 +96,8 @@ public class TutorService : ITutorService
         profile.TravelRadiusMiles = request.TravelRadiusMiles;
         profile.PricePerHour = request.PricePerHour;
         profile.TeachingMode = request.TeachingMode;
+        profile.HasDbs = request.HasDbs;
+        profile.HasCertification = request.HasCertification;
         profile.UpdatedAt = DateTime.UtcNow;
 
         // Update Location Point
@@ -113,8 +119,8 @@ public class TutorService : ITutorService
         var slots = request.Availability.Select(a => new AvailabilitySlot
         {
             DayOfWeek = a.DayOfWeek,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime
+            StartTime = TimeOnly.Parse(a.StartTime),
+            EndTime = TimeOnly.Parse(a.EndTime)
         }).ToList();
         await _tutorRepository.ReplaceAvailabilityAsync(profile.Id, slots, ct);
 
@@ -199,7 +205,12 @@ public class TutorService : ITutorService
             profile.HasDbs,
             profile.HasCertification,
             ComputeNextAvailableText(profile.AvailabilitySlots),
-            "Typically responds within a few hours"
+            "Typically responds within a few hours",
+            profile.AvailabilitySlots.Select(s => new AvailabilitySlotResponse(
+                s.DayOfWeek,
+                s.StartTime.ToString("HH:mm"),
+                s.EndTime.ToString("HH:mm")
+            )).ToList()
         );
     }
 

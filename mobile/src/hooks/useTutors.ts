@@ -38,6 +38,7 @@ export function useMyTutorProfile() {
 
 interface TutorProfileUpdate {
     fullName: string;
+    photoUrl?: string;
     bio: string;
     category: number;
     baseLatitude: number;
@@ -46,6 +47,8 @@ interface TutorProfileUpdate {
     travelRadiusMiles: number;
     pricePerHour: number;
     teachingMode: number;
+    hasDbs: boolean;
+    hasCertification: boolean;
     subjects: string[];
     availability: { dayOfWeek: number; startTime: string; endTime: string }[];
 }

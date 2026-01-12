@@ -108,7 +108,7 @@ export default function ProfileScreen() {
                             <MenuItem
                                 icon="school-outline"
                                 label="Tutor Profile Settings"
-                                onPress={() => router.push('/profile/edit-info')}
+                                onPress={() => router.push('/profile/tutor-settings')}
                                 isLast
                             />
                         )}
