@@ -15,7 +15,7 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
             .HasMaxLength(1000);
 
         builder.HasOne(r => r.BookingRequest)
-            .WithOne()
+            .WithOne(b => b.Review)
             .HasForeignKey<Review>(r => r.BookingRequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -35,4 +35,3 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.HasQueryFilter(r => !r.Student.IsDeleted && !r.Tutor.User.IsDeleted);
     }
 }
-

@@ -19,6 +19,7 @@ public class BookingRepository : IBookingRepository
         return await _context.BookingRequests
             .Include(b => b.Student)
             .Include(b => b.Tutor)
+            .Include(b => b.Review)
             .Include(b => b.Messages)
                 .ThenInclude(m => m.Sender)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
@@ -29,6 +30,7 @@ public class BookingRepository : IBookingRepository
         return await _context.BookingRequests
             .Include(b => b.Tutor)
             .Include(b => b.Student)
+            .Include(b => b.Review)
             .Include(b => b.Messages)!.ThenInclude(m => m.Sender)
             .Where(b => b.StudentId == studentId)
             .OrderByDescending(b => b.CreatedAt)
@@ -40,6 +42,7 @@ public class BookingRepository : IBookingRepository
         return await _context.BookingRequests
             .Include(b => b.Student)
             .Include(b => b.Tutor)
+            .Include(b => b.Review)
             .Include(b => b.Messages)!.ThenInclude(m => m.Sender)
             .Where(b => b.TutorId == tutorId)
             .OrderByDescending(b => b.CreatedAt)
@@ -76,4 +79,3 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync(ct);
     }
 }
-

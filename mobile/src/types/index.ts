@@ -63,6 +63,8 @@ export interface TutorProfile {
     averageRating: number;
     reviewCount: number;
     isActive: boolean;
+    hasDbs: boolean;
+    hasCertification: boolean;
     responseTimeText?: string;
     reviews?: Review[];
     ratingBreakdown?: Record<number, number>;
@@ -128,6 +130,7 @@ export interface Booking {
     pricePerHour: number;
     status: BookingStatus;
     createdAt: string;
+    hasReview: boolean;
     messages: BookingMessage[];
 }
 

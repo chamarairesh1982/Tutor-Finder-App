@@ -22,6 +22,7 @@ public class BookingRequest
     public DateTime? UpdatedAt { get; set; }
     
     public List<BookingMessage> Messages { get; set; } = new();
+    public Review? Review { get; set; }
 }
 
 public class BookingMessage

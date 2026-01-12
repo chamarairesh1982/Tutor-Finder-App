@@ -39,6 +39,8 @@ public record TutorProfileResponse(
     decimal AverageRating,
     int ReviewCount,
     bool IsActive,
+    bool HasDbs,
+    bool HasCertification,
     string? NextAvailableText,
     string? ResponseTimeText
 );

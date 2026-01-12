@@ -196,6 +196,8 @@ public class TutorService : ITutorService
             profile.AverageRating,
             profile.ReviewCount,
             profile.IsActive,
+            profile.HasDbs,
+            profile.HasCertification,
             ComputeNextAvailableText(profile.AvailabilitySlots),
             "Typically responds within a few hours"
         );

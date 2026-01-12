@@ -170,7 +170,12 @@ export default function TutorDetailScreen() {
         {
             title: 'Qualifications',
             icon: '🎓',
-            items: tutor.qualifications?.split('\n').filter(l => l.trim()) ?? ['DBS Checked', 'Verified Profile'],
+            items: [
+                ...(tutor.qualifications?.split('\n').filter(l => l.trim()) ?? []),
+                ...(tutor.hasDbs ? ['DBS Checked & Verified'] : []),
+                ...(tutor.hasCertification ? ['Certified Tutor'] : []),
+                'Verified Profile'
+            ],
             isChecklist: true
         },
         {
@@ -223,7 +228,9 @@ export default function TutorDetailScreen() {
                                 <View style={styles.nameSection}>
                                     <View style={styles.nameHeader}>
                                         <Text style={styles.fullName}>{tutor.fullName}</Text>
-                                        <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+                                        {(tutor.hasDbs || tutor.hasCertification) && (
+                                            <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+                                        )}
                                     </View>
                                     <Text style={styles.categoryText}>{Category[tutor.category]}</Text>
                                     <View style={styles.ratingRow}>

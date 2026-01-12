@@ -225,6 +225,7 @@ public class BookingService : IBookingService
             b.PricePerHourAtBooking,
             b.Status,
             b.CreatedAt,
+            b.Review != null,
             b.Messages.Select(m => new BookingMessageDto(
                 m.Id,
                 m.SenderId,

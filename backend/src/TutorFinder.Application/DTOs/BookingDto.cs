@@ -20,6 +20,7 @@ public record BookingResponse(
     decimal PricePerHour,
     BookingStatus Status,
     DateTime CreatedAt,
+    bool HasReview,
     List<BookingMessageDto> Messages
 );
 

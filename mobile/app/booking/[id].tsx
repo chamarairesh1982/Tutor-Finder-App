@@ -129,7 +129,8 @@ export default function BookingDetailScreen() {
     const dateLabel = booking.preferredDate || 'Flexible Date';
 
     const showReview = !isTutor && (booking.status === BookingStatus.Accepted || booking.status === BookingStatus.Completed);
-    const reviewEnabled = !isTutor && booking.status === BookingStatus.Completed && !reviewSubmitted;
+    const hasAlreadyReviewed = booking.hasReview || reviewSubmitted;
+    const reviewEnabled = !isTutor && booking.status === BookingStatus.Completed && !hasAlreadyReviewed;
 
     const handleSubmitReview = () => {
         if (!showReview) return;
@@ -264,7 +265,7 @@ export default function BookingDetailScreen() {
 
                     {showReview && (
                         <View style={{ marginTop: spacing.lg }}>
-                            {reviewSubmitted ? (
+                            {hasAlreadyReviewed ? (
                                 <View style={styles.reviewThanks}>
                                     <Text style={styles.reviewThanksTitle}>Review submitted</Text>
                                     <Text style={styles.reviewThanksBody}>Thanks — your feedback helps students choose confidently.</Text>

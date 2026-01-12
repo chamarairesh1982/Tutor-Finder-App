@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HomeSearchBar } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { TeachingMode } from '../../src/types';
+import { useAuthStore } from '../../src/store/authStore';
+import { useSearchTutors } from '../../src/hooks/useTutors';
+import { TutorCard } from '../../src/components/TutorCard';
 
 const categoryCards = [
     { key: 'all', label: 'All Subjects', color: colors.categories.purple, emoji: '🎯' },
@@ -19,11 +22,21 @@ const categoryCards = [
 export default function DiscoverScreen() {
     const router = useRouter();
     const { width } = useBreakpoint();
+    const { isAuthenticated } = useAuthStore();
 
     const [subject, setSubject] = useState('');
     const [location, setLocation] = useState('');
     const [radius, setRadius] = useState(10);
     const [mode, setMode] = useState<TeachingMode>(TeachingMode.Both);
+
+    const { data: featuredData, isLoading: isLoadingFeatured } = useSearchTutors({
+        lat: undefined, lng: undefined, postcode: undefined, radiusMiles: 50,
+        subject: undefined, category: undefined, minRating: 4,
+        priceMin: undefined, priceMax: undefined, mode: undefined,
+        page: 1, pageSize: 4, sortBy: 'rating'
+    });
+
+    const featuredTutors = featuredData?.items ?? [];
 
     const handleSearch = () => {
         router.push({
@@ -59,9 +72,20 @@ export default function DiscoverScreen() {
                         </View>
                     </View>
                     <View style={styles.navActions}>
-                        <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                            <Text style={styles.navCtaText}>Sign Up</Text>
-                        </TouchableOpacity>
+                        {isAuthenticated ? (
+                            <TouchableOpacity style={styles.navCta} onPress={() => router.push('/profile')}>
+                                <Text style={styles.navCtaText}>My Profile</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <>
+                                <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+                                    <Text style={styles.navLink}>Login</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
+                                    <Text style={styles.navCtaText}>Sign Up</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 </View>
 
@@ -110,6 +134,26 @@ export default function DiscoverScreen() {
                         </TouchableOpacity>
                     ))}
                 </View>
+
+                {featuredTutors.length > 0 && (
+                    <>
+                        <View style={styles.sectionHeader}>
+                            <View style={styles.sectionTitleRow}>
+                                <Text style={styles.sectionTitle}>Featured Tutors</Text>
+                                <TouchableOpacity onPress={() => router.push('/search')}>
+                                    <Text style={styles.viewAllText}>View all →</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View style={styles.featuredGrid}>
+                            {featuredTutors.map((tutor) => (
+                                <View key={tutor.id} style={styles.featuredCardWrapper}>
+                                    <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
+                                </View>
+                            ))}
+                        </View>
+                    </>
+                )}
 
                 <View style={styles.statsBar}>
                     <View style={styles.statsItem}>
@@ -181,6 +225,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.md,
     },
+    navLink: {
+        fontSize: typography.fontSize.base,
+        color: colors.neutrals.textSecondary,
+        fontWeight: typography.fontWeight.semibold,
+        marginRight: spacing.md,
+    },
     navCta: {
         backgroundColor: colors.primary,
         paddingVertical: spacing.sm,
@@ -243,6 +293,16 @@ const styles = StyleSheet.create({
     sectionHeader: {
         marginTop: spacing.xl,
     },
+    sectionTitleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+    },
+    viewAllText: {
+        color: colors.primary,
+        fontWeight: typography.fontWeight.bold,
+        fontSize: typography.fontSize.sm,
+    },
     sectionTitle: {
         fontSize: typography.fontSize['2xl'],
         fontWeight: typography.fontWeight.bold,
@@ -273,6 +333,15 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.surface,
         textAlign: 'center',
+    },
+    featuredGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginHorizontal: -spacing.md,
+    },
+    featuredCardWrapper: {
+        width: Platform.OS === 'web' ? '50%' : '100%',
+        paddingVertical: spacing.sm,
     },
     statsBar: {
         marginTop: spacing.xl,
