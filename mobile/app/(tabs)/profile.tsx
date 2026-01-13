@@ -105,12 +105,20 @@ export default function ProfileScreen() {
                             isLast={user.role !== UserRole.Tutor}
                         />
                         {user.role === UserRole.Tutor && (
-                            <MenuItem
-                                icon="school-outline"
-                                label="Tutor Profile Settings"
-                                onPress={() => router.push('/profile/tutor-settings')}
-                                isLast
-                            />
+                            <>
+                                <MenuItem
+                                    icon="analytics-outline"
+                                    label="Tutor Dashboard"
+                                    onPress={() => router.push('/profile/dashboard')}
+                                    color={colors.primary}
+                                />
+                                <MenuItem
+                                    icon="school-outline"
+                                    label="Tutor Profile Settings"
+                                    onPress={() => router.push('/profile/tutor-settings')}
+                                    isLast
+                                />
+                            </>
                         )}
                     </View>
                 </View>

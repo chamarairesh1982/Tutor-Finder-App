@@ -36,6 +36,16 @@ export function useMyTutorProfile() {
     });
 }
 
+export function useMyTutorStats() {
+    return useQuery({
+        queryKey: ['tutors', 'me', 'stats'],
+        queryFn: async () => {
+            const response = await apiClient.get<any>('/tutors/me/stats');
+            return response.data;
+        },
+    });
+}
+
 interface TutorProfileUpdate {
     fullName: string;
     photoUrl?: string;

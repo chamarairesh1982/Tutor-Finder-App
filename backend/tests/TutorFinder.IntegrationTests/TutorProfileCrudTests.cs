@@ -55,7 +55,7 @@ public class TutorProfileCrudTests : IClassFixture<SqlServerWebFactory>
             new List<string> { "GCSE Maths" },
             new List<AvailabilitySlotRequest>
             {
-                new AvailabilitySlotRequest(DayOfWeek.Monday, new TimeOnly(17,0), new TimeOnly(19,0))
+                new AvailabilitySlotRequest(DayOfWeek.Monday, "17:00", "19:00")
             }
         );
 

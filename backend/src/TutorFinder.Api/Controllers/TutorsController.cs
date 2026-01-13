@@ -31,6 +31,20 @@ public class TutorsController : ControllerBase
         );
     }
 
+    [HttpGet("me/stats")]
+    [Authorize(Policy = "TutorOnly")]
+    public async Task<IActionResult> GetMyStats(CancellationToken ct)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+
+        var result = await _tutorService.GetStatsAsync(userId, ct);
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
     [HttpPost]
     [Authorize(Policy = "TutorOnly")]
     public async Task<IActionResult> CreateProfile([FromBody] TutorProfileRequest request, CancellationToken ct)

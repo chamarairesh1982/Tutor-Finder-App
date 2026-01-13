@@ -46,6 +46,7 @@ public record TutorProfileResponse(
     bool HasCertification,
     string? NextAvailableText,
     string? ResponseTimeText,
+    int ViewCount,
     List<AvailabilitySlotResponse> AvailabilitySlots
 );
 
@@ -53,5 +54,14 @@ public record AvailabilitySlotResponse(
     DayOfWeek DayOfWeek,
     string StartTime,
     string EndTime
+);
+
+public record TutorStatsResponse(
+    int TotalViews,
+    int PendingBookings,
+    int ActiveBookings,
+    int CompletedBookings,
+    decimal TotalEarnings,
+    double ResponseRate
 );
 

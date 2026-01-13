@@ -14,5 +14,8 @@ public interface IBookingRepository
     Task SaveChangesAsync(CancellationToken ct);
     
     Task AddMessageAsync(BookingMessage message, CancellationToken ct);
+    Task<BookingStats> GetStatsByTutorIdAsync(Guid tutorId, CancellationToken ct);
 }
+
+public record BookingStats(int Pending, int Accepted, int Completed, decimal Earnings);
 

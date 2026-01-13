@@ -32,6 +32,7 @@ public class TutorProfile
     public decimal AverageRating { get; set; }
     public int ReviewCount { get; set; }
     public double ResponseRate { get; set; } = 100.0;
+    public int ViewCount { get; set; }
     
     public bool IsActive { get; set; } = true;
     

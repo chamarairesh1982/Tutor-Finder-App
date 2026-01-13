@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using TutorFinder.Api.Middleware;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using TutorFinder.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -158,6 +159,13 @@ app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
 
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+// Seed Data
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+    await seeder.SeedAsync();
+}
 
 try
 {

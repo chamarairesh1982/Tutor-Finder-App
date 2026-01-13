@@ -3,6 +3,7 @@ using TutorFinder.Application.Common;
 using TutorFinder.Application.DTOs;
 using TutorFinder.Application.Interfaces;
 using TutorFinder.Domain.Entities;
+using TutorFinder.Domain.Enums;
 
 namespace TutorFinder.Application.Services;
 
@@ -11,16 +12,19 @@ public class TutorService : ITutorService
     private readonly ITutorRepository _tutorRepository;
     private readonly ITutorSearchRepository _searchRepository;
     private readonly IGeocodingService _geocodingService;
+    private readonly IBookingRepository _bookingRepository;
     private readonly GeometryFactory _geometryFactory;
 
     public TutorService(
         ITutorRepository tutorRepository,
         ITutorSearchRepository searchRepository,
-        IGeocodingService geocodingService)
+        IGeocodingService geocodingService,
+        IBookingRepository bookingRepository)
     {
         _tutorRepository = tutorRepository;
         _searchRepository = searchRepository;
         _geocodingService = geocodingService;
+        _bookingRepository = bookingRepository;
         // WGS84
         _geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     }
@@ -143,7 +147,31 @@ public class TutorService : ITutorService
         var profile = await _tutorRepository.GetByIdAsync(tutorId, ct);
         if (profile == null) return new Result<TutorProfileResponse>.Failure("Profile not found", 404);
 
+        // Increment view count
+        profile.ViewCount++;
+        await _tutorRepository.UpdateAsync(profile, ct);
+        await _tutorRepository.SaveChangesAsync(ct);
+
         return new Result<TutorProfileResponse>.Success(MapToResponse(profile));
+    }
+
+    public async Task<Result<TutorStatsResponse>> GetStatsAsync(Guid userId, CancellationToken ct)
+    {
+        var profile = await _tutorRepository.GetByUserIdAsync(userId, ct);
+        if (profile == null) return new Result<TutorStatsResponse>.Failure("Profile not found", 404);
+
+        var bookingStats = await _bookingRepository.GetStatsByTutorIdAsync(profile.Id, ct);
+
+        var stats = new TutorStatsResponse(
+            TotalViews: profile.ViewCount,
+            PendingBookings: bookingStats.Pending,
+            ActiveBookings: bookingStats.Accepted,
+            CompletedBookings: bookingStats.Completed,
+            TotalEarnings: bookingStats.Earnings,
+            ResponseRate: profile.ResponseRate
+        );
+
+        return new Result<TutorStatsResponse>.Success(stats);
     }
 
     public async Task<Result<PagedResult<TutorSearchResultDto>>> SearchAsync(TutorSearchRequest request, CancellationToken ct)
@@ -206,6 +234,7 @@ public class TutorService : ITutorService
             profile.HasCertification,
             ComputeNextAvailableText(profile.AvailabilitySlots),
             "Typically responds within a few hours",
+            profile.ViewCount,
             profile.AvailabilitySlots.Select(s => new AvailabilitySlotResponse(
                 s.DayOfWeek,
                 s.StartTime.ToString("HH:mm"),

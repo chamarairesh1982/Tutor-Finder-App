@@ -66,6 +66,7 @@ export interface TutorProfile {
     availabilitySummary?: string;
     averageRating: number;
     reviewCount: number;
+    viewCount: number;
     isActive: boolean;
     hasDbs: boolean;
     hasCertification: boolean;
@@ -179,4 +180,13 @@ export interface Favorite {
     hasDbs: boolean;
     hasCertification: boolean;
     createdAt: string;
+}
+
+export interface TutorStats {
+    totalViews: number;
+    pendingBookings: number;
+    activeBookings: number;
+    completedBookings: number;
+    totalEarnings: number;
+    responseRate: number;
 }

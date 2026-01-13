@@ -78,4 +78,35 @@ public class BookingRepository : IBookingRepository
     {
         await _context.SaveChangesAsync(ct);
     }
+
+    public async Task<BookingStats> GetStatsByTutorIdAsync(Guid tutorId, CancellationToken ct)
+    {
+        // Safe implementation: Fetch minimal data and aggregate in memory
+        // This avoids complex EF Core GroupBy translation issues that were causing 500 errors
+        var bookings = await _context.BookingRequests
+            .IgnoreQueryFilters()
+            .Where(b => b.TutorId == tutorId)
+            .Select(b => new { b.Status, b.PricePerHourAtBooking })
+            .ToListAsync(ct);
+
+        if (bookings.Count == 0) return new BookingStats(0, 0, 0, 0m);
+
+        var pending = 0;
+        var accepted = 0; // Active
+        var completed = 0;
+        var earnings = 0m;
+
+        foreach (var b in bookings)
+        {
+            if (b.Status == Domain.Enums.BookingStatus.Pending) pending++;
+            else if (b.Status == Domain.Enums.BookingStatus.Accepted) accepted++;
+            else if (b.Status == Domain.Enums.BookingStatus.Completed)
+            {
+                completed++;
+                earnings += b.PricePerHourAtBooking;
+            }
+        }
+
+        return new BookingStats(pending, accepted, completed, earnings);
+    }
 }
