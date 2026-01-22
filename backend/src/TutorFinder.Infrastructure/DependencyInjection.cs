@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IPaymentService, StripePaymentService>();
         services.AddScoped<DbSeeder>();
         
         services.AddHttpClient<IGeocodingService, GeocodingService>();

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TutorFinder.Application.DTOs;
 using TutorFinder.Application.Interfaces;
 
@@ -22,6 +23,7 @@ public class PaymentsController : ControllerBase
     [HttpPost("create-intent")]
     public async Task<ActionResult<PaymentIntentResponse>> CreateIntent(CreatePaymentIntentRequest request)
     {
+        request.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await _paymentService.CreatePaymentIntentAsync(request);
         return Ok(result);
     }

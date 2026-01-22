@@ -402,6 +402,7 @@ export default function BookingDetailScreen() {
 
             <PaymentModal
                 visible={showPayment}
+                bookingId={id!}
                 amount={booking.pricePerHour} // Assuming 1 hour for now, logic can be more complex
                 onClose={() => setShowPayment(false)}
                 onSuccess={() => {

@@ -10,6 +10,8 @@ import { ToastHost } from '../src/components/ToastHost';
 import { colors, spacing, layout } from '../src/lib/theme';
 import { View, Platform, StyleSheet } from 'react-native';
 
+import { SafeStripeProvider } from '../src/components/SafeStripeProvider';
+
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -65,17 +67,19 @@ function RootLayoutNav() {
 export default function RootLayout() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-                <QueryClientProvider client={queryClient}>
-                    <StatusBar style="auto" />
-                    <View style={styles.webContainer}>
-                        <View style={styles.appWrapper}>
-                            <RootLayoutNav />
-                            <ToastHost />
+            <SafeStripeProvider publishableKey="pk_test_replace_this_with_your_real_publishable_key">
+                <SafeAreaProvider>
+                    <QueryClientProvider client={queryClient}>
+                        <StatusBar style="auto" />
+                        <View style={styles.webContainer}>
+                            <View style={styles.appWrapper}>
+                                <RootLayoutNav />
+                                <ToastHost />
+                            </View>
                         </View>
-                    </View>
-                </QueryClientProvider>
-            </SafeAreaProvider>
+                    </QueryClientProvider>
+                </SafeAreaProvider>
+            </SafeStripeProvider>
         </GestureHandlerRootView>
     );
 }

@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Modal, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { usePaymentSheet } from '@stripe/stripe-react-native';
+import React, { useState } from 'react';
+import { View, Modal, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text } from './Text';
 import { Button } from './Button';
-import { colors, spacing, borderRadius, shadows } from '../lib/theme';
+import { colors, spacing, shadows, borderRadius } from '../lib/theme';
 import { Ionicons } from '@expo/vector-icons';
-import apiClient from '../api/client';
-import { useAuthStore } from '../store/authStore';
 
 interface PaymentModalProps {
     visible: boolean;
@@ -16,93 +13,27 @@ interface PaymentModalProps {
     onSuccess: () => void;
 }
 
-export function PaymentModal({ visible, amount, bookingId, onClose, onSuccess }: PaymentModalProps) {
-    const { user } = useAuthStore();
+export function PaymentModal({ visible, amount, onClose, onSuccess }: PaymentModalProps) {
     const [loading, setLoading] = useState(false);
-    const [initializing, setInitializing] = useState(false);
     const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
 
-    const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
-
-    const fetchPaymentSheetParams = async () => {
-        try {
-            const response = await apiClient.post('/payments/create-intent', {
-                bookingId,
-                amount,
-                currency: 'gbp'
-            });
-
-            return {
-                paymentIntent: response.data.clientSecret,
-                publishableKey: response.data.publishableKey,
-            };
-        } catch (error) {
-            console.error('Error fetching payment intent:', error);
-            throw error;
-        }
-    };
-
-    const initializePaymentSheet = async () => {
-        setInitializing(true);
-        try {
-            const { paymentIntent } = await fetchPaymentSheetParams();
-
-            const { error } = await initPaymentSheet({
-                merchantDisplayName: 'TutorMatch UK',
-                paymentIntentClientSecret: paymentIntent,
-                allowsDelayedPaymentMethods: true,
-                defaultBillingDetails: {
-                    name: user?.displayName,
-                },
-                appearance: {
-                    colors: {
-                        primary: colors.primary,
-                    },
-                    shapes: {
-                        borderRadius: 12,
-                    }
-                }
-            });
-
-            if (error) {
-                Alert.alert(`Error: ${error.code}`, error.message);
-            }
-        } catch (error) {
-            Alert.alert('Initialization failed', 'Unable to connect to payment provider.');
-        } finally {
-            setInitializing(false);
-        }
-    };
-
-    useEffect(() => {
-        if (visible && bookingId) {
-            initializePaymentSheet();
-        }
-    }, [visible, bookingId]);
-
-    const handlePay = async () => {
+    const handlePay = () => {
         setLoading(true);
-        const { error } = await presentPaymentSheet();
-
-        if (error) {
-            if (error.code !== 'Canceled') {
-                Alert.alert(`Error: ${error.code}`, error.message);
-            }
-            setLoading(false);
-        } else {
+        // On web, we simulate the payment for now to avoid the native codegen error
+        setTimeout(() => {
             setStep('success');
+            setLoading(false);
             setTimeout(() => {
                 onSuccess();
                 setStep('details');
-                setLoading(false);
             }, 1500);
-        }
+        }, 2000);
     };
 
     return (
         <Modal
             visible={visible}
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             onRequestClose={onClose}
         >
@@ -111,7 +42,7 @@ export function PaymentModal({ visible, amount, bookingId, onClose, onSuccess }:
                     {step === 'details' && (
                         <>
                             <View style={styles.header}>
-                                <Text variant="h4">Checkout</Text>
+                                <Text variant="h4">Secure Web Payment</Text>
                                 <TouchableOpacity onPress={onClose}>
                                     <Ionicons name="close" size={24} color={colors.neutrals.textMuted} />
                                 </TouchableOpacity>
@@ -122,18 +53,24 @@ export function PaymentModal({ visible, amount, bookingId, onClose, onSuccess }:
                                 <Text variant="h2" color={colors.primary}>£{amount.toFixed(2)}</Text>
                             </View>
 
+                            <View style={styles.webAlert}>
+                                <Ionicons name="information-circle" size={20} color={colors.primary} />
+                                <Text style={styles.webAlertText}>
+                                    Native Stripe SDK is disabled on web. This is a simulated checkout.
+                                </Text>
+                            </View>
+
                             <Button
-                                title={initializing ? "Loading secure checkout..." : `Pay £${amount.toFixed(2)}`}
+                                title={`Complete Simulated Payment (£${amount.toFixed(2)})`}
                                 onPress={handlePay}
                                 size="lg"
-                                style={{ marginTop: spacing.lg }}
-                                disabled={initializing || loading}
+                                style={{ marginTop: spacing.md }}
                                 isLoading={loading}
                             />
 
                             <View style={styles.secureRow}>
                                 <Ionicons name="lock-closed" size={12} color={colors.neutrals.textMuted} />
-                                <Text variant="caption" style={{ marginLeft: 4 }}>Payments secured by Stripe</Text>
+                                <Text variant="caption" style={{ marginLeft: 4 }}>Payments simulation mode</Text>
                             </View>
                         </>
                     )}
@@ -142,6 +79,7 @@ export function PaymentModal({ visible, amount, bookingId, onClose, onSuccess }:
                         <View style={styles.centered}>
                             <Ionicons name="checkmark-circle" size={64} color={colors.statusAccepted} />
                             <Text variant="h4" style={{ marginTop: spacing.md }}>Payment Successful!</Text>
+                            <Text variant="body" color={colors.neutrals.textSecondary}>Simulation complete.</Text>
                         </View>
                     )}
                 </View>
@@ -154,13 +92,15 @@ const styles = StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     card: {
         backgroundColor: colors.neutrals.surface,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderRadius: 24,
         padding: spacing.xl,
+        width: 400,
+        maxWidth: '90%',
         minHeight: 350,
         ...shadows.lg,
     },
@@ -179,6 +119,21 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textSecondary,
         marginBottom: 8,
     },
+    webAlert: {
+        flexDirection: 'row',
+        backgroundColor: colors.primarySoft,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+        gap: spacing.sm,
+    },
+    webAlertText: {
+        fontSize: 13,
+        color: colors.primary,
+        flex: 1,
+        lineHeight: 18,
+    },
     secureRow: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -192,4 +147,3 @@ const styles = StyleSheet.create({
         minHeight: 200,
     }
 });
-
