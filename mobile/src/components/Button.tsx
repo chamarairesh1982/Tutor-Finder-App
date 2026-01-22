@@ -114,10 +114,10 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
     text_primary: {
-        color: colors.neutrals.background,
+        color: colors.neutrals.surface,
     },
     text_secondary: {
-        color: colors.neutrals.background,
+        color: colors.neutrals.surface,
     },
     text_outline: {
         color: colors.neutrals.textPrimary,

@@ -9,20 +9,20 @@ import { useSearchTutors } from '../src/hooks/useTutors';
 import { SearchFiltersState } from '../src/components/FilterSidebar';
 import { TeachingMode, TutorSearchRequest, TutorSearchResult } from '../src/types';
 import { useAuthStore } from '../src/store/authStore';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SearchPage() {
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
     const params = useLocalSearchParams<{ subject?: string; location?: string; radius?: string; mode?: string; rating45?: string; midPrice?: string; dbs?: string; weekends?: string; availabilityDay?: string }>();
-    const { isLg, isMd, width } = useBreakpoint();
+    const { isLg, width } = useBreakpoint();
 
     const [subject, setSubject] = useState(params.subject ?? '');
     const [location, setLocation] = useState(params.location ?? '');
     const [sortBy, setSortBy] = useState<TutorSearchRequest['sortBy']>('best');
     const [availabilityDay, setAvailabilityDay] = useState<number | undefined>(params.availabilityDay ? Number(params.availabilityDay) : undefined);
     const [sortOpen, setSortOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>(isLg ? 'split' : 'list');
-    const [hoveredTutorId, setHoveredTutorId] = useState<string | undefined>(undefined);
+    const [viewMode, setViewMode] = useState<'list' | 'map'>(isLg ? 'list' : 'list');
 
     const quickDefaults = {
         dbs: params.dbs === '1',
@@ -42,10 +42,6 @@ export default function SearchPage() {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [page, setPage] = useState(1);
     const [pageSize] = useState(20);
-
-    useEffect(() => {
-        setViewMode(isLg ? 'split' : 'list');
-    }, [isLg]);
 
     const searchParams = useMemo<TutorSearchRequest>(() => ({
         subject: subject || undefined,
@@ -108,80 +104,25 @@ export default function SearchPage() {
 
     const renderTopBar = () => (
         <View style={styles.topBar}>
-            <View style={styles.topBarLeft}>
-                <Text style={styles.resultCount}>{resultsCount} tutors found</Text>
-                <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>Showing {results.length}</Text>
-                </View>
-            </View>
+            <Text style={styles.resultCountText}>{resultsCount} experts found</Text>
             <View style={styles.topBarRight}>
-                <View style={[styles.sortMenu, { zIndex: 100 }]}>
-                    <TouchableOpacity style={styles.sortTrigger} onPress={() => setSortOpen((prev) => !prev)}>
-                        <Text style={styles.sortLabel}>Sort by:</Text>
-                        <Text style={styles.sortValue}>{sortLabel(sortBy)}</Text>
-                        <Text style={styles.sortChevron}>▼</Text>
-                    </TouchableOpacity>
-                    {sortOpen && (
-                        <View style={styles.sortOptions}>
-                            {(['best', 'nearest', 'rating', 'price'] as TutorSearchRequest['sortBy'][]).map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    onPress={() => {
-                                        setSortBy(option);
-                                        setSortOpen(false);
-                                    }}
-                                    style={[styles.sortOption, option === sortBy && styles.sortOptionActive]}
-                                >
-                                    <Text style={[styles.sortOptionText, option === sortBy && styles.sortOptionTextActive]}>{sortLabel(option)}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
-
-                {isLg && (
-                    <View style={styles.viewToggle}>
-                        <ToggleButton label="List View" active={viewMode === 'split'} onPress={() => setViewMode('split')} />
-                        <ToggleButton label="Full Map" active={viewMode === 'map'} onPress={() => setViewMode('map')} />
-                    </View>
-                )}
-
-                {!isLg && (
-                    <TouchableOpacity style={styles.filterTrigger} onPress={() => setFiltersOpen(true)}>
-                        <Text style={styles.filterTriggerText}>Filters</Text>
-                    </TouchableOpacity>
-                )}
+                <TouchableOpacity style={styles.filterBtn} onPress={() => setFiltersOpen(true)}>
+                    <Ionicons name="options-outline" size={18} color={colors.primaryDark} />
+                    <Text style={styles.filterBtnText}>Filters</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sortBtn} onPress={() => setSortOpen(true)}>
+                    <Ionicons name="swap-vertical" size={18} color={colors.primaryDark} />
+                    <Text style={styles.sortBtnText}>{sortLabel(sortBy)}</Text>
+                </TouchableOpacity>
             </View>
-        </View>
-    );
-
-    const renderList = () => (
-        <View style={styles.cardStack}>
-            {results.map((tutor) => (
-                <View key={tutor.id} style={styles.cardWrapper}>
-                    {isMd ? (
-                        <TutorCardWeb
-                            tutor={tutor}
-                            onPress={() => handleCardPress(tutor)}
-                            onViewProfile={() => handleCardPress(tutor)}
-                            onRequestBooking={() => handleCardPress(tutor)}
-                            onMouseEnter={() => setHoveredTutorId(tutor.id)}
-                            onMouseLeave={() => setHoveredTutorId(undefined)}
-                        />
-                    ) : (
-                        <TutorCard tutor={tutor} onPress={() => handleCardPress(tutor)} />
-                    )}
-                </View>
-            ))}
         </View>
     );
 
     const renderContent = () => {
         if (isLoading && results.length === 0) {
-            // Render specific skeletons based on view mode if needed, but generic list is fine
             return (
                 <View style={styles.cardStack}>
-                    <SkeletonList />
+                    <SkeletonList count={5} />
                 </View>
             );
         }
@@ -189,8 +130,11 @@ export default function SearchPage() {
         if (isError) {
             return (
                 <View style={styles.centered}>
-                    <Text style={styles.errorText}>Could not load tutors. Please adjust filters and try again.</Text>
-                    <TouchableOpacity style={styles.retry} onPress={() => refetch()}><Text style={styles.retryText}>Retry</Text></TouchableOpacity>
+                    <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+                    <Text style={styles.errorText}>We couldn't load the tutors.</Text>
+                    <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+                        <Text style={styles.retryBtnText}>Try Again</Text>
+                    </TouchableOpacity>
                 </View>
             );
         }
@@ -198,410 +142,341 @@ export default function SearchPage() {
         if (results.length === 0 && !isFetching) {
             return (
                 <View style={styles.centered}>
-                    <Text style={styles.emptyText}>No tutors found matching your search.</Text>
-                    <TouchableOpacity style={styles.retry} onPress={() => {
+                    <Ionicons name="search-outline" size={48} color={colors.neutrals.textMuted} />
+                    <Text style={styles.emptyText}>No results found.</Text>
+                    <TouchableOpacity style={styles.clearBtn} onPress={() => {
                         setSubject('');
                         setLocation('');
                         setFilters({ ...filters, radiusMiles: 10, mode: undefined });
-                    }}><Text style={styles.retryText}>Clear all filters</Text></TouchableOpacity>
+                    }}>
+                        <Text style={styles.clearBtnText}>Clear Filters</Text>
+                    </TouchableOpacity>
                 </View>
             );
         }
 
-        if (viewMode === 'map' && !isLg) {
-            return <MapPanelPlaceholder tutors={results} activeTutorId={hoveredTutorId} />;
-        }
-
-        if (viewMode === 'split' && isLg) {
-            return (
-                <View style={styles.splitLayout}>
-                    <View style={styles.splitList}>{renderList()}</View>
-                    <View style={styles.splitMap}>
-                        <MapPanelPlaceholder tutors={results} activeTutorId={hoveredTutorId} />
+        return (
+            <View style={[styles.cardStack, isLg && styles.cardStackDesktop]}>
+                {results.map((tutor) => (
+                    <View key={tutor.id} style={isLg && styles.cardWrapperDesktop}>
+                        {isLg ? (
+                            <TutorCardWeb
+                                tutor={tutor}
+                                onPress={() => handleCardPress(tutor)}
+                                onViewProfile={() => handleCardPress(tutor)}
+                                onRequestBooking={() => handleCardPress(tutor)}
+                            />
+                        ) : (
+                            <TutorCard tutor={tutor} onPress={() => handleCardPress(tutor)} />
+                        )}
                     </View>
-                </View>
-            );
-        }
-
-        return renderList();
+                ))}
+            </View>
+        );
     };
 
     return (
-        <View style={styles.safeArea}>
-            <View style={{ backgroundColor: colors.neutrals.background, zIndex: 2000 }}>
-                <SafeAreaView edges={['top']} />
-                <View style={styles.navbarOuter}>
-                    <View style={[styles.navbar, { maxWidth: layout.contentMaxWidth + 400, alignSelf: 'center', width: '100%', paddingHorizontal: spacing.xl }]}>
+        <View style={styles.container}>
+            {isLg ? (
+                <View style={styles.desktopNav}>
+                    <View style={styles.desktopNavInner}>
                         <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
-                            <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
-                            <Text style={styles.brand}>TutorMatch UK</Text>
+                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
+                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
                         </TouchableOpacity>
-                        <View style={styles.navActions}>
+                        <View style={styles.desktopActions}>
                             {isAuthenticated ? (
-                                <TouchableOpacity onPress={() => router.push('/profile')}><Text style={styles.navLink}>My Profile</Text></TouchableOpacity>
+                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
+                                    <Text style={styles.navLinkText}>My Dashboard</Text>
+                                </TouchableOpacity>
                             ) : (
-                                <>
-                                    <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
-                                    <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                                        <Text style={styles.navCtaText}>Sign up</Text>
-                                    </TouchableOpacity>
-                                </>
+                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
+                                    <Text style={styles.navLinkText}>Login</Text>
+                                </TouchableOpacity>
                             )}
                         </View>
                     </View>
                 </View>
+            ) : (
+                <View style={styles.mobileNav}>
+                    <SafeAreaView edges={['top']}>
+                        <View style={styles.navContent}>
+                            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                                <Ionicons name="arrow-back" size={24} color={colors.neutrals.textPrimary} />
+                            </TouchableOpacity>
+                            <Text style={styles.navTitle}>Search results</Text>
+                            <View style={{ width: 40 }} />
+                        </View>
+                    </SafeAreaView>
+                </View>
+            )}
+
+            <View style={[styles.mainLayout, isLg && styles.mainLayoutDesktop]}>
+                {isLg && (
+                    <View style={styles.sidebarSticky}>
+                        <FilterSidebar filters={filters} onChange={setFilters} />
+                    </View>
+                )}
+
+                <ScrollView
+                    contentContainerStyle={[styles.scrollContent, isLg && styles.scrollContentDesktop]}
+                    onScroll={onScroll}
+                    scrollEventThrottle={250}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={[styles.searchBlock, isLg && styles.searchBlockDesktop]}>
+                        <HomeSearchBar
+                            subject={subject}
+                            location={location}
+                            radius={filters.radiusMiles}
+                            mode={filters.mode ?? TeachingMode.Both}
+                            availabilityDay={availabilityDay}
+                            onSubjectChange={setSubject}
+                            onLocationChange={setLocation}
+                            onRadiusChange={(val) => setFilters((prev) => ({ ...prev, radiusMiles: val }))}
+                            onModeChange={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
+                            onAvailabilityDayChange={setAvailabilityDay}
+                            onSubmit={handleSearch}
+                        />
+                    </View>
+
+                    <View style={[styles.resultsContainer, isLg && styles.resultsContainerDesktop]}>
+                        {renderTopBar()}
+
+                        <View style={styles.resultsArea}>
+                            {renderContent()}
+
+                            {isFetching && hasMore && (
+                                <View style={styles.loadingMore}>
+                                    <ActivityIndicator size="small" color={colors.primary} />
+                                    <Text style={styles.loadingMoreText}>Fetching more experts...</Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                </ScrollView>
             </View>
 
-            <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth + 400 ? spacing.xl : spacing.lg }]}
-                showsVerticalScrollIndicator={false}
-                onScroll={onScroll}
-                scrollEventThrottle={250}
-                stickyHeaderIndices={[1]}
-            >
-                <View style={styles.searchShell}>
-                    <HomeSearchBar
-                        subject={subject}
-                        location={location}
-                        radius={filters.radiusMiles}
-                        mode={filters.mode ?? TeachingMode.Both}
-                        availabilityDay={availabilityDay}
-                        onSubjectChange={setSubject}
-                        onLocationChange={setLocation}
-                        onRadiusChange={(val) => setFilters((prev) => ({ ...prev, radiusMiles: val }))}
-                        onModeChange={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
-                        onAvailabilityDayChange={setAvailabilityDay}
-                        onSubmit={handleSearch}
-                    />
-                </View>
+            <Modal visible={filtersOpen} animationType="slide">
+                <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
+                    <FilterSidebar filters={filters} onChange={setFilters} onClose={() => setFiltersOpen(false)} compact />
+                </SafeAreaView>
+            </Modal>
 
-                {/* This empty view serves as a sticky header anchor if needed, or we just use resultsShell */}
-                <View style={{ height: 1, backgroundColor: 'transparent' }} />
-
-                <View style={styles.resultsShell}>
-                    {isLg && (
-                        <View style={styles.sidebarWrapper}>
-                            <FilterSidebar filters={filters} onChange={setFilters} />
-                        </View>
-                    )}
-
-                    <View style={styles.resultsColumn}>
-                        {renderTopBar()}
-                        <View style={styles.divider} />
-                        {isFetching && results.length > 0 && <Text style={styles.loadingHint}>Updating results…</Text>}
-                        {renderContent()}
-
-                        {isFetching && hasMore && (
-                            <View style={styles.loadingMoreRow}>
-                                <ActivityIndicator size="small" color={colors.primary} />
-                                <Text style={styles.loadingMoreText}>Loading more experts…</Text>
-                            </View>
-                        )}
-                        {!hasMore && results.length > 0 && (
-                            <View style={styles.footerNote}>
-                                <Text style={styles.footerNoteText}>You've seen all available tutors for this search.</Text>
-                            </View>
-                        )}
+            <Modal visible={sortOpen} transparent animationType="fade">
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSortOpen(false)}>
+                    <View style={styles.bottomSheet}>
+                        <Text style={styles.sheetTitle}>Sort tutors by</Text>
+                        {(['best', 'nearest', 'rating', 'price'] as TutorSearchRequest['sortBy'][]).map((option) => (
+                            <TouchableOpacity
+                                key={option}
+                                style={[styles.sheetOption, sortBy === option && styles.sheetOptionActive]}
+                                onPress={() => { setSortBy(option); setSortOpen(false); }}
+                            >
+                                <Text style={[styles.sheetOptionText, sortBy === option && styles.sheetOptionTextActive]}>
+                                    {sortLabel(option)}
+                                </Text>
+                                {sortBy === option && <Ionicons name="checkmark" size={20} color={colors.primaryDark} />}
+                            </TouchableOpacity>
+                        ))}
                     </View>
-                </View>
-            </ScrollView>
-
-            {!isLg && (
-                <Modal visible={filtersOpen} animationType="slide" onRequestClose={() => setFiltersOpen(false)}>
-                    <SafeAreaView style={styles.modalContainer}>
-                        <FilterSidebar filters={filters} onChange={setFilters} onClose={() => setFiltersOpen(false)} compact />
-                    </SafeAreaView>
-                </Modal>
-            )}
+                </TouchableOpacity>
+            </Modal>
         </View>
-    );
-}
-
-function ToggleButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-    return (
-        <TouchableOpacity style={[styles.toggle, active && styles.toggleActive]} onPress={onPress} activeOpacity={0.85}>
-            <Text style={[styles.toggleText, active && styles.toggleTextActive]}>{label}</Text>
-        </TouchableOpacity>
     );
 }
 
 function sortLabel(value: TutorSearchRequest['sortBy']) {
     switch (value) {
-        case 'nearest':
-            return 'Nearest First';
-        case 'rating':
-            return 'Top Rated';
-        case 'price':
-            return 'Price (Low to High)';
-        default:
-            return 'Best Match';
+        case 'nearest': return 'Nearest';
+        case 'rating': return 'Top Rated';
+        case 'price': return 'Price Low-High';
+        default: return 'Best Match';
     }
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
         backgroundColor: colors.neutrals.background,
     },
-    navbarOuter: {
+    desktopNav: {
         backgroundColor: colors.neutrals.surface,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutrals.cardBorder,
+        zIndex: 2000,
+        height: 80,
+        justifyContent: 'center',
     },
-    navbar: {
+    desktopNavInner: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        maxWidth: layout.wideContentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
     },
     brandRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
+        gap: spacing.sm,
     },
-    logo: {
+    logoMini: {
         width: 32,
         height: 32,
         backgroundColor: colors.primary,
-        borderRadius: borderRadius.sm,
+        borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    logoText: {
-        color: colors.neutrals.surface,
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.heavy,
+    logoMiniText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 18,
     },
-    brand: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primaryDark,
+    brandTitleDesktop: {
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
         letterSpacing: -0.5,
     },
-    navActions: {
+    desktopActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
+        gap: spacing.xl,
     },
     navLink: {
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.semibold,
-        fontSize: typography.fontSize.sm,
-    },
-    navCta: {
-        backgroundColor: colors.primary,
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.full,
     },
-    navCtaText: {
-        color: colors.neutrals.surface,
-        fontWeight: typography.fontWeight.bold,
-        fontSize: typography.fontSize.sm,
+    navLinkText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.neutrals.textSecondary,
     },
-    page: {
-        paddingVertical: spacing.xl,
-        gap: spacing.lg,
-        alignItems: 'center',
+    mobileNav: {
+        backgroundColor: colors.neutrals.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
+        zIndex: 1000,
     },
-    searchShell: {
-        width: '100%',
-        maxWidth: layout.contentMaxWidth + 200,
-        marginTop: spacing.sm,
-    },
-    resultsShell: {
+    navContent: {
         flexDirection: 'row',
-        gap: spacing.xl,
-        alignItems: 'flex-start',
-        width: '100%',
-        maxWidth: layout.contentMaxWidth + 400,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 60,
+        paddingHorizontal: spacing.md,
     },
-    sidebarWrapper: {
-        width: 300,
-        position: 'sticky' as any,
-        top: spacing.lg,
+    backBtn: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    resultsColumn: {
+    navTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: colors.neutrals.textPrimary,
+    },
+    mainLayout: {
         flex: 1,
-        gap: spacing.lg,
+    },
+    mainLayoutDesktop: {
+        flexDirection: 'row',
+        maxWidth: layout.wideContentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+        paddingHorizontal: spacing.xl,
+        gap: spacing.xl,
+    },
+    sidebarSticky: {
+        width: 300,
+        paddingTop: spacing.xl,
+    },
+    scrollContent: {
+        paddingBottom: spacing['4xl'],
+    },
+    scrollContentDesktop: {
+        flex: 1,
+    },
+    searchBlock: {
+        padding: spacing.lg,
+        backgroundColor: colors.neutrals.background,
+    },
+    searchBlockDesktop: {
+        paddingHorizontal: 0,
+        paddingVertical: spacing.xl,
+    },
+    resultsContainer: {
+        flex: 1,
+    },
+    resultsContainerDesktop: {
+        paddingBottom: spacing['4xl'],
     },
     topBar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: spacing.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
     },
-    topBarLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-    },
-    resultCount: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
+    resultCountText: {
+        fontSize: 14,
+        fontWeight: 'bold',
         color: colors.neutrals.textPrimary,
-    },
-    countBadge: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    countBadgeText: {
-        color: colors.neutrals.textSecondary,
-        fontSize: 10,
-        fontWeight: typography.fontWeight.bold,
-        textTransform: 'uppercase',
     },
     topBarRight: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-    },
-    sortMenu: {
-        position: 'relative',
-    },
-    sortTrigger: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    sortLabel: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
-        fontWeight: typography.fontWeight.medium,
-    },
-    sortValue: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.bold,
-    },
-    sortChevron: {
-        fontSize: 10,
-        color: colors.neutrals.textMuted,
-        marginLeft: spacing.xs,
-    },
-    sortOptions: {
-        position: 'absolute',
-        top: '100%',
-        right: 0,
-        marginTop: spacing.xs,
-        width: 200,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        borderRadius: borderRadius.md,
-        ...shadows.md,
-        overflow: 'hidden',
-    },
-    sortOption: {
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.lg,
-    },
-    sortOptionActive: {
-        backgroundColor: colors.primarySoft,
-    },
-    sortOptionText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
-    },
-    sortOptionTextActive: {
-        color: colors.primaryDark,
-        fontWeight: typography.fontWeight.bold,
-    },
-    viewToggle: {
-        flexDirection: 'row',
-        backgroundColor: colors.neutrals.surfaceAlt,
-        padding: 4,
-        borderRadius: borderRadius.md,
-        gap: 4,
-    },
-    toggle: {
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.md,
-        borderRadius: borderRadius.sm,
-    },
-    toggleActive: {
-        backgroundColor: colors.neutrals.surface,
-        ...shadows.sm,
-    },
-    toggleText: {
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.semibold,
-        fontSize: 12,
-    },
-    toggleTextActive: {
-        color: colors.primaryDark,
-    },
-    filterTrigger: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.xl,
-        backgroundColor: colors.primary,
-        borderRadius: borderRadius.full,
-    },
-    filterTriggerText: {
-        color: colors.neutrals.surface,
-        fontWeight: typography.fontWeight.bold,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: colors.neutrals.cardBorder,
-    },
-    loadingHint: {
-        fontSize: typography.fontSize.xs,
-        color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
-    },
-    loadingMoreRow: {
-        marginTop: spacing.xl,
-        alignItems: 'center',
         gap: spacing.sm,
     },
-    loadingMoreText: {
-        color: colors.neutrals.textSecondary,
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.medium,
-    },
-    footerNote: {
-        marginTop: spacing.xl,
-        alignItems: 'center',
-        paddingVertical: spacing.xl,
-    },
-    footerNoteText: {
-        color: colors.neutrals.textMuted,
-        fontSize: typography.fontSize.sm,
-    },
-    cardStack: {
-        gap: spacing.lg,
-    },
-    cardWrapper: {
-        borderRadius: borderRadius.lg,
-    },
-    splitLayout: {
+    filterBtn: {
         flexDirection: 'row',
-        gap: spacing.xl,
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: colors.primarySoft,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
     },
-    splitList: {
-        flex: 1,
-        gap: spacing.lg,
+    filterBtnText: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: colors.primaryDark,
     },
-    splitMap: {
-        width: 440,
-        height: 700,
-        position: 'sticky' as any,
-        top: spacing.lg,
-        borderRadius: borderRadius.lg,
-        overflow: 'hidden',
+    sortBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
+    },
+    sortBtnText: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: colors.neutrals.textPrimary,
+    },
+    resultsArea: {
+        paddingVertical: spacing.lg,
+    },
+    cardStack: {
+        gap: spacing.sm,
+    },
+    cardStackDesktop: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginHorizontal: -spacing.sm,
+    },
+    cardWrapperDesktop: {
+        width: '50%',
+        padding: spacing.sm,
     },
     centered: {
         alignItems: 'center',
@@ -609,24 +484,76 @@ const styles = StyleSheet.create({
         paddingVertical: spacing['5xl'],
         gap: spacing.md,
     },
-    emptyText: {
-        color: colors.neutrals.textSecondary,
-        fontSize: typography.fontSize.lg,
-        textAlign: 'center',
-    },
     errorText: {
         color: colors.error,
+        fontSize: 16,
+    },
+    retryBtn: {
+        padding: spacing.md,
+    },
+    retryBtnText: {
+        color: colors.primary,
+        fontWeight: 'bold',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: colors.neutrals.textSecondary,
+    },
+    clearBtn: {
+        padding: spacing.md,
+    },
+    clearBtnText: {
+        color: colors.primary,
+        fontWeight: 'bold',
+    },
+    loadingMore: {
+        paddingVertical: spacing.xl,
+        alignItems: 'center',
+        gap: 8,
+    },
+    loadingMoreText: {
+        fontSize: 12,
+        color: colors.neutrals.textMuted,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    bottomSheet: {
+        backgroundColor: colors.neutrals.surface,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        padding: spacing.xl,
+        paddingBottom: spacing['4xl'],
+    },
+    sheetTitle: {
+        fontSize: 20,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+        marginBottom: spacing.xl,
         textAlign: 'center',
     },
-    retry: {
-        marginTop: spacing.sm,
+    sheetOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.surfaceAlt,
     },
-    retryText: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
+    sheetOptionActive: {
+        backgroundColor: colors.primarySoft + '40',
+        borderRadius: 12,
+        paddingHorizontal: spacing.md,
     },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: colors.neutrals.background,
+    sheetOptionText: {
+        fontSize: 16,
+        color: colors.neutrals.textPrimary,
+        fontWeight: '500',
+    },
+    sheetOptionTextActive: {
+        color: colors.primaryDark,
+        fontWeight: '700',
     },
 });

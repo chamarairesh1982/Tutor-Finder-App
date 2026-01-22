@@ -8,7 +8,6 @@ import { useAuthStore } from '../../src/store/authStore';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { Booking, BookingStatus } from '../../src/types';
 
-
 export default function BookingsScreen() {
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
@@ -18,11 +17,11 @@ export default function BookingsScreen() {
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
-            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText, icon: 'time' };
-            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText, icon: 'checkmark-circle' };
-            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText, icon: 'close-circle' };
-            case BookingStatus.Completed: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary, icon: 'checkmark-done-circle' };
-            default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary, icon: 'help-circle' };
+            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText };
+            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText };
+            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText };
+            case BookingStatus.Completed: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary };
+            default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary };
         }
     };
 
@@ -31,7 +30,7 @@ export default function BookingsScreen() {
     };
 
     const renderBookingItem = ({ item }: { item: Booking }) => {
-        const { bg, text, icon } = getStatusColor(item.status);
+        const { bg, text } = getStatusColor(item.status);
 
         return (
             <TouchableOpacity
@@ -39,47 +38,48 @@ export default function BookingsScreen() {
                 onPress={() => router.push(`/booking/${item.id}`)}
                 activeOpacity={0.9}
             >
-                <View style={styles.cardHeader}>
-                    <View style={styles.tutorInfo}>
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>{item.tutorName.charAt(0)}</Text>
+                <View style={[styles.statusIndicator, { backgroundColor: text }]} />
+
+                <View style={styles.cardMain}>
+                    <View style={styles.cardTop}>
+                        <View style={styles.tutorAvatar}>
+                            <Text style={styles.avatarInitial}>{item.tutorName.charAt(0)}</Text>
                         </View>
-                        <View>
-                            <Text style={styles.tutorName}>{item.tutorName}</Text>
-                            <Text style={styles.bookingRate}>£{item.pricePerHour}/hr</Text>
+                        <View style={styles.headerInfo}>
+                            <Text style={styles.tutorNameText}>{item.tutorName}</Text>
+                            <View style={styles.metaRow}>
+                                <Text style={styles.categoryBadge}>Mathematics</Text>
+                                <Text style={styles.dot}>•</Text>
+                                <Text style={styles.pricePerHour}>£{item.pricePerHour}/hr</Text>
+                            </View>
+                        </View>
+                        <View style={[styles.pillBadge, { backgroundColor: bg }]}>
+                            <Text style={[styles.pillText, { color: text }]}>{getStatusLabel(item.status)}</Text>
                         </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: bg }]}>
-                        <Ionicons name={icon as any} size={14} color={text} />
-                        <Text style={[styles.statusText, { color: text }]}>
-                            {getStatusLabel(item.status)}
-                        </Text>
+
+                    <View style={styles.bookingDetails}>
+                        <View style={styles.detailItem}>
+                            <Ionicons name="calendar-outline" size={14} color={colors.neutrals.textMuted} />
+                            <Text style={styles.detailValue}>{item.preferredDate || 'TBD'}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <Ionicons name={item.preferredMode === 1 ? "videocam-outline" : "people-outline"} size={14} color={colors.neutrals.textMuted} />
+                            <Text style={styles.detailValue}>
+                                {item.preferredMode === 0 ? 'In Person' : item.preferredMode === 1 ? 'Online' : 'Flexible'}
+                            </Text>
+                        </View>
                     </View>
+
+                    {item.messages && item.messages.length > 0 && (
+                        <View style={styles.lastMessageContainer}>
+                            <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.primary} />
+                            <Text style={styles.lastMessageText} numberOfLines={1}>
+                                {item.messages[item.messages.length - 1].content}
+                            </Text>
+                        </View>
+                    )}
                 </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.cardBody}>
-                    <View style={styles.detailRow}>
-                        <Ionicons name="calendar-outline" size={16} color={colors.neutrals.textMuted} />
-                        <Text style={styles.detailText}>{item.preferredDate || 'Date TBD'}</Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                        <Ionicons name={item.preferredMode === 1 ? "videocam-outline" : "location-outline"} size={16} color={colors.neutrals.textMuted} />
-                        <Text style={styles.detailText}>
-                            {item.preferredMode === 0 ? 'In Person' : item.preferredMode === 1 ? 'Online' : 'Flexible Mode'}
-                        </Text>
-                    </View>
-                </View>
-
-                {item.messages && item.messages.length > 0 && (
-                    <View style={styles.messagePreviewContainer}>
-                        <View style={styles.messageLine} />
-                        <Text style={styles.messagePreview} numberOfLines={1}>
-                            "{item.messages[item.messages.length - 1].content}"
-                        </Text>
-                    </View>
-                )}
             </TouchableOpacity>
         );
     };
@@ -91,8 +91,8 @@ export default function BookingsScreen() {
             <SafeAreaView style={styles.container} edges={['top']}>
                 <View style={styles.emptyContainer}>
                     <Ionicons name="lock-closed-outline" size={64} color={colors.neutrals.surfaceAlt} />
-                    <Text style={styles.emptyTitle}>Sign in to view bookings</Text>
-                    <Text style={styles.emptyText}>Booking requests and chat live here once you’re signed in.</Text>
+                    <Text style={styles.emptyTitle}>Sign in to view</Text>
+                    <Text style={styles.emptyText}>Track your learning requests and chat with tutors once you’re signed in.</Text>
                     <TouchableOpacity
                         style={styles.browseButton}
                         onPress={() => router.push('/(auth)/login')}
@@ -103,15 +103,6 @@ export default function BookingsScreen() {
             </SafeAreaView>
         );
     }
-
-    if (isLoading && !listData.length) {
-        return (
-            <View style={styles.centered}>
-                <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-        );
-    }
-
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -126,7 +117,7 @@ export default function BookingsScreen() {
 
             <FlatList
                 data={listData}
-                keyExtractor={(item, index) => item.id || `booking-${index}`}
+                keyExtractor={(item) => item.id}
                 renderItem={renderBookingItem}
                 contentContainerStyle={styles.listContent}
                 refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />}
@@ -134,7 +125,7 @@ export default function BookingsScreen() {
                     <View style={styles.emptyContainer}>
                         <Ionicons name="calendar-clear-outline" size={64} color={colors.neutrals.surfaceAlt} />
                         <Text style={styles.emptyTitle}>No Bookings Yet</Text>
-                        <Text style={styles.emptyText}>Start your learning journey by finding a great tutor.</Text>
+                        <Text style={styles.emptyText}>Find a tutor and start your first lesson today.</Text>
                         <TouchableOpacity
                             style={styles.browseButton}
                             onPress={() => router.push('/')}
@@ -151,132 +142,137 @@ export default function BookingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutrals.surfaceAlt,
+        backgroundColor: colors.neutrals.background,
     },
     header: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.lg,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: colors.neutrals.surfaceAlt,
     },
     title: {
-        fontSize: typography.fontSize['3xl'],
-        fontWeight: typography.fontWeight.bold,
+        fontSize: 32,
+        fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
+        letterSpacing: -1,
     },
     pendingBadge: {
-        backgroundColor: colors.statusPending,
-        paddingHorizontal: spacing.sm,
+        backgroundColor: colors.primaryDark,
+        paddingHorizontal: 12,
         paddingVertical: 4,
-        borderRadius: borderRadius.full,
+        borderRadius: 8,
     },
     pendingBadgeText: {
-        color: colors.statusPendingText,
+        color: '#fff',
         fontSize: 10,
-        fontWeight: typography.fontWeight.bold,
-        letterSpacing: 0.5,
+        fontWeight: 'bold',
     },
     listContent: {
-        padding: spacing.md,
-        paddingBottom: spacing.xl,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing['4xl'],
     },
     bookingCard: {
-        backgroundColor: colors.neutrals.background,
-        borderRadius: borderRadius.lg,
-        padding: spacing.lg,
-        marginBottom: spacing.md,
-        // Premium shadow
-        shadowColor: 'rgba(0,0,0,0.08)',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 12,
-        elevation: 3,
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: 24,
+        marginBottom: spacing.lg,
+        flexDirection: 'row',
+        overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.03)',
+        borderColor: colors.neutrals.cardBorder,
+        ...shadows.sm,
     },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
+    statusIndicator: {
+        width: 6,
+        height: '100%',
     },
-    tutorInfo: {
-        flexDirection: 'row',
+    cardMain: {
+        flex: 1,
+        padding: spacing.lg,
         gap: spacing.md,
-        alignItems: 'center',
     },
-    avatarPlaceholder: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
+    cardTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    tutorAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 14,
         backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: spacing.md,
     },
-    avatarText: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
-        fontSize: typography.fontSize.lg,
+    avatarInitial: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: colors.primaryDark,
     },
-    tutorName: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.bold,
+    headerInfo: {
+        flex: 1,
+    },
+    tutorNameText: {
+        fontSize: 18,
+        fontWeight: 'bold',
         color: colors.neutrals.textPrimary,
     },
-    bookingRate: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-    },
-    statusBadge: {
+    metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: borderRadius.full,
-        gap: 4,
+        gap: 6,
     },
-    statusText: {
+    categoryBadge: {
+        fontSize: 12,
+        color: colors.neutrals.textSecondary,
+    },
+    dot: {
+        fontSize: 12,
+        color: colors.neutrals.textMuted,
+    },
+    pricePerHour: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: colors.primaryDark,
+    },
+    pillBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    pillText: {
         fontSize: 10,
-        fontWeight: typography.fontWeight.bold,
+        fontWeight: 'bold',
         textTransform: 'uppercase',
     },
-    divider: {
-        height: 1,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        marginVertical: spacing.md,
-    },
-    cardBody: {
+    bookingDetails: {
         flexDirection: 'row',
-        gap: spacing.xl,
+        gap: spacing.lg,
     },
-    detailRow: {
+    detailItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        gap: 6,
     },
-    detailText: {
-        fontSize: typography.fontSize.sm,
+    detailValue: {
+        fontSize: 14,
         color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: '500',
     },
-    messagePreviewContainer: {
-        marginTop: spacing.md,
+    lastMessageContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.sm,
-    },
-    messageLine: {
-        width: 2,
-        height: '100%',
+        gap: 8,
         backgroundColor: colors.neutrals.surfaceAlt,
-        borderRadius: borderRadius.full,
+        padding: 10,
+        borderRadius: 12,
     },
-    messagePreview: {
-        color: colors.neutrals.textMuted,
+    lastMessageText: {
+        fontSize: 13,
+        color: colors.neutrals.textSecondary,
         fontStyle: 'italic',
-        fontSize: typography.fontSize.xs,
         flex: 1,
     },
     centered: {
@@ -285,32 +281,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     emptyContainer: {
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing['4xl'],
-        gap: spacing.md,
+        paddingVertical: spacing['5xl'],
+        gap: spacing.lg,
     },
     emptyTitle: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
-        marginTop: spacing.md,
     },
     emptyText: {
-        fontSize: typography.fontSize.base,
+        fontSize: 16,
         color: colors.neutrals.textSecondary,
         textAlign: 'center',
-        maxWidth: 250,
+        paddingHorizontal: spacing.xl,
+        lineHeight: 24,
     },
     browseButton: {
         backgroundColor: colors.primary,
-        paddingHorizontal: spacing.xl,
-        paddingVertical: spacing.md,
+        paddingHorizontal: spacing['2xl'],
+        paddingVertical: spacing.lg,
         borderRadius: borderRadius.full,
-        marginTop: spacing.md,
+        ...shadows.md,
     },
     browseButtonText: {
-        color: colors.neutrals.background,
-        fontWeight: typography.fontWeight.bold,
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });

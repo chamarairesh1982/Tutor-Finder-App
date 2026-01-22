@@ -72,7 +72,7 @@ export function HomeSearchBar({
                     />
                 </View>
 
-                <View style={styles.divider} />
+                {!stacked && <View style={styles.divider} />}
 
                 <View style={[styles.inputContainer, styles.locationContainer]}>
                     <Text style={styles.innerLabel}>Where?</Text>
@@ -131,7 +131,7 @@ export function HomeSearchBar({
                         </TouchableOpacity>
 
                         {dayOpen && (
-                            <View style={[styles.radiusMenu, { left: 0, right: 'auto', zIndex: 10000 }]}>
+                            <View style={[styles.radiusMenu, { left: isLg ? 0 : -100, zIndex: 10000 }]}>
                                 {dayOptions.map((opt) => (
                                     <TouchableOpacity
                                         key={String(opt.value)}
@@ -230,10 +230,6 @@ const styles = StyleSheet.create({
         height: 32,
         backgroundColor: colors.neutrals.cardBorder,
         marginHorizontal: spacing.md,
-        ...Platform.select({
-            web: { display: 'flex' } as any,
-            default: { display: 'none' } as any
-        })
     },
     locationRow: {
         flexDirection: 'row',

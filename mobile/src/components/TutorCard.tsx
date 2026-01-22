@@ -113,14 +113,14 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
             <View style={styles.footerDetails}>
                 <View style={styles.tagsRow}>
                     {tutor.hasDbs && (
-                        <View style={[styles.statusTag, { backgroundColor: '#dcfce7' }]}>
-                            <Ionicons name="shield-checkmark" size={10} color="#15803d" />
-                            <Text style={[styles.tagText, { color: '#15803d' }]}>DBS</Text>
+                        <View style={[styles.statusTag, { backgroundColor: '#cdfbd4' }]}>
+                            <Ionicons name="shield-checkmark" size={10} color="#065f46" />
+                            <Text style={[styles.tagText, { color: '#065f46' }]}>DBS</Text>
                         </View>
                     )}
                     <View style={styles.statusTag}>
-                        <Ionicons name="time-outline" size={10} color={colors.primary} />
-                        <Text style={[styles.tagText, { color: colors.primary }]}>{tutor.nextAvailableText || 'Next week'}</Text>
+                        <Ionicons name="time-outline" size={10} color={colors.primaryDark} />
+                        <Text style={[styles.tagText, { color: colors.primaryDark }]}>{tutor.nextAvailableText || 'Next week'}</Text>
                     </View>
                 </View>
 
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     },
     categoryName: {
         fontSize: 13,
-        color: colors.primary,
+        color: colors.primaryDark,
         fontWeight: '600',
     },
     statsRow: {

@@ -174,7 +174,28 @@ export default function TutorDetailScreen() {
     const horizontalPadding = width > layout.contentMaxWidth ? spacing['2xl'] : spacing.lg;
 
     return (
-        <SafeAreaView style={styles.container} edges={['bottom']}>
+        <SafeAreaView style={styles.container} edges={['bottom', 'top']}>
+            {isLg && (
+                <View style={styles.desktopNav}>
+                    <View style={styles.desktopNavInner}>
+                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
+                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
+                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
+                        </TouchableOpacity>
+                        <View style={styles.desktopActions}>
+                            {isAuthenticated ? (
+                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
+                                    <Text style={styles.navLinkText}>My Dashboard</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
+                                    <Text style={styles.navLinkText}>Login</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            )}
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.pageContent}>
                     <View style={styles.heroSection}>
@@ -189,7 +210,7 @@ export default function TutorDetailScreen() {
 
                         <View style={styles.heroContent}>
                             <View style={styles.profileHeaderRow}>
-                                <View style={styles.avatarLarge}>
+                                <View style={[styles.avatarLarge, isLg && styles.avatarLargeDesktop]}>
                                     {tutor.photoUrl ? (
                                         <Image source={{ uri: tutor.photoUrl }} style={styles.avatarImg} />
                                     ) : (
@@ -198,7 +219,10 @@ export default function TutorDetailScreen() {
                                 </View>
                                 <View style={styles.heroText}>
                                     <View style={styles.nameHeader}>
-                                        <Text style={styles.fullName}>{tutor.fullName}</Text>
+                                        <TouchableOpacity onPress={() => router.back()} style={styles.backFab}>
+                                            <Ionicons name="arrow-back" size={20} color="#fff" />
+                                        </TouchableOpacity>
+                                        <Text style={[styles.fullName, isLg && styles.fullNameDesktop]}>{tutor.fullName}</Text>
                                         {(tutor.hasDbs || tutor.hasCertification) && (
                                             <View style={styles.verifiedBadge}>
                                                 <Ionicons name="checkmark-circle" size={12} color="#fff" />
@@ -330,7 +354,7 @@ function InfoSection({ section }: { section: any }) {
         <View style={styles.sectionCard}>
             <View style={styles.sectionTitleRow}>
                 <View style={styles.iconCircle}>
-                    <Ionicons name={(section.icon + '-outline') as any} size={20} color={colors.primary} />
+                    <Ionicons name={(section.icon + '-outline') as any} size={20} color={colors.primaryDark} />
                 </View>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
             </View>
@@ -370,8 +394,62 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.neutrals.background,
     },
+    desktopNav: {
+        backgroundColor: colors.neutrals.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
+        zIndex: 2000,
+        height: 80,
+        justifyContent: 'center',
+    },
+    desktopNavInner: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacing.xl,
+        maxWidth: layout.wideContentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+    },
+    brandRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    logoMini: {
+        width: 32,
+        height: 32,
+        backgroundColor: colors.primary,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoMiniText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    brandTitleDesktop: {
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+        letterSpacing: -0.5,
+    },
+    desktopActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xl,
+    },
+    navLink: {
+        paddingVertical: spacing.sm,
+    },
+    navLinkText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.neutrals.textSecondary,
+    },
     scrollContent: {
-        paddingBottom: spacing['2xl'],
+        paddingBottom: spacing['4xl'],
     },
     pageContent: {
         width: '100%',
@@ -420,6 +498,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         ...shadows.lg,
     },
+    avatarLargeDesktop: {
+        width: 140,
+        height: 140,
+        borderRadius: 32,
+    },
     avatarImg: {
         width: '100%',
         height: '100%',
@@ -427,7 +510,7 @@ const styles = StyleSheet.create({
     avatarInitial: {
         fontSize: 40,
         fontWeight: typography.fontWeight.heavy,
-        color: colors.primary,
+        color: colors.primaryDark,
         lineHeight: 100,
         textAlign: 'center',
     },
@@ -439,10 +522,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.md,
     },
+    backFab: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.sm,
+        ...Platform.select({ web: { display: 'none' } as any }),
+    },
     fullName: {
         fontSize: 32,
         fontWeight: typography.fontWeight.heavy,
         color: '#fff',
+    },
+    fullNameDesktop: {
+        fontSize: 44,
     },
     heroCategory: {
         fontSize: 16,

@@ -53,7 +53,7 @@ export default function ProfileScreen() {
         >
             <View style={styles.menuItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: color ? `${color}15` : colors.neutrals.surfaceAlt }]}>
-                    <Ionicons name={icon as any} size={20} color={color || colors.primary} />
+                    <Ionicons name={icon as any} size={20} color={color || colors.primaryDark} />
                 </View>
                 <Text style={[styles.menuItemText, color && { color }]}>{label}</Text>
             </View>
@@ -94,13 +94,13 @@ export default function ProfileScreen() {
                         <View style={styles.profileTextInfo}>
                             <Text style={styles.userName}>{user.displayName || 'Account'}</Text>
                             <Text style={styles.userEmail}>{user.email || ''}</Text>
-                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <View style={{ flexDirection: 'row' }}>
                                 <View style={styles.roleBadge}>
                                     <Text style={styles.roleText}>
                                         {user.role === UserRole.Tutor ? 'Professional Tutor' : 'Learner'}
                                     </Text>
                                 </View>
-                            </div>
+                            </View>
                         </View>
                     </View>
 
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     avatarInitialLarge: {
         fontSize: 32,
         fontWeight: typography.fontWeight.bold,
-        color: colors.primary,
+        color: colors.primaryDark,
     },
     editAvatarBtn: {
         position: 'absolute',

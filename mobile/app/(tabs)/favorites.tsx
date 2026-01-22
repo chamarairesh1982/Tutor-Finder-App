@@ -1,38 +1,33 @@
 import React from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../src/hooks/useFavorites';
-import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
+import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { TutorCard } from '../../src/components';
-import { TutorSearchResult, TeachingMode } from '../../src/types';
+import { TutorSearchResult } from '../../src/types';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function FavoritesScreen() {
     const { data: favorites, isLoading, isError, refetch } = useFavorites();
-    const [isRefreshing, setIsRefreshing] = React.useState(false);
     const router = useRouter();
-
-    const onRefresh = async () => {
-        setIsRefreshing(true);
-        await refetch();
-        setIsRefreshing(false);
-    };
 
     const renderEmpty = () => (
         <View style={styles.centered}>
-            <View style={styles.emptyIcon}><Text style={styles.emptyIconText}>♥</Text></View>
-            <Text style={styles.emptyTitle}>No saved tutors yet</Text>
-            <Text style={styles.emptySubtitle}>
-                Tutors you save will appear here. Find your perfect match and keep them bookmarked.
+            <View style={styles.emptyIconContainer}>
+                <Ionicons name="heart-outline" size={64} color={colors.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>Keep your favorites here</Text>
+            <Text style={styles.emptyText}>
+                Tap the heart on any tutor profile to save them for later. It’s the easiest way to find your perfect match again.
             </Text>
             <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/')}>
-                <Text style={styles.browseButtonText}>Browse Tutors</Text>
+                <Text style={styles.browseButtonText}>Explore Tutors</Text>
             </TouchableOpacity>
         </View>
     );
 
     const renderFavorite = ({ item }: { item: any }) => {
-        // Map Favorite to TutorSearchResult for the TutorCard
         const tutor: TutorSearchResult = {
             id: item.tutorProfileId,
             fullName: item.tutorName,
@@ -43,111 +38,111 @@ export default function FavoritesScreen() {
             averageRating: item.tutorAverageRating,
             reviewCount: item.tutorReviewCount,
             distanceMiles: 0,
-            nextAvailableText: 'Saved tutor',
+            nextAvailableText: 'Saved Expert',
             hasDbs: item.hasDbs,
             hasCertification: item.hasCertification
         };
 
         return (
-            <TutorCard
-                tutor={tutor}
-                onPress={() => router.push(`/tutor/${tutor.id}`)}
-            />
+            <View style={styles.cardContainer}>
+                <TutorCard
+                    tutor={tutor}
+                    onPress={() => router.push(`/tutor/${tutor.id}`)}
+                />
+            </View>
         );
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Saved Experts</Text>
-                    <Text style={styles.subtitle}>{favorites?.length || 0} tutors in your list</Text>
-                </View>
-
-                {isLoading ? (
-                    <View style={styles.centered}>
-                        <Text style={styles.loadingText}>Loading your favorites...</Text>
-                    </View>
-                ) : isError ? (
-                    <View style={styles.centered}>
-                        <Text style={styles.errorText}>Failed to load favorites</Text>
-                        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-                            <Text style={styles.retryButtonText}>Retry</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    <FlatList
-                        data={favorites}
-                        renderItem={renderFavorite}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={renderEmpty}
-                        showsVerticalScrollIndicator={false}
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                )}
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Saved Experts</Text>
+                <Text style={styles.countText}>{favorites?.length || 0} tutors saved</Text>
             </View>
+
+            {isLoading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            ) : isError ? (
+                <View style={styles.centered}>
+                    <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
+                    <Text style={styles.errorText}>Something went wrong</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+                        <Text style={styles.retryText}>Try Again</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <FlatList
+                    data={favorites}
+                    renderItem={renderFavorite}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={renderEmpty}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={isLoading}
+                            onRefresh={refetch}
+                            tintColor={colors.primary}
+                        />
+                    }
+                />
+            )}
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
         backgroundColor: colors.neutrals.background,
     },
-    container: {
-        flex: 1,
-    },
     header: {
-        padding: spacing.xl,
-        backgroundColor: colors.neutrals.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.lg,
     },
     title: {
-        fontSize: typography.fontSize['3xl'],
+        fontSize: 32,
         fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
         letterSpacing: -1,
     },
-    subtitle: {
-        fontSize: typography.fontSize.sm,
+    countText: {
+        fontSize: 14,
         color: colors.neutrals.textSecondary,
-        marginTop: 4,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: '500',
+        marginTop: 2,
     },
     listContent: {
-        paddingVertical: spacing.lg,
+        paddingBottom: spacing['4xl'],
+    },
+    cardContainer: {
+        paddingVertical: spacing.xs,
     },
     centered: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing['3xl'],
+        padding: spacing.xl,
     },
-    emptyIcon: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+    emptyIconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.xl,
     },
-    emptyIconText: {
-        fontSize: 40,
-        color: colors.primary,
-    },
     emptyTitle: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.md,
     },
-    emptySubtitle: {
-        fontSize: typography.fontSize.base,
+    emptyText: {
+        fontSize: 16,
         color: colors.neutrals.textSecondary,
         textAlign: 'center',
         lineHeight: 24,
@@ -155,30 +150,27 @@ const styles = StyleSheet.create({
     },
     browseButton: {
         backgroundColor: colors.primary,
-        paddingVertical: spacing.md,
         paddingHorizontal: spacing['2xl'],
+        paddingVertical: spacing.lg,
         borderRadius: borderRadius.full,
         ...shadows.md,
     },
     browseButtonText: {
-        color: colors.neutrals.surface,
-        fontWeight: typography.fontWeight.bold,
-        fontSize: typography.fontSize.base,
-    },
-    loadingText: {
-        fontSize: typography.fontSize.base,
-        color: colors.neutrals.textSecondary,
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     errorText: {
-        fontSize: typography.fontSize.base,
-        color: colors.error,
-        marginBottom: spacing.md,
+        fontSize: 16,
+        color: colors.neutrals.textSecondary,
+        marginVertical: spacing.md,
     },
     retryButton: {
         padding: spacing.md,
     },
-    retryButtonText: {
+    retryText: {
         color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });

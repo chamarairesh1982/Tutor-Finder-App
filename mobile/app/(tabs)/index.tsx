@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HomeSearchBar, Text, Card, ErrorState, EmptyState, SkeletonList } from '../../src/components';
@@ -21,7 +22,7 @@ const categoryCards = [
 
 export default function DiscoverScreen() {
     const router = useRouter();
-    const { width } = useBreakpoint();
+    const { width, isLg } = useBreakpoint();
     const { isAuthenticated } = useAuthStore();
     const [subject, setSubject] = useState('');
     const [location, setLocation] = useState('');
@@ -65,34 +66,54 @@ export default function DiscoverScreen() {
 
     return (
         <View style={styles.safeArea}>
-            <View style={{ backgroundColor: colors.neutrals.background, zIndex: 2000 }}>
-                <SafeAreaView edges={['top']} />
-                <View style={[styles.navbar, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}>
-                    <View style={styles.brandRow}>
-                        <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
-                        <View style={{ justifyContent: 'center' }}>
-                            <Text variant="h5" style={{ color: colors.primaryDark, marginBottom: 0 }}>TutorMatch UK</Text>
-                            <Text variant="caption" style={styles.brandSub}>Find Your Perfect Tutor</Text>
+            {isLg ? (
+                <View style={styles.desktopNav}>
+                    <View style={styles.desktopNavInner}>
+                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
+                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
+                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
+                        </TouchableOpacity>
+                        <View style={styles.desktopActions}>
+                            {isAuthenticated ? (
+                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
+                                    <Text style={styles.navLinkText}>My Dashboard</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <>
+                                    <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
+                                        <Text style={styles.navLinkText}>Login</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.navCtaDesktop} onPress={() => router.push('/(auth)/register')}>
+                                        <Text style={styles.navCtaTextDesktop}>Get Started</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
                         </View>
                     </View>
-                    <View style={styles.navActions}>
-                        {isAuthenticated ? (
-                            <TouchableOpacity style={styles.navCta} onPress={() => router.push('/profile')}>
-                                <Text style={styles.navCtaText}>My Profile</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <>
-                                <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                                    <Text style={styles.navLink}>Login</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                                    <Text style={styles.navCtaText}>Sign Up</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
-                    </View>
                 </View>
-            </View>
+            ) : (
+                <View style={styles.mobileNav}>
+                    <SafeAreaView edges={['top']}>
+                        <View style={styles.navContent}>
+                            <View style={styles.brandRow}>
+                                <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
+                                <Text style={styles.brandTitle}>TutorMatch</Text>
+                            </View>
+                            <View style={styles.navActions}>
+                                {isAuthenticated ? (
+                                    <TouchableOpacity style={styles.profileCircle} onPress={() => router.push('/profile')}>
+                                        <Ionicons name="person" size={20} color={colors.primary} />
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity style={styles.loginBtnSmall} onPress={() => router.push('/(auth)/login')}>
+                                        <Text style={styles.loginBtnText}>Log In</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                    </SafeAreaView>
+                </View>
+            )}
 
             <ScrollView
                 contentContainerStyle={[
@@ -106,13 +127,16 @@ export default function DiscoverScreen() {
             >
 
                 {/* Hero Section */}
-                <View style={styles.heroCentered}>
-                    <Text variant="h1" align="center" style={styles.heroTitle}>
-                        Learn Something <Text style={styles.heroAmazing}>Amazing</Text>
-                    </Text>
-                    <Text variant="bodyLarge" align="center" style={styles.heroSubtitle}>
-                        Connect with verified tutors across the UK for music, sports, academics, and more. Quality learning starts here.
-                    </Text>
+                <View style={[styles.heroSection, isLg && styles.heroSectionDesktop]}>
+                    <View style={styles.heroHeader}>
+                        <Text style={styles.heroPreTitle}>FIND YOUR PERFECT MATCH</Text>
+                        <Text style={[styles.heroMainTitle, isLg && styles.heroMainTitleDesktop]}>
+                            Learn Something <Text style={styles.heroHighlight}>Amazing</Text>
+                        </Text>
+                        <Text style={[styles.heroDesc, isLg && styles.heroDescDesktop]}>
+                            Connect with verified experts for music, academics, languages and more. Quality learning starts here.
+                        </Text>
+                    </View>
 
                     <View style={styles.searchContainer}>
                         <HomeSearchBar
@@ -137,23 +161,47 @@ export default function DiscoverScreen() {
                     </View>
                 </View>
 
-                {/* Categories */}
                 <View style={styles.sectionHeader}>
-                    <Text variant="h4">Browse by Category</Text>
+                    <Text variant="h4" style={isLg && { fontSize: 24 }}>What would you like to learn?</Text>
                 </View>
-                <View style={styles.categoryGrid}>
-                    {categoryCards.map((cat) => (
-                        <TouchableOpacity
-                            key={cat.key}
-                            style={[styles.categoryCard, { backgroundColor: cat.color }]}
-                            onPress={() => handleCategorySelect(cat.label)}
-                            activeOpacity={0.9}
-                        >
-                            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                            <Text weight="bold" style={styles.categoryLabel}>{cat.label}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+
+                {isLg ? (
+                    <View style={styles.categoryGrid}>
+                        {categoryCards.map((cat) => (
+                            <TouchableOpacity
+                                key={cat.key}
+                                style={[styles.categoryCardDesktop, { backgroundColor: cat.color + '15', borderColor: cat.color + '30' }]}
+                                onPress={() => handleCategorySelect(cat.label)}
+                                activeOpacity={0.8}
+                            >
+                                <View style={[styles.categoryEmojiBg, { backgroundColor: cat.color, width: 44, height: 44 }]}>
+                                    <Text style={[styles.categoryEmoji, { fontSize: 22 }]}>{cat.emoji}</Text>
+                                </View>
+                                <Text weight="bold" style={[styles.categoryLabel, { color: cat.color, fontSize: 14 }]}>{cat.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                ) : (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.categoryScroll}
+                    >
+                        {categoryCards.map((cat) => (
+                            <TouchableOpacity
+                                key={cat.key}
+                                style={[styles.categoryCard, { backgroundColor: cat.color + '15', borderColor: cat.color + '30' }]}
+                                onPress={() => handleCategorySelect(cat.label)}
+                                activeOpacity={0.8}
+                            >
+                                <View style={[styles.categoryEmojiBg, { backgroundColor: cat.color }]}>
+                                    <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                                </View>
+                                <Text weight="bold" style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
 
                 {/* Featured Section */}
                 <View style={styles.sectionHeader}>
@@ -179,9 +227,9 @@ export default function DiscoverScreen() {
                         icon="people-outline"
                     />
                 ) : (
-                    <View style={styles.featuredGrid}>
+                    <View style={[styles.featuredGrid, isLg && styles.featuredGridDesktop]}>
                         {featuredTutors.map((tutor) => (
-                            <View key={tutor.id} style={styles.featuredCardWrapper}>
+                            <View key={tutor.id} style={[styles.featuredCardWrapper, isLg && styles.featuredCardWrapperDesktop]}>
                                 <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
                             </View>
                         ))}
@@ -207,122 +255,190 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.background,
     },
     page: {
-        paddingVertical: spacing.xl,
-        gap: spacing.xl, // Reduced gap slightly
         paddingBottom: spacing['4xl'],
     },
-    navbar: {
+    desktopNav: {
+        backgroundColor: colors.neutrals.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.cardBorder,
+        zIndex: 2000,
+        height: 80,
+        justifyContent: 'center',
+    },
+    desktopNavInner: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: spacing.xl,
+        maxWidth: layout.wideContentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+    },
+    brandTitleDesktop: {
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+        letterSpacing: -0.5,
+    },
+    desktopActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xl,
+    },
+    navLink: {
         paddingVertical: spacing.sm,
-        backgroundColor: colors.neutrals.background,
-        zIndex: 1100, // Higher than search bar
+    },
+    navLinkText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.neutrals.textSecondary,
+    },
+    navCtaDesktop: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.full,
+        ...shadows.sm,
+    },
+    navCtaTextDesktop: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    mobileNav: {
+        backgroundColor: colors.neutrals.surface,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.surfaceAlt,
+        borderBottomColor: colors.neutrals.cardBorder,
+        zIndex: 2000,
+    },
+    navContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        height: 60,
     },
     brandRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-        // Removed flex: 1 to prevent collapse
+        gap: spacing.sm,
     },
-    logo: {
-        width: 44,
-        height: 44,
+    logoMini: {
+        width: 32,
+        height: 32,
         backgroundColor: colors.primary,
-        borderRadius: borderRadius.md,
+        borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        flexShrink: 0, // Prevent logo from squishing
     },
-    logoText: {
-        color: colors.neutrals.surface,
-        fontSize: typography.fontSize['2xl'],
+    logoMiniText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    brandTitle: {
+        fontSize: 20,
         fontWeight: typography.fontWeight.heavy,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    },
-    brandSub: {
-        color: colors.neutrals.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
+        color: colors.neutrals.textPrimary,
+        letterSpacing: -0.5,
     },
     navActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-        flexShrink: 0, // Prevent actions from shrinking
-        marginLeft: spacing.md,
     },
-    navLink: {
-        fontSize: typography.fontSize.base,
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.semibold,
-        marginRight: spacing.md,
-    },
-    navCta: {
-        backgroundColor: colors.primary,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.xl,
-        borderRadius: borderRadius.full,
-    },
-    navCtaText: {
-        color: colors.neutrals.surface,
-        fontWeight: typography.fontWeight.bold,
-    },
-    heroCentered: {
+    profileCircle: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: colors.primarySoft,
         alignItems: 'center',
-        paddingVertical: spacing['2xl'],
-        gap: spacing.lg,
-        zIndex: 1000, // Keep hero block above others for dropdowns
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
     },
-    heroTitle: {
-        maxWidth: 900,
-        marginBottom: spacing.xs,
-        fontSize: Platform.OS === 'web' ? 48 : 32, // Responsive font size
-        lineHeight: Platform.OS === 'web' ? 56 : 40,
+    loginBtnSmall: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.primary,
     },
-    heroAmazing: {
+    loginBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    heroSection: {
+        paddingVertical: spacing.xl,
+        gap: spacing.xl,
+    },
+    heroSectionDesktop: {
+        paddingVertical: spacing['5xl'],
+        gap: spacing['2xl'],
+    },
+    heroHeader: {
+        alignItems: 'center',
+        gap: 8,
+    },
+    heroPreTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: colors.primaryDark,
+        letterSpacing: 2,
+    },
+    heroMainTitle: {
+        fontSize: 36,
+        fontWeight: typography.fontWeight.heavy,
+        textAlign: 'center',
+        color: colors.neutrals.textPrimary,
+        lineHeight: 44,
+    },
+    heroMainTitleDesktop: {
+        fontSize: 64,
+        lineHeight: 72,
+        maxWidth: 800,
+    },
+    heroHighlight: {
         color: colors.primary,
-        fontStyle: 'italic',
-        fontWeight: '800',
     },
-    heroSubtitle: {
+    heroDesc: {
+        fontSize: 16,
         color: colors.neutrals.textSecondary,
-        maxWidth: 600,
-        fontSize: Platform.OS === 'web' ? 18 : 16,
-        lineHeight: 28, // Explicit line height to prevent overlap
+        textAlign: 'center',
+        lineHeight: 24,
+        paddingHorizontal: spacing.xl,
+    },
+    heroDescDesktop: {
+        fontSize: 20,
+        lineHeight: 32,
+        maxWidth: 700,
     },
     searchContainer: {
         width: '100%',
         maxWidth: 800,
-        marginTop: spacing.lg,
-        zIndex: 500, // High z-index for dropdowns
-        position: 'relative', // Critical for web z-index
-        ...Platform.select({
-            web: {
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.1,
-                shadowRadius: 20,
-            }
-        }),
+        zIndex: 500,
+        alignSelf: 'center',
     },
     trustBadges: {
         flexDirection: 'row',
-        gap: spacing['2xl'],
-        marginTop: spacing.xl,
+        gap: spacing.lg,
+        marginTop: spacing.md,
         flexWrap: 'wrap',
         justifyContent: 'center',
-        opacity: 0.8,
     },
     trustBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        gap: 6,
+        backgroundColor: colors.neutrals.surface,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
     },
     sectionHeader: {
-        marginTop: spacing.md,
+        marginTop: spacing.xl,
+        marginBottom: spacing.md,
     },
     sectionTitleRow: {
         flexDirection: 'row',
@@ -334,43 +450,65 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
         fontSize: typography.fontSize.sm,
     },
+    categoryScroll: {
+        paddingRight: spacing.xl,
+        gap: spacing.md,
+    },
     categoryGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.md,
-        justifyContent: 'center',
     },
     categoryCard: {
-        width: Platform.OS === 'web' ? '30%' : '45%',
-        minWidth: 140,
-        height: 120,
-        borderRadius: borderRadius.lg,
+        width: 120,
+        height: 140,
+        borderRadius: 24,
         padding: spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: spacing.xs, // Use gap for reliable spacing
+        borderWidth: 1,
         ...shadows.sm,
-        flexGrow: 1,
+    },
+    categoryCardDesktop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderRadius: 20,
+        borderWidth: 1,
+        gap: spacing.md,
+        flex: 1,
+        minWidth: 200,
+    },
+    categoryEmojiBg: {
+        width: 54,
+        height: 54,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.xs,
+        ...shadows.sm,
     },
     categoryEmoji: {
-        fontSize: 32,
-        height: 40, // Fixed height to prevent collapse
-        textAlign: 'center',
-        lineHeight: 40,
+        fontSize: 28,
     },
     categoryLabel: {
-        color: colors.neutrals.surface,
+        fontSize: 13,
         textAlign: 'center',
-        fontWeight: '700',
     },
     featuredGrid: {
+        marginHorizontal: -spacing.sm,
+    },
+    featuredGridDesktop: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginHorizontal: -spacing.md,
     },
     featuredCardWrapper: {
-        width: Platform.OS === 'web' ? '50%' : '100%',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+    },
+    featuredCardWrapperDesktop: {
+        width: '50%',
+        padding: spacing.md,
     },
 });
