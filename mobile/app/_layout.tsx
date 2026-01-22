@@ -10,7 +10,7 @@ import { ToastHost } from '../src/components/ToastHost';
 import { colors, spacing, layout } from '../src/lib/theme';
 import { View, Platform, StyleSheet } from 'react-native';
 
-import { SafeStripeProvider } from '../src/components/SafeStripeProvider';
+import { SafeStripeProvider } from '../src/components';
 
 const queryClient = new QueryClient({
     defaultOptions: {

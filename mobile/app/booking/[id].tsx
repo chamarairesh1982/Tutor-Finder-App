@@ -7,7 +7,7 @@ import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useC
 import { useCreateReview } from '../../src/hooks/useReviews';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { Button, ReviewComposer, PaymentModal } from '../../src/components';
+import { Button, ReviewComposer, PaymentModal, TypingIndicator } from '../../src/components';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { BookingStatus, UserRole, BookingMessage } from '../../src/types';
 
@@ -325,8 +325,12 @@ export default function BookingDetailScreen() {
                                                 <Text style={[styles.timestamp, isMe ? styles.timeMe : styles.timeOther]}>
                                                     {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </Text>
-                                                {isMe && msg.isRead && (
-                                                    <Text style={styles.readIndicator}>Read</Text>
+                                                {isMe && (
+                                                    msg.isRead ? (
+                                                        <Text style={styles.readIndicator}>Read</Text>
+                                                    ) : (
+                                                        <Text style={styles.deliveredIndicator}>Delivered</Text>
+                                                    )
                                                 )}
                                             </View>
                                         </View>
@@ -338,9 +342,7 @@ export default function BookingDetailScreen() {
                         {isCounterpartTyping && (
                             <View style={[styles.messageRow, styles.rowOther]}>
                                 <View style={[styles.bubble, styles.bubbleOther, styles.typingBubble]}>
-                                    <View style={styles.typingDots}>
-                                        <Text style={styles.typingText}>typing...</Text>
-                                    </View>
+                                    <TypingIndicator />
                                 </View>
                             </View>
                         )}
@@ -606,19 +608,16 @@ const styles = StyleSheet.create({
         color: colors.primary,
         fontWeight: typography.fontWeight.bold,
     },
+    deliveredIndicator: {
+        fontSize: 10,
+        color: colors.neutrals.textSecondary,
+        fontStyle: 'italic',
+    },
     typingBubble: {
-        width: 80,
+        width: 60,
         alignItems: 'center',
         paddingVertical: 12,
-    },
-    typingDots: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    typingText: {
-        fontSize: 12,
-        color: colors.neutrals.textMuted,
-        fontStyle: 'italic',
+        paddingHorizontal: 0,
     },
     inputContainer: {
         flexDirection: 'row',

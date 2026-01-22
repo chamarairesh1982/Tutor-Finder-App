@@ -11,6 +11,7 @@ import { colors, spacing, typography, borderRadius, layout, shadows } from '../.
 import { BookingStatus, Category, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { Button } from '../../src/components/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TutorDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -111,7 +112,6 @@ export default function TutorDetailScreen() {
         const formatted = `${day} at ${time.substring(0, 5)}`;
         setPreferredDate(formatted);
         setScheduleModalOpen(false);
-        // If we picked a slot, we probably want to make sure the user sees the booking panel
         if (!isLg && !bookingModalOpen) {
             setBookingModalOpen(true);
         }
@@ -136,52 +136,17 @@ export default function TutorDetailScreen() {
 
     const teachingModeLabel = (() => {
         switch (tutor.teachingMode) {
-            case TeachingMode.InPerson:
-                return 'In-person';
-            case TeachingMode.Online:
-                return 'Online';
-            default:
-                return 'In-person & online';
-        }
-    })();
-
-    const aboutText = tutor.bio?.trim() || 'This tutor is updating their bio.';
-    const teachingStyleText = tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner.';
-    const specialityList = (tutor.specialities?.length ? tutor.specialities : tutor.subjects) ?? [];
-    const locationText = tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.`;
-    const availabilityText = tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.';
-    const reviewList = tutor.reviews ?? [];
-
-    const bookingCta = (() => {
-        if (!activeBooking) {
-            return {
-                title: 'Request booking',
-                onPress: openBookingModal,
-                badge: null as null | string,
-            };
-        }
-
-        switch (activeBooking.status) {
-            case BookingStatus.Pending:
-                return { title: 'View request', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Pending' };
-            case BookingStatus.Accepted:
-                return { title: 'Message tutor', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Accepted' };
-            case BookingStatus.Completed:
-                return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Completed' };
-            default:
-                return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: null };
+            case TeachingMode.InPerson: return 'In-person';
+            case TeachingMode.Online: return 'Online';
+            default: return 'In-person & online';
         }
     })();
 
     const infoSections = [
-        {
-            title: 'About',
-            icon: '👤',
-            body: aboutText
-        },
+        { title: 'About', icon: 'person', body: tutor.bio?.trim() || 'This tutor is updating their bio.' },
         {
             title: 'Qualifications',
-            icon: '🎓',
+            icon: 'school',
             items: [
                 ...(tutor.qualifications?.split('\n').filter(l => l.trim()) ?? []),
                 ...(tutor.hasDbs ? ['DBS Checked & Verified'] : []),
@@ -190,47 +155,40 @@ export default function TutorDetailScreen() {
             ],
             isChecklist: true
         },
-        {
-            title: 'Teaching style',
-            icon: '💡',
-            body: teachingStyleText
-        },
-        {
-            title: 'Specialties',
-            icon: '✨',
-            items: specialityList,
-            isPill: true
-        },
-        {
-            title: 'Location',
-            icon: '📍',
-            body: locationText
-        },
-        {
-            title: 'Availability',
-            icon: '🕒',
-            body: availabilityText,
-            slots: tutor.availabilitySlots
-        },
-        {
-            title: 'Response Time',
-            icon: '💬',
-            body: tutor.responseTimeText ?? 'Usually replies within 24 hours'
-        },
+        { title: 'Teaching style', icon: 'bulb', body: tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner.' },
+        { title: 'Specialties', icon: 'star', items: (tutor.specialities?.length ? tutor.specialities : tutor.subjects) ?? [], isPill: true },
+        { title: 'Location', icon: 'location', body: tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.` },
+        { title: 'Availability', icon: 'time', body: tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.', slots: tutor.availabilitySlots },
+        { title: 'Response Time', icon: 'chatbubbles', body: tutor.responseTimeText ?? 'Usually replies within 24 hours' },
     ];
+
+    const bookingCta = (() => {
+        if (!activeBooking) return { title: 'Request booking', onPress: openBookingModal, badge: null };
+        switch (activeBooking.status) {
+            case BookingStatus.Pending: return { title: 'View request', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Pending' };
+            case BookingStatus.Accepted: return { title: 'Message tutor', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Accepted' };
+            default: return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: null };
+        }
+    })();
 
     const horizontalPadding = width > layout.contentMaxWidth ? spacing['2xl'] : spacing.lg;
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom']}>
-            <ScrollView
-                contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.pageContent}>
-                    <View style={styles.headerCard}>
-                        <View style={styles.headerRow}>
-                            <View style={styles.profileInfo}>
+                    <View style={styles.heroSection}>
+                        <View style={styles.heroBackground}>
+                            {tutor.photoUrl ? (
+                                <Image source={{ uri: tutor.photoUrl }} style={styles.heroBlur} blurRadius={Platform.OS === 'ios' ? 20 : 5} />
+                            ) : (
+                                <View style={[styles.heroBlur, { backgroundColor: colors.primary }]} />
+                            )}
+                            <View style={styles.heroOverlay} />
+                        </View>
+
+                        <View style={styles.heroContent}>
+                            <View style={styles.profileHeaderRow}>
                                 <View style={styles.avatarLarge}>
                                     {tutor.photoUrl ? (
                                         <Image source={{ uri: tutor.photoUrl }} style={styles.avatarImg} />
@@ -238,61 +196,65 @@ export default function TutorDetailScreen() {
                                         <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
                                     )}
                                 </View>
-                                <View style={styles.nameSection}>
+                                <View style={styles.heroText}>
                                     <View style={styles.nameHeader}>
                                         <Text style={styles.fullName}>{tutor.fullName}</Text>
                                         {(tutor.hasDbs || tutor.hasCertification) && (
-                                            <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+                                            <View style={styles.verifiedBadge}>
+                                                <Ionicons name="checkmark-circle" size={12} color="#fff" />
+                                                <Text style={styles.verifiedText}>Verified</Text>
+                                            </View>
                                         )}
                                     </View>
-                                    <Text style={styles.categoryText}>{Category[tutor.category]}</Text>
-                                    <View style={styles.ratingRow}>
+                                    <Text style={styles.heroCategory}>{Category[tutor.category]}</Text>
+                                    <View style={styles.heroRatingRow}>
+                                        <Ionicons name="star" size={16} color={colors.ratingStars} />
                                         <Text style={styles.ratingValue}>{tutor.averageRating.toFixed(1)}</Text>
-                                        <Text style={styles.ratingStars}>{'★'.repeat(Math.round(tutor.averageRating))}</Text>
                                         <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
                                     </View>
                                 </View>
                             </View>
+
                             {isLg && (
-                                <View style={styles.topCtas}>
-                                    <Text style={styles.headerPrice}>£{tutor.pricePerHour}<Text style={styles.headerPriceUnit}>/hr</Text></Text>
-                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} size="lg" />
+                                <View style={styles.heroPriceSection}>
+                                    <Text style={styles.heroPrice}>£{tutor.pricePerHour}<Text style={styles.heroPriceUnit}>/hr</Text></Text>
+                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} size="lg" style={styles.heroBtn} />
                                 </View>
                             )}
                         </View>
                     </View>
 
-                    <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide]}>
+                    <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide, { paddingHorizontal: horizontalPadding }]}>
                         <View style={styles.contentColumn}>
                             {infoSections.map((section) => (
                                 <InfoSection key={section.title} section={section} />
                             ))}
 
                             <View style={styles.reviewsHeader}>
-                                <Text style={styles.sectionTitle}>Student Reviews</Text>
+                                <Text style={styles.reviewSectionTitle}>Student Reviews</Text>
+                                <ReviewList
+                                    reviews={tutor.reviews ?? []}
+                                    averageRating={tutor.averageRating}
+                                    totalCount={tutor.reviewCount}
+                                    ratingBreakdown={tutor.ratingBreakdown}
+                                    sort={reviewSort}
+                                    onSortChange={setReviewSort}
+                                />
                             </View>
-                            <ReviewList
-                                reviews={reviewList}
-                                averageRating={tutor.averageRating}
-                                totalCount={tutor.reviewCount}
-                                ratingBreakdown={tutor.ratingBreakdown}
-                                sort={reviewSort}
-                                onSortChange={setReviewSort}
-                            />
                         </View>
 
                         <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
                             {activeBooking ? (
                                 <View style={styles.bookingStatusCard}>
                                     <View style={styles.bookingStatusTop}>
-                                        <Text style={styles.bookingStatusLabel}>Booking status</Text>
+                                        <Text style={styles.bookingStatusLabel}>Current Booking</Text>
                                         {!!bookingCta.badge && (
                                             <View style={styles.bookingStatusBadge}>
                                                 <Text style={styles.bookingStatusBadgeText}>{bookingCta.badge.toUpperCase()}</Text>
                                             </View>
                                         )}
                                     </View>
-                                    <Text style={styles.bookingStatusHint}>You can message, cancel, or leave a review from your booking.</Text>
+                                    <Text style={styles.bookingStatusHint}>Message this tutor directly from your active booking.</Text>
                                     <Button title={bookingCta.title} onPress={bookingCta.onPress} size="lg" />
                                 </View>
                             ) : (
@@ -317,59 +279,48 @@ export default function TutorDetailScreen() {
             </ScrollView>
 
             {!isLg && (
-                <>
-                    <View style={styles.mobileBookingBar}>
-                        <View>
-                            <Text style={styles.mobilePrice}>£{tutor.pricePerHour}<Text style={styles.mobilePriceUnit}>/hr</Text></Text>
-                            <Text style={styles.mobilePriceCaption}>Secure booking</Text>
-                        </View>
-                        <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
+                <View style={styles.mobileBookingBar}>
+                    <View>
+                        <Text style={styles.mobilePrice}>£{tutor.pricePerHour}<Text style={styles.mobilePriceUnit}>/hr</Text></Text>
+                        <Text style={styles.mobilePriceCaption}>Secure payment</Text>
                     </View>
-
-                    <Modal visible={bookingModalOpen} animationType="slide" onRequestClose={() => setBookingModalOpen(false)}>
-                        <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Request a Session</Text>
-                                <TouchableOpacity onPress={() => setBookingModalOpen(false)} style={styles.closeBtn}>
-                                    <Text style={styles.closeBtnText}>✕</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
-                                <BookingPanel
-                                    pricePerHour={tutor.pricePerHour}
-                                    mode={preferredMode}
-                                    onModeChange={setPreferredMode}
-                                    preferredDate={preferredDate}
-                                    onPreferredDateChange={setPreferredDate}
-                                    message={initialMessage}
-                                    onMessageChange={setInitialMessage}
-                                    onSubmit={handleBooking}
-                                    isSubmitting={isBookingPending}
-                                    responseTimeText={tutor.responseTimeText}
-                                    availabilitySlots={tutor.availabilitySlots}
-                                    onSelectFromSchedule={() => setScheduleModalOpen(true)}
-                                />
-                            </ScrollView>
-                        </SafeAreaView>
-                    </Modal>
-
-                    <SchedulePickerModal
-                        visible={scheduleModalOpen}
-                        onClose={() => setScheduleModalOpen(false)}
-                        slots={tutor.availabilitySlots || []}
-                        onSelect={handleSlotSelect}
-                    />
-                </>
+                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
+                </View>
             )}
 
-            {isLg && (
-                <SchedulePickerModal
-                    visible={scheduleModalOpen}
-                    onClose={() => setScheduleModalOpen(false)}
-                    slots={tutor.availabilitySlots || []}
-                    onSelect={handleSlotSelect}
-                />
-            )}
+            <Modal visible={bookingModalOpen} animationType="slide" onRequestClose={() => setBookingModalOpen(false)}>
+                <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Request a Session</Text>
+                        <TouchableOpacity onPress={() => setBookingModalOpen(false)} style={styles.closeBtn}>
+                            <Ionicons name="close" size={24} color={colors.neutrals.textMuted} />
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+                        <BookingPanel
+                            pricePerHour={tutor.pricePerHour}
+                            mode={preferredMode}
+                            onModeChange={setPreferredMode}
+                            preferredDate={preferredDate}
+                            onPreferredDateChange={setPreferredDate}
+                            message={initialMessage}
+                            onMessageChange={setInitialMessage}
+                            onSubmit={handleBooking}
+                            isSubmitting={isBookingPending}
+                            responseTimeText={tutor.responseTimeText}
+                            availabilitySlots={tutor.availabilitySlots}
+                            onSelectFromSchedule={() => setScheduleModalOpen(true)}
+                        />
+                    </ScrollView>
+                </SafeAreaView>
+            </Modal>
+
+            <SchedulePickerModal
+                visible={scheduleModalOpen}
+                onClose={() => setScheduleModalOpen(false)}
+                slots={tutor.availabilitySlots || []}
+                onSelect={handleSlotSelect}
+            />
         </SafeAreaView>
     );
 }
@@ -378,7 +329,9 @@ function InfoSection({ section }: { section: any }) {
     return (
         <View style={styles.sectionCard}>
             <View style={styles.sectionTitleRow}>
-                <View style={styles.iconCircle}><Text style={styles.sectionIcon}>{section.icon}</Text></View>
+                <View style={styles.iconCircle}>
+                    <Ionicons name={(section.icon + '-outline') as any} size={20} color={colors.primary} />
+                </View>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
             </View>
 
@@ -389,10 +342,10 @@ function InfoSection({ section }: { section: any }) {
             )}
 
             {section.isChecklist && (
-                <View style={styles.checklist}>
+                <View style={[styles.checklist, { marginTop: spacing.sm }]}>
                     {section.items.map((item: string, idx: number) => (
                         <View key={idx} style={styles.checkItem}>
-                            <Text style={styles.checkIcon}>✓</Text>
+                            <Ionicons name="checkmark-circle-sharp" size={18} color={colors.success} />
                             <Text style={styles.checkText}>{item}</Text>
                         </View>
                     ))}
@@ -418,202 +371,144 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutrals.background,
     },
     scrollContent: {
-        paddingVertical: spacing.xl,
-        gap: spacing.lg,
-        alignItems: 'center',
+        paddingBottom: spacing['2xl'],
     },
     pageContent: {
         width: '100%',
-        maxWidth: layout.wideContentMaxWidth,
-        gap: spacing.lg,
-    },
-    centered: {
-        flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.xl,
     },
-    headerCard: {
-        backgroundColor: colors.neutrals.surface,
-        padding: spacing.xl,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
+    heroSection: {
+        width: '100%',
+        height: 280,
+        justifyContent: 'flex-end',
+        overflow: 'hidden',
     },
-    headerRow: {
+    heroBackground: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    heroBlur: {
+        ...StyleSheet.absoluteFillObject,
+        width: '100%',
+        height: '100%',
+    },
+    heroOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+    },
+    heroContent: {
+        maxWidth: layout.wideContentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+        paddingHorizontal: spacing.xl,
+        paddingBottom: spacing.xl,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        gap: spacing.lg,
-        alignItems: 'flex-start',
+        alignItems: 'flex-end',
     },
-    profileInfo: {
+    profileHeaderRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xl,
-        flex: 1,
     },
     avatarLarge: {
-        width: 128,
-        height: 128,
-        borderRadius: borderRadius.lg,
-        backgroundColor: colors.primarySoft,
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: 100,
+        height: 100,
+        borderRadius: 24,
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 4,
+        borderColor: '#fff',
         overflow: 'hidden',
+        ...shadows.lg,
     },
     avatarImg: {
         width: '100%',
         height: '100%',
     },
     avatarInitial: {
-        fontSize: 48,
+        fontSize: 40,
         fontWeight: typography.fontWeight.heavy,
         color: colors.primary,
+        lineHeight: 100,
+        textAlign: 'center',
     },
-    nameSection: {
-        flex: 1,
-        gap: spacing.xs,
+    heroText: {
+        gap: 4,
     },
     nameHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
-        flexWrap: 'wrap',
     },
     fullName: {
-        fontSize: typography.fontSize['4xl'],
+        fontSize: 32,
         fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        letterSpacing: -1,
+        color: '#fff',
     },
-    verifiedBadge: {
-        backgroundColor: colors.primarySoft,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-    },
-    verifiedText: {
-        color: colors.primaryDark,
-        fontSize: 11,
-        fontWeight: typography.fontWeight.bold,
-        textTransform: 'uppercase',
-    },
-    categoryText: {
-        fontSize: typography.fontSize.lg,
-        color: colors.primary,
+    heroCategory: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.9)',
         fontWeight: typography.fontWeight.semibold,
     },
-    ratingRow: {
+    heroRatingRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        marginTop: spacing.xs,
+        marginTop: 4,
     },
     ratingValue: {
-        fontSize: typography.fontSize.lg,
+        fontSize: 16,
         fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
-    ratingStars: {
-        color: colors.ratingStars,
-        fontSize: typography.fontSize.lg,
+        color: '#fff',
     },
     reviewCount: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
     },
-    topCtas: {
+    heroPriceSection: {
         alignItems: 'flex-end',
         gap: spacing.md,
     },
-    headerPrice: {
-        fontSize: typography.fontSize['3xl'],
+    heroPrice: {
+        fontSize: 36,
         fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
+        color: '#fff',
     },
-    headerPriceUnit: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textMuted,
+    heroPriceUnit: {
+        fontSize: 16,
         fontWeight: typography.fontWeight.normal,
     },
+    heroBtn: {
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+        paddingHorizontal: spacing.xl,
+    },
     bodyLayout: {
-        gap: spacing.lg,
         width: '100%',
+        maxWidth: layout.wideContentMaxWidth,
+        marginTop: spacing.xl,
+        gap: spacing.xl,
     },
     bodyLayoutWide: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: spacing.xl,
     },
     contentColumn: {
         flex: 1.2,
         gap: spacing.lg,
-        minWidth: 0,
-    },
-    reviewsHeader: {
-        marginTop: spacing.xl,
-        marginBottom: -spacing.md,
     },
     bookingColumn: {
         flex: 0.8,
-        gap: spacing.md,
+        maxWidth: 420,
         width: '100%',
     },
     bookingSticky: {
-        maxWidth: 420,
-        width: '100%',
-        alignSelf: 'flex-start',
         position: 'sticky' as any,
         top: spacing.lg,
     },
-    bookingStatusCard: {
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        padding: spacing.xl,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        gap: spacing.md,
-    },
-    bookingStatusTop: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    bookingStatusLabel: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    bookingStatusBadge: {
-        backgroundColor: colors.primarySoft,
-        borderRadius: borderRadius.full,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-    },
-    bookingStatusBadgeText: {
-        fontSize: 10,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primaryDark,
-        letterSpacing: 0.5,
-    },
-    bookingStatusHint: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-        lineHeight: 20,
-    },
     sectionCard: {
         backgroundColor: colors.neutrals.surface,
+        borderRadius: 24,
         padding: spacing.xl,
-        borderRadius: borderRadius.lg,
         borderWidth: 1,
         borderColor: colors.neutrals.cardBorder,
         ...shadows.sm,
@@ -627,61 +522,97 @@ const styles = StyleSheet.create({
     iconCircle: {
         width: 36,
         height: 36,
-        borderRadius: 18,
+        borderRadius: 12,
         backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-    },
-    sectionIcon: {
-        fontSize: 18,
     },
     sectionTitle: {
-        fontSize: typography.fontSize.xl,
+        fontSize: 18,
         fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.textPrimary,
     },
     sectionBody: {
-        fontSize: typography.fontSize.base,
+        fontSize: 16,
         color: colors.neutrals.textSecondary,
         lineHeight: 26,
     },
     checklist: {
-        gap: spacing.sm,
+        gap: 12,
     },
     checkItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-    },
-    checkIcon: {
-        color: colors.success,
-        fontSize: 18,
-        fontWeight: typography.fontWeight.bold,
+        gap: 12,
     },
     checkText: {
-        fontSize: typography.fontSize.base,
+        fontSize: 15,
         color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: typography.fontWeight.semibold,
     },
     pillRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.sm,
+        gap: 8,
     },
     specialtyPill: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.xs,
+        paddingHorizontal: 16,
+        paddingVertical: 6,
         backgroundColor: colors.primarySoft,
-        borderRadius: borderRadius.full,
+        borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.primaryLight,
     },
     specialtyText: {
         color: colors.primaryDark,
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
+        fontSize: 13,
+        fontWeight: typography.fontWeight.bold,
+    },
+    reviewsHeader: {
+        marginTop: spacing.xl,
+    },
+    reviewSectionTitle: {
+        fontSize: 22,
+        fontWeight: typography.fontWeight.heavy,
+        color: colors.neutrals.textPrimary,
+        marginBottom: spacing.lg,
+    },
+    bookingStatusCard: {
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: 24,
+        padding: spacing.xl,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+        ...shadows.sm,
+        gap: spacing.md,
+    },
+    bookingStatusTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    bookingStatusLabel: {
+        fontSize: 12,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.neutrals.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    bookingStatusBadge: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    bookingStatusBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    bookingStatusHint: {
+        fontSize: 14,
+        color: colors.neutrals.textSecondary,
+        lineHeight: 20,
     },
     mobileBookingBar: {
         flexDirection: 'row',
@@ -694,25 +625,37 @@ const styles = StyleSheet.create({
         ...shadows.lg,
     },
     mobilePrice: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
+        fontSize: 24,
+        fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
     },
     mobilePriceUnit: {
-        fontSize: typography.fontSize.xs,
+        fontSize: 14,
+        fontWeight: typography.fontWeight.normal,
         color: colors.neutrals.textMuted,
     },
     mobilePriceCaption: {
-        fontSize: 11,
+        fontSize: 12,
         color: colors.success,
-        fontWeight: typography.fontWeight.bold,
+        fontWeight: 'bold',
     },
     mobileBookingBtn: {
         minWidth: 160,
     },
-    errorText: {
-        fontSize: typography.fontSize.base,
-        color: colors.error,
+    verifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: colors.success,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    verifiedText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
     },
     modalHeader: {
         flexDirection: 'row',
@@ -723,16 +666,19 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.neutrals.cardBorder,
     },
     modalTitle: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
-    closeBtn: {
-        padding: spacing.sm,
-    },
-    closeBtnText: {
         fontSize: 20,
         fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textSecondary,
+    },
+    closeBtn: {
+        padding: 4,
+    },
+    centered: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    errorText: {
+        color: colors.error,
+        fontSize: 16,
     },
 });

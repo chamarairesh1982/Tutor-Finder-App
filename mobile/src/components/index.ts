@@ -1,3 +1,4 @@
+// Standard components
 export { Button } from './Button';
 export { Input } from './Input';
 export { TutorCard } from './TutorCard';
@@ -20,4 +21,8 @@ export { Card } from './Card';
 export { Chip } from './Chip';
 export { ErrorState } from './ErrorState';
 export { EmptyState } from './EmptyState';
+export { TypingIndicator } from './TypingIndicator';
+
+// Platform-Specific (Mocked on web via metro.config.js)
 export { PaymentModal } from './PaymentModal';
+export { SafeStripeProvider } from './SafeStripeProvider';
