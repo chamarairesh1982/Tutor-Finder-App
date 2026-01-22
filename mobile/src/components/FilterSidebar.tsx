@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { TeachingMode } from '../types';
 import { Button } from './Button';
+import { Slider } from './Slider';
+import { RangeSlider } from './RangeSlider';
 
 export interface SearchFiltersState {
     radiusMiles: number;
@@ -69,35 +71,14 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
             </View>
 
             <Text style={styles.sectionLabel}>Price range (£/hr)</Text>
-            <View style={styles.priceRow}>
-                <View style={styles.priceInputWrapper}>
-                    <Text style={styles.priceLabelSmall}>Min</Text>
-                    <View style={styles.priceInputInner}>
-                        <Text style={styles.priceCurrency}>£</Text>
-                        <TextInput
-                            style={styles.priceTextInput}
-                            placeholder="0"
-                            value={filters.priceMin?.toString() || ''}
-                            onChangeText={(val) => onChange({ ...filters, priceMin: val ? parseInt(val) : undefined })}
-                            keyboardType="numeric"
-                        />
-                    </View>
-                </View>
-                <View style={styles.priceDivider} />
-                <View style={styles.priceInputWrapper}>
-                    <Text style={styles.priceLabelSmall}>Max</Text>
-                    <View style={styles.priceInputInner}>
-                        <Text style={styles.priceCurrency}>£</Text>
-                        <TextInput
-                            style={styles.priceTextInput}
-                            placeholder="100+"
-                            value={filters.priceMax?.toString() || ''}
-                            onChangeText={(val) => onChange({ ...filters, priceMax: val ? parseInt(val) : undefined })}
-                            keyboardType="numeric"
-                        />
-                    </View>
-                </View>
-            </View>
+            <RangeSlider
+                min={0}
+                max={100}
+                initialMin={filters.priceMin ?? 0}
+                initialMax={filters.priceMax ?? 100}
+                onMinChange={(val) => onChange({ ...filters, priceMin: val })}
+                onMaxChange={(val) => onChange({ ...filters, priceMax: val })}
+            />
 
             <Text style={styles.sectionLabel}>Minimum Rating</Text>
             <View style={styles.ratingRow}>
@@ -123,6 +104,14 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
                     </TouchableOpacity>
                 )}
             </View>
+
+            <Text style={styles.sectionLabel}>Distance ({filters.radiusMiles} miles)</Text>
+            <Slider
+                min={1}
+                max={50}
+                value={filters.radiusMiles}
+                onChange={(val) => onChange({ ...filters, radiusMiles: val })}
+            />
 
             <Text style={styles.sectionLabel}>Quick picks</Text>
             <View style={styles.chipRow}>
@@ -154,23 +143,6 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
                             activeOpacity={0.85}
                         >
                             <Text style={[styles.modeText, isActive && styles.modeTextActive]}>{label}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-
-            <Text style={styles.sectionLabel}>Radius</Text>
-            <View style={styles.modeRow}>
-                {[5, 10, 20, 50].map((value) => {
-                    const isActive = filters.radiusMiles === value;
-                    return (
-                        <TouchableOpacity
-                            key={value}
-                            style={[styles.modeButton, isActive && styles.modeButtonActive]}
-                            onPress={() => setRadius(value)}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={[styles.modeText, isActive && styles.modeTextActive]}>{value} miles</Text>
                         </TouchableOpacity>
                     );
                 })}
