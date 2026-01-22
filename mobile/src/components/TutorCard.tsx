@@ -14,8 +14,12 @@ interface TutorCardProps {
 
 const categoryLabels: Record<Category, string> = {
     [Category.Music]: 'Music',
-    [Category.Sports]: 'Sports',
-    [Category.Education]: 'Education',
+    [Category.Maths]: 'Maths',
+    [Category.English]: 'English',
+    [Category.Science]: 'Science',
+    [Category.Languages]: 'Languages',
+    [Category.Programming]: 'Programming',
+    [Category.Other]: 'Other',
 };
 
 export function TutorCard({ tutor, onPress }: TutorCardProps) {

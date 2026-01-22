@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { colors, borderRadius, spacing } from '../lib/theme';
 
-export function SkeletonList() {
+export function SkeletonList({ count = 3 }: { count?: number }) {
     return (
         <View style={styles.container}>
-            {Array.from({ length: 3 }).map((_, index) => (
+            {Array.from({ length: count }).map((_, index) => (
                 <SkeletonCard key={index} />
             ))}
         </View>

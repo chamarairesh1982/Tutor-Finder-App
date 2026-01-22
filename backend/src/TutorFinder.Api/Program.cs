@@ -9,6 +9,12 @@ using Microsoft.OpenApi.Models;
 using TutorFinder.Api.Middleware;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using TutorFinder.Infrastructure.Data;
+using Asp.Versioning;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +38,61 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<ValidationActionFilter>();
 });
 
-builder.Services.AddCors();
+// B1: Secure CORS
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ProductionCorsPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// B2: Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                QueueLimit = 2,
+                Window = TimeSpan.FromMinutes(1)
+            });
+    });
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            await context.HttpContext.Response.WriteAsync(
+                $"Too many requests. Please try again after {retryAfter.TotalSeconds} seconds.", token);
+        }
+        else
+        {
+            await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", token);
+        }
+    };
+});
+
+// B3: API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc().AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -61,6 +121,26 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// B4: Observability
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddConsoleExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddConsoleExporter();
+    });
+
+// B6: Caching
+builder.Services.AddMemoryCache();
 
 // Auth
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -113,11 +193,19 @@ if (!string.IsNullOrWhiteSpace(connectionString))
 
 var app = builder.Build();
 
-// Middleware - CORS must be first to handle OPTIONS requests correctly
-app.UseCors(policy => policy
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
+// Middleware
+app.UseRateLimiter(); // B2
+
+if (app.Environment.IsDevelopment())
+{
+    // In dev, allow any origin for convenience, OR use ProductionCorsPolicy if preferred
+    app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()); 
+}
+else
+{
+    app.UseCors("ProductionCorsPolicy"); // B1
+    app.UseHsts(); // B1
+}
 
 app.UseExceptionHandler();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -129,8 +217,6 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "TutorFinder API V1");
     c.RoutePrefix = "swagger"; // This ensures it's at /swagger
 });
-
-// UseHttpsRedirection is removed to prevent CORS preflight redirect issues on localhost
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -160,11 +246,21 @@ app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-// Seed Data
-using (var scope = app.Services.CreateScope())
+// B5: Seeding Safety
+if (app.Environment.IsDevelopment())
 {
-    var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
-    await seeder.SeedAsync();
+    using (var scope = app.Services.CreateScope())
+    {
+        try 
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+            await seeder.SeedAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while seeding the database.");
+        }
+    }
 }
 
 try

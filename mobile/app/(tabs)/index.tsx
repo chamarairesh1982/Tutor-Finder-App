@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HomeSearchBar } from '../../src/components';
+import { HomeSearchBar, Text, Card, ErrorState, EmptyState, SkeletonList } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { TeachingMode } from '../../src/types';
@@ -30,7 +30,12 @@ export default function DiscoverScreen() {
     const [mode, setMode] = useState<TeachingMode>(TeachingMode.Both);
     const [availabilityDay, setAvailabilityDay] = useState<number | undefined>(undefined);
 
-    const { data: featuredData, isLoading: isLoadingFeatured } = useSearchTutors({
+    const {
+        data: featuredData,
+        isLoading: isLoadingFeatured,
+        isError: isFeaturedError,
+        refetch: refetchFeatured
+    } = useSearchTutors({
         lat: undefined, lng: undefined, postcode: undefined, radiusMiles: 50,
         subject: undefined, category: undefined, minRating: 4,
         priceMin: undefined, priceMax: undefined, mode: undefined,
@@ -62,15 +67,22 @@ export default function DiscoverScreen() {
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <ScrollView
-                contentContainerStyle={[styles.page, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}
+                contentContainerStyle={[
+                    styles.page,
+                    { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }
+                ]}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={isLoadingFeatured} onRefresh={refetchFeatured} />
+                }
             >
+                {/* Navbar */}
                 <View style={styles.navbar}>
                     <View style={styles.brandRow}>
                         <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
                         <View>
-                            <Text style={styles.brand}>TutorMatch UK</Text>
-                            <Text style={styles.brandSub}>Find Your Perfect Tutor</Text>
+                            <Text variant="h5" style={{ color: colors.primaryDark, marginBottom: 0 }}>TutorMatch UK</Text>
+                            <Text variant="caption" style={styles.brandSub}>Find Your Perfect Tutor</Text>
                         </View>
                     </View>
                     <View style={styles.navActions}>
@@ -91,11 +103,12 @@ export default function DiscoverScreen() {
                     </View>
                 </View>
 
+                {/* Hero Section */}
                 <View style={styles.heroCentered}>
-                    <Text style={styles.heroTitle}>
+                    <Text variant="h1" align="center" style={styles.heroTitle}>
                         Learn Something <Text style={styles.heroAmazing}>Amazing</Text>
                     </Text>
-                    <Text style={styles.heroSubtitle}>
+                    <Text variant="bodyLarge" align="center" style={styles.heroSubtitle}>
                         Connect with verified tutors across the UK for music, sports, academics, and more. Quality learning starts here.
                     </Text>
 
@@ -122,8 +135,9 @@ export default function DiscoverScreen() {
                     </View>
                 </View>
 
+                {/* Categories */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Browse by Category</Text>
+                    <Text variant="h4">Browse by Category</Text>
                 </View>
                 <View style={styles.categoryGrid}>
                     {categoryCards.map((cat) => (
@@ -134,36 +148,43 @@ export default function DiscoverScreen() {
                             activeOpacity={0.9}
                         >
                             <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                            <Text style={styles.categoryLabel}>{cat.label}</Text>
+                            <Text weight="bold" style={styles.categoryLabel}>{cat.label}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                {featuredTutors.length > 0 && (
-                    <>
-                        <View style={styles.sectionHeader}>
-                            <View style={styles.sectionTitleRow}>
-                                <Text style={styles.sectionTitle}>Featured Tutors</Text>
-                                <TouchableOpacity onPress={() => router.push('/search')}>
-                                    <Text style={styles.viewAllText}>View all →</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                        <View style={styles.featuredGrid}>
-                            {featuredTutors.map((tutor) => (
-                                <View key={tutor.id} style={styles.featuredCardWrapper}>
-                                    <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
-                                </View>
-                            ))}
-                        </View>
-                    </>
-                )}
-
-                <View style={styles.statsBar}>
-                    <View style={styles.statsItem}>
-                        <Text style={styles.statsLabel}>8 tutors found</Text>
+                {/* Featured Section */}
+                <View style={styles.sectionHeader}>
+                    <View style={styles.sectionTitleRow}>
+                        <Text variant="h4">Featured Tutors</Text>
+                        <TouchableOpacity onPress={() => router.push('/search')}>
+                            <Text style={styles.viewAllText}>View all →</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
+
+                {isLoadingFeatured ? (
+                    <SkeletonList count={3} />
+                ) : isFeaturedError ? (
+                    <ErrorState
+                        message="Failed to load featured tutors."
+                        onRetry={refetchFeatured}
+                    />
+                ) : featuredTutors.length === 0 ? (
+                    <EmptyState
+                        title="No Featured Tutors"
+                        message="Check back later for top-rated tutors."
+                        icon="people-outline"
+                    />
+                ) : (
+                    <View style={styles.featuredGrid}>
+                        {featuredTutors.map((tutor) => (
+                            <View key={tutor.id} style={styles.featuredCardWrapper}>
+                                <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
+                            </View>
+                        ))}
+                    </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -172,8 +193,8 @@ export default function DiscoverScreen() {
 function TrustBadge({ icon, label }: { icon: string; label: string }) {
     return (
         <View style={styles.trustBadge}>
-            <Text style={styles.trustBadgeIcon}>{icon}</Text>
-            <Text style={styles.trustBadgeText}>{label}</Text>
+            <Text style={{ fontSize: 16 }}>{icon}</Text>
+            <Text variant="caption" weight="medium" style={{ color: colors.neutrals.textSecondary }}>{label}</Text>
         </View>
     );
 }
@@ -185,13 +206,14 @@ const styles = StyleSheet.create({
     },
     page: {
         paddingVertical: spacing.xl,
-        gap: spacing['2xl'],
+        gap: spacing.xl, // Reduced gap slightly
+        paddingBottom: spacing['4xl'],
     },
     navbar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm,
     },
     brandRow: {
         flexDirection: 'row',
@@ -210,19 +232,12 @@ const styles = StyleSheet.create({
         color: colors.neutrals.surface,
         fontSize: typography.fontSize['2xl'],
         fontWeight: typography.fontWeight.heavy,
-    },
-    brand: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primaryDark,
-        letterSpacing: -0.5,
+        fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
     },
     brandSub: {
-        fontSize: 11,
         color: colors.neutrals.textMuted,
         textTransform: 'uppercase',
         letterSpacing: 1,
-        fontWeight: typography.fontWeight.semibold,
     },
     navActions: {
         flexDirection: 'row',
@@ -247,26 +262,20 @@ const styles = StyleSheet.create({
     },
     heroCentered: {
         alignItems: 'center',
-        paddingVertical: spacing['2xl'],
+        paddingVertical: spacing.xl,
         gap: spacing.lg,
     },
     heroTitle: {
-        fontSize: typography.fontSize['5xl'],
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        textAlign: 'center',
-        letterSpacing: -1.5,
-        lineHeight: 52,
+        maxWidth: 800,
+        marginBottom: spacing.xs,
     },
     heroAmazing: {
         color: colors.primary,
+        fontStyle: 'italic',
     },
     heroSubtitle: {
-        fontSize: typography.fontSize.lg,
         color: colors.neutrals.textSecondary,
-        textAlign: 'center',
         maxWidth: 600,
-        lineHeight: 28,
     },
     searchContainer: {
         width: '100%',
@@ -286,16 +295,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.xs,
     },
-    trustBadgeIcon: {
-        fontSize: typography.fontSize.base,
-    },
-    trustBadgeText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
-    },
     sectionHeader: {
-        marginTop: spacing.xl,
+        marginTop: spacing.md,
     },
     sectionTitleRow: {
         flexDirection: 'row',
@@ -306,11 +307,6 @@ const styles = StyleSheet.create({
         color: colors.primary,
         fontWeight: typography.fontWeight.bold,
         fontSize: typography.fontSize.sm,
-    },
-    sectionTitle: {
-        fontSize: typography.fontSize['2xl'],
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
     },
     categoryGrid: {
         flexDirection: 'row',
@@ -333,8 +329,6 @@ const styles = StyleSheet.create({
         fontSize: 32,
     },
     categoryLabel: {
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.bold,
         color: colors.neutrals.surface,
         textAlign: 'center',
     },
@@ -346,22 +340,6 @@ const styles = StyleSheet.create({
     featuredCardWrapper: {
         width: Platform.OS === 'web' ? '50%' : '100%',
         paddingVertical: spacing.sm,
-    },
-    statsBar: {
-        marginTop: spacing.xl,
-        padding: spacing.md,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        borderRadius: borderRadius.md,
-    },
-    statsItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    statsLabel: {
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
+        paddingHorizontal: spacing.sm,
     },
 });
