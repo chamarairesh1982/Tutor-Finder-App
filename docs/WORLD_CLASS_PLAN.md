@@ -48,6 +48,22 @@ Transform the existing MVP into a production-grade, secure, scalable, and beauti
 | P1 | **Payment Intent** | Backend endpoint to create PaymentIntent (Stripe pattern). | **Done** (Mock) |
 | P2 | **Payment UI** | Simple checkout UI (Mock/Stub for now) to complete booking flow. | **Done** (Mock) |
 
+## Phase 3: Production Readiness (Scaling & Polish)
+
+### P6 - Revenue & Reliability
+| ID | Task | Description | Status |
+|----|------|-------------|--------|
+| R3 | **Real Stripe Flow** | Replace `PaymentModal` mock with real Stripe Elements/PaymentSheet. | [ ] |
+| R4 | **Payouts System** | Backend logic for Tutor payouts (Connect pattern). | [ ] |
+| R5 | **Error Boundary** | Global React Error Boundaries + Sentry integration. | [ ] |
+
+### P7 - User Experience & Growth
+| ID | Task | Description | Status |
+|----|------|-------------|--------|
+| G1 | **Advanced Search** | Filter by Price Range, Distance (Slider), and Rating threshold. | [ ] |
+| G2 | **Messaging Polish** | SignalR 'Typing...' status and 'Read' indicators. | [ ] |
+| G3 | **Social Sharing** | Native share sheets for Tutor Profiles. | [ ] |
+
 ## Implementation Log
 - [x] Plan Created
 - [x] **Backend**: Secure CORS, Rate Limiting, Versioning, Observability, Safe Seeding, Caching.

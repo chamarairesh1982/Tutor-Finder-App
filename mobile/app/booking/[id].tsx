@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, ScrollView, TextInput, TouchableOpacity, Activi
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useCompleteBooking } from '../../src/hooks/useBookings';
+import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useCompleteBooking, useMarkAsRead } from '../../src/hooks/useBookings';
 import { useCreateReview } from '../../src/hooks/useReviews';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
@@ -22,30 +22,92 @@ export default function BookingDetailScreen() {
     const { mutate: respond, isPending: isResponding } = useRespondToBooking(id!);
     const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking(id!);
     const { mutate: completeBooking, isPending: isCompleting } = useCompleteBooking(id!);
+    const { mutate: markAsRead } = useMarkAsRead(id!);
     const { mutate: createReview, isPending: isReviewing } = useCreateReview();
     const notify = useNotificationStore((s) => s.addToast);
+    const connection = useNotificationStore((s) => s.connection);
 
     const [message, setMessage] = useState('');
+    const [isCounterpartTyping, setIsCounterpartTyping] = useState(false);
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewComment, setReviewComment] = useState('');
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
 
     const scrollViewRef = useRef<ScrollView>(null);
+    const typingTimeoutRef = useRef<any>(null);
+    const lastTypingSentRef = useRef<number>(0);
 
     const messages = booking?.messages ?? [];
+    const isTutor = user?.role === UserRole.Tutor;
+    const recipientUserId = isTutor ? booking?.studentId : booking?.tutorUserId;
 
     useEffect(() => {
-        // Scroll to bottom when booking data updates (new messages)
-        if (messages.length) {
+        // Scroll to bottom when booking data updates (new messages) or typing starts
+        if (messages.length || isCounterpartTyping) {
             setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
         }
-    }, [messages.length]);
+    }, [messages.length, isCounterpartTyping]);
 
+    // SignalR Listeners
+    useEffect(() => {
+        if (!connection || !id) return;
+
+        const handleTyping = (bid: string, isTyping: boolean) => {
+            if (bid === id) setIsCounterpartTyping(isTyping);
+        };
+
+        const handleRead = (bid: string) => {
+            if (bid === id) refetch();
+        };
+
+        connection.on("TypingStatus", handleTyping);
+        connection.on("MessagesRead", handleRead);
+
+        return () => {
+            connection.off("TypingStatus", handleTyping);
+            connection.off("MessagesRead", handleRead);
+        };
+    }, [connection, id, refetch]);
+
+    // Mark as read logic
+    useEffect(() => {
+        const unreadCount = messages.filter(m => m.senderId !== user?.id && !m.isRead).length;
+        if (unreadCount > 0 && recipientUserId) {
+            markAsRead(undefined, {
+                onSuccess: () => {
+                    connection?.invoke("NotifyMessagesRead", id, recipientUserId);
+                }
+            });
+        }
+    }, [messages.length, recipientUserId]);
+
+    const handleTypingInput = (text: string) => {
+        setMessage(text);
+        if (!connection || !recipientUserId) return;
+
+        const now = Date.now();
+        if (now - lastTypingSentRef.current > 3000) {
+            connection.invoke("SendTypingStatus", id, recipientUserId, true);
+            lastTypingSentRef.current = now;
+
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                connection.invoke("SendTypingStatus", id, recipientUserId, false);
+            }, 4000);
+        }
+    };
 
     const handleSend = () => {
         const trimmed = message.trim();
         if (!trimmed) return;
+
+        // Stop typing indicator immediately
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        if (connection && recipientUserId) {
+            connection.invoke("SendTypingStatus", id, recipientUserId, false);
+        }
+
         sendMessage(trimmed, {
             onSuccess: () => setMessage(''),
             onError: (err: any) => {
@@ -122,7 +184,6 @@ export default function BookingDetailScreen() {
         );
     }
 
-    const isTutor = user?.role === UserRole.Tutor;
     const counterpartName = isTutor ? booking.studentName : booking.tutorName;
     const statusStyles = getStatusColor(booking.status);
     const modeLabel = booking.preferredMode === 0 ? 'In Person' : booking.preferredMode === 1 ? 'Online' : 'Flexible';
@@ -260,13 +321,28 @@ export default function BookingDetailScreen() {
                                     <View key={msg.id} style={[styles.messageRow, isMe ? styles.rowMe : styles.rowOther]}>
                                         <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
                                             <Text style={[styles.messageText, isMe ? styles.textMe : styles.textOther]}>{msg.content}</Text>
-                                            <Text style={[styles.timestamp, isMe ? styles.timeMe : styles.timeOther]}>
-                                                {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </Text>
+                                            <View style={styles.bubbleFooter}>
+                                                <Text style={[styles.timestamp, isMe ? styles.timeMe : styles.timeOther]}>
+                                                    {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </Text>
+                                                {isMe && msg.isRead && (
+                                                    <Text style={styles.readIndicator}>Read</Text>
+                                                )}
+                                            </View>
                                         </View>
                                     </View>
                                 );
                             })
+                        )}
+
+                        {isCounterpartTyping && (
+                            <View style={[styles.messageRow, styles.rowOther]}>
+                                <View style={[styles.bubble, styles.bubbleOther, styles.typingBubble]}>
+                                    <View style={styles.typingDots}>
+                                        <Text style={styles.typingText}>typing...</Text>
+                                    </View>
+                                </View>
+                            </View>
                         )}
                     </View>
 
@@ -307,7 +383,7 @@ export default function BookingDetailScreen() {
                         placeholder="Type a message..."
                         placeholderTextColor={colors.neutrals.textMuted}
                         value={message}
-                        onChangeText={setMessage}
+                        onChangeText={handleTypingInput}
                         multiline
                     />
                     <TouchableOpacity
@@ -517,6 +593,31 @@ const styles = StyleSheet.create({
     },
     timeOther: {
         color: colors.neutrals.textMuted,
+    },
+    bubbleFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        marginTop: 2,
+    },
+    readIndicator: {
+        fontSize: 10,
+        color: colors.primary,
+        fontWeight: typography.fontWeight.bold,
+    },
+    typingBubble: {
+        width: 80,
+        alignItems: 'center',
+        paddingVertical: 12,
+    },
+    typingDots: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    typingText: {
+        fontSize: 12,
+        color: colors.neutrals.textMuted,
+        fontStyle: 'italic',
     },
     inputContainer: {
         flexDirection: 'row',

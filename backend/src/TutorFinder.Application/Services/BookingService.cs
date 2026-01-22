@@ -212,6 +212,29 @@ public class BookingService : IBookingService
         ));
     }
 
+    public async Task<Result<bool>> MarkMessagesAsReadAsync(Guid userId, Guid bookingId, CancellationToken ct)
+    {
+        var booking = await _bookingRepository.GetByIdAsync(bookingId, ct);
+        if (booking == null) return new Result<bool>.Failure("Booking not found", 404);
+
+        if (booking.StudentId != userId && booking.Tutor.UserId != userId)
+            return new Result<bool>.Failure("Unauthorized", 403);
+
+        var unreadMessages = booking.Messages.Where(m => m.SenderId != userId && !m.IsRead).ToList();
+        if (!unreadMessages.Any()) return new Result<bool>.Success(true);
+
+        foreach (var msg in unreadMessages)
+        {
+            msg.IsRead = true;
+            msg.ReadAt = DateTime.UtcNow;
+        }
+
+        await _bookingRepository.UpdateAsync(booking, ct);
+        await _bookingRepository.SaveChangesAsync(ct);
+
+        return new Result<bool>.Success(true);
+    }
+
     private static BookingResponse MapToResponse(BookingRequest b)
     {
         return new BookingResponse(
@@ -219,6 +242,7 @@ public class BookingService : IBookingService
             b.StudentId,
             b.Student?.DisplayName ?? "Student",
             b.TutorId,
+            b.Tutor?.UserId ?? Guid.Empty,
             b.Tutor?.FullName ?? "Tutor",
             b.PreferredMode,
             b.PreferredDate,
@@ -231,7 +255,9 @@ public class BookingService : IBookingService
                 m.SenderId,
                 m.Sender?.DisplayName ?? "User",
                 m.Content,
-                m.SentAt
+                m.SentAt,
+                m.IsRead,
+                m.ReadAt
             )).ToList()
         );
     }

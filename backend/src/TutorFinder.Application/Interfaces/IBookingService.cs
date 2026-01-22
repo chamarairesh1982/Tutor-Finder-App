@@ -12,5 +12,6 @@ public interface IBookingService
     Task<Result<BookingResponse>> GetBookingByIdAsync(Guid userId, Guid bookingId, CancellationToken ct);
     Task<Result<List<BookingResponse>>> GetMyBookingsAsync(Guid userId, CancellationToken ct);
     Task<Result<BookingMessageDto>> SendMessageAsync(Guid userId, Guid bookingId, SendMessageRequest request, CancellationToken ct);
+    Task<Result<bool>> MarkMessagesAsReadAsync(Guid userId, Guid bookingId, CancellationToken ct);
 }
 

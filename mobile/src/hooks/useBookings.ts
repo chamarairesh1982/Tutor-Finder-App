@@ -115,3 +115,17 @@ export function useSendMessage(bookingId: string) {
         },
     });
 }
+
+export function useMarkAsRead(bookingId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async () => {
+            await apiClient.post(`/bookings/${bookingId}/read`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookings', bookingId] });
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+        },
+    });
+}

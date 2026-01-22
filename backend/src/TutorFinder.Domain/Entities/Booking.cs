@@ -35,4 +35,7 @@ public class BookingMessage
     
     public string Content { get; set; } = string.Empty;
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
+
+    public bool IsRead { get; set; }
+    public DateTime? ReadAt { get; set; }
 }

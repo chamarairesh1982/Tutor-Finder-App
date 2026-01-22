@@ -84,6 +84,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                 get().addToast({ type: 'info', title, message });
             });
 
+            // Handlers for typing and read receipts - can be used by components via connection.on
+            // but we add them here if we want global handling or triggering refetches
+            newConnection.on("TypingStatus", (bookingId: string, isTyping: boolean) => {
+                // This could update a global 'typing' state if we wanted
+            });
+
+            newConnection.on("MessagesRead", (bookingId: string) => {
+                // This could trigger a query invalidation if we wanted
+            });
+
             newConnection.onclose(() => set({ isConnected: false, connection: null }));
 
             await newConnection.start();

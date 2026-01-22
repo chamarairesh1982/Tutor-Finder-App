@@ -95,6 +95,17 @@ public class BookingsController : ControllerBase
         );
     }
 
+    [HttpPost("{id}/read")]
+    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var result = await _bookingService.MarkMessagesAsReadAsync(userId, id, ct);
+        return result.Match<IActionResult>(
+            success => Ok(success),
+            failure => Problem(failure.Message, statusCode: failure.StatusCode)
+        );
+    }
+
     private Guid GetUserId()
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);

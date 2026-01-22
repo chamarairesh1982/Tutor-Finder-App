@@ -14,6 +14,7 @@ public record BookingResponse(
     Guid StudentId,
     string StudentName,
     Guid TutorId,
+    Guid TutorUserId,
     string TutorName,
     TeachingMode PreferredMode,
     string? PreferredDate,
@@ -29,7 +30,9 @@ public record BookingMessageDto(
     Guid SenderId,
     string SenderName,
     string Content,
-    DateTime SentAt
+    DateTime SentAt,
+    bool IsRead = false,
+    DateTime? ReadAt = null
 );
 
 public record RespondToBookingRequest(

@@ -28,4 +28,14 @@ public class NotificationHub : Hub
         }
         await base.OnDisconnectedAsync(exception);
     }
+
+    public async Task SendTypingStatus(string bookingId, string recipientId, bool isTyping)
+    {
+        await Clients.Group($"user_{recipientId}").SendAsync("TypingStatus", bookingId, isTyping);
+    }
+
+    public async Task NotifyMessagesRead(string bookingId, string recipientId)
+    {
+        await Clients.Group($"user_{recipientId}").SendAsync("MessagesRead", bookingId);
+    }
 }

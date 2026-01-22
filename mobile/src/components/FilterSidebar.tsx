@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
 import { TeachingMode } from '../types';
 import { Button } from './Button';
@@ -67,6 +68,62 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
                 )}
             </View>
 
+            <Text style={styles.sectionLabel}>Price range (£/hr)</Text>
+            <View style={styles.priceRow}>
+                <View style={styles.priceInputWrapper}>
+                    <Text style={styles.priceLabelSmall}>Min</Text>
+                    <View style={styles.priceInputInner}>
+                        <Text style={styles.priceCurrency}>£</Text>
+                        <TextInput
+                            style={styles.priceTextInput}
+                            placeholder="0"
+                            value={filters.priceMin?.toString() || ''}
+                            onChangeText={(val) => onChange({ ...filters, priceMin: val ? parseInt(val) : undefined })}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                </View>
+                <View style={styles.priceDivider} />
+                <View style={styles.priceInputWrapper}>
+                    <Text style={styles.priceLabelSmall}>Max</Text>
+                    <View style={styles.priceInputInner}>
+                        <Text style={styles.priceCurrency}>£</Text>
+                        <TextInput
+                            style={styles.priceTextInput}
+                            placeholder="100+"
+                            value={filters.priceMax?.toString() || ''}
+                            onChangeText={(val) => onChange({ ...filters, priceMax: val ? parseInt(val) : undefined })}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                </View>
+            </View>
+
+            <Text style={styles.sectionLabel}>Minimum Rating</Text>
+            <View style={styles.ratingRow}>
+                {[1, 2, 3, 4, 5].map((star) => {
+                    const isActive = (filters.minRating || 0) >= star;
+                    return (
+                        <TouchableOpacity
+                            key={star}
+                            onPress={() => onChange({ ...filters, minRating: star })}
+                            style={styles.starTouch}
+                        >
+                            <Ionicons
+                                name={isActive ? "star" : "star-outline"}
+                                size={28}
+                                color={isActive ? colors.ratingStars : colors.neutrals.border}
+                            />
+                        </TouchableOpacity>
+                    );
+                })}
+                {filters.minRating && (
+                    <TouchableOpacity onPress={() => onChange({ ...filters, minRating: undefined })}>
+                        <Text style={styles.clearRating}>Clear</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
             <Text style={styles.sectionLabel}>Quick picks</Text>
             <View style={styles.chipRow}>
                 {quickFilterConfig.map((chip) => {
@@ -104,7 +161,7 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
 
             <Text style={styles.sectionLabel}>Radius</Text>
             <View style={styles.modeRow}>
-                {[5, 10, 20].map((value) => {
+                {[5, 10, 20, 50].map((value) => {
                     const isActive = filters.radiusMiles === value;
                     return (
                         <TouchableOpacity
@@ -122,8 +179,13 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
             <View style={styles.divider} />
 
             <View style={styles.footerButtons}>
-                <Button title="Apply" onPress={onClose || (() => { })} fullWidth size="md" />
-                <Text style={styles.helper}>Filters use existing API fields; DBS/weekend tags are surfaced once available.</Text>
+                <Button title="Show Results" onPress={onClose || (() => { })} fullWidth size="md" />
+                <TouchableOpacity onPress={() => onChange({
+                    radiusMiles: 10,
+                    quickFilters: { dbs: false, weekends: false, rating45: false, midPrice: false }
+                })} style={{ alignSelf: 'center' }}>
+                    <Text style={styles.clearAllText}>Clear all filters</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -231,5 +293,67 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textMuted,
         textAlign: 'center',
         lineHeight: 16,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    priceInputWrapper: {
+        flex: 1,
+    },
+    priceLabelSmall: {
+        fontSize: 10,
+        color: colors.neutrals.textMuted,
+        marginBottom: 4,
+        fontWeight: 'bold',
+    },
+    priceInputInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.sm,
+        height: 44,
+        borderWidth: 1,
+        borderColor: colors.neutrals.cardBorder,
+    },
+    priceCurrency: {
+        fontSize: 16,
+        color: colors.neutrals.textSecondary,
+        marginRight: 4,
+    },
+    priceTextInput: {
+        flex: 1,
+        fontSize: 16,
+        color: colors.neutrals.textPrimary,
+        height: '100%',
+        padding: 0,
+    },
+    priceDivider: {
+        width: 12,
+        height: 1,
+        backgroundColor: colors.neutrals.cardBorder,
+        marginTop: 18, // Align with inputs
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    starTouch: {
+        padding: 2,
+    },
+    clearRating: {
+        fontSize: 12,
+        color: colors.primary,
+        fontWeight: 'bold',
+        marginLeft: spacing.md,
+    },
+    clearAllText: {
+        fontSize: 14,
+        color: colors.neutrals.textMuted,
+        textDecorationLine: 'underline',
+        marginTop: spacing.sm,
     },
 });

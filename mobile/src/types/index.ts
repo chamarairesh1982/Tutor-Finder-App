@@ -131,6 +131,7 @@ export interface Booking {
     studentId: string;
     studentName: string;
     tutorId: string;
+    tutorUserId: string;
     tutorName: string;
     preferredMode: TeachingMode;
     preferredDate?: string;
@@ -147,6 +148,8 @@ export interface BookingMessage {
     senderName: string;
     content: string;
     sentAt: string;
+    isRead?: boolean;
+    readAt?: string;
 }
 
 export interface Review {

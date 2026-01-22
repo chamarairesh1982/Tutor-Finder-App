@@ -227,24 +227,27 @@ export default function SearchPage() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.navbarOuter}>
-                <View style={[styles.navbar, { maxWidth: layout.contentMaxWidth + 400, alignSelf: 'center', width: '100%', paddingHorizontal: spacing.xl }]}>
-                    <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
-                        <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
-                        <Text style={styles.brand}>TutorMatch UK</Text>
-                    </TouchableOpacity>
-                    <View style={styles.navActions}>
-                        {isAuthenticated ? (
-                            <TouchableOpacity onPress={() => router.push('/profile')}><Text style={styles.navLink}>My Profile</Text></TouchableOpacity>
-                        ) : (
-                            <>
-                                <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
-                                <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
-                                    <Text style={styles.navCtaText}>Sign up</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
+        <View style={styles.safeArea}>
+            <View style={{ backgroundColor: colors.neutrals.background, zIndex: 2000 }}>
+                <SafeAreaView edges={['top']} />
+                <View style={styles.navbarOuter}>
+                    <View style={[styles.navbar, { maxWidth: layout.contentMaxWidth + 400, alignSelf: 'center', width: '100%', paddingHorizontal: spacing.xl }]}>
+                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
+                            <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
+                            <Text style={styles.brand}>TutorMatch UK</Text>
+                        </TouchableOpacity>
+                        <View style={styles.navActions}>
+                            {isAuthenticated ? (
+                                <TouchableOpacity onPress={() => router.push('/profile')}><Text style={styles.navLink}>My Profile</Text></TouchableOpacity>
+                            ) : (
+                                <>
+                                    <TouchableOpacity onPress={() => router.push('/(auth)/login')}><Text style={styles.navLink}>Login</Text></TouchableOpacity>
+                                    <TouchableOpacity style={styles.navCta} onPress={() => router.push('/(auth)/register')}>
+                                        <Text style={styles.navCtaText}>Sign up</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
                     </View>
                 </View>
             </View>
@@ -309,7 +312,7 @@ export default function SearchPage() {
                     </SafeAreaView>
                 </Modal>
             )}
-        </SafeAreaView>
+        </View>
     );
 }
 
