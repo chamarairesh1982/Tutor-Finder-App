@@ -5,11 +5,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/store/authStore';
+import { useNotificationStore } from '../src/store/notificationStore';
 import { ToastHost } from '../src/components/ToastHost';
 import { colors, spacing, layout } from '../src/lib/theme';
+import { View, Platform, StyleSheet } from 'react-native';
 
 const queryClient = new QueryClient({
-
     defaultOptions: {
         queries: {
             retry: 2,
@@ -19,11 +20,20 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
-    const { isLoading, loadStoredAuth } = useAuthStore();
+    const { isLoading, loadStoredAuth, isAuthenticated } = useAuthStore();
+    const { connectSignalR, disconnectSignalR } = useNotificationStore();
 
     useEffect(() => {
         loadStoredAuth();
     }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            connectSignalR();
+        } else {
+            disconnectSignalR();
+        }
+    }, [isAuthenticated]);
 
     if (isLoading) {
         return null; // Could show a splash screen here
@@ -52,8 +62,6 @@ function RootLayoutNav() {
     );
 }
 
-import { View, Platform, StyleSheet } from 'react-native';
-
 export default function RootLayout() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -65,7 +73,6 @@ export default function RootLayout() {
                             <RootLayoutNav />
                             <ToastHost />
                         </View>
-
                     </View>
                 </QueryClientProvider>
             </SafeAreaProvider>
@@ -95,5 +102,4 @@ const styles = StyleSheet.create({
             } as any,
         }),
     },
-
 });

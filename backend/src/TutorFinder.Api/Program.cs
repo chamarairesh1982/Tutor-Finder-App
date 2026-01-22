@@ -140,7 +140,11 @@ builder.Services.AddOpenTelemetry()
     });
 
 // B6: Caching
+// B6: Caching
 builder.Services.AddMemoryCache();
+
+// R1: SignalR
+builder.Services.AddSignalR();
 
 // Auth
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -162,6 +166,21 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+    };
+    
+    // Allow SignalR to send token in query string if needed
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -198,8 +217,7 @@ app.UseRateLimiter(); // B2
 
 if (app.Environment.IsDevelopment())
 {
-    // In dev, allow any origin for convenience, OR use ProductionCorsPolicy if preferred
-    app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()); 
+    app.UseCors(x => x.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials()); 
 }
 else
 {
@@ -244,6 +262,7 @@ app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
 });
 
 app.MapControllers();
+app.MapHub<TutorFinder.Api.Hubs.NotificationHub>("/hubs/notifications");
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
 // B5: Seeding Safety

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HomeSearchBar, Text, Card, ErrorState, EmptyState, SkeletonList } from '../../src/components';
 import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
@@ -23,7 +23,6 @@ export default function DiscoverScreen() {
     const router = useRouter();
     const { width } = useBreakpoint();
     const { isAuthenticated } = useAuthStore();
-
     const [subject, setSubject] = useState('');
     const [location, setLocation] = useState('');
     const [radius, setRadius] = useState(10);
@@ -66,6 +65,7 @@ export default function DiscoverScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <Stack.Screen options={{ headerShown: false }} />
             <ScrollView
                 contentContainerStyle={[
                     styles.page,
@@ -80,7 +80,7 @@ export default function DiscoverScreen() {
                 <View style={styles.navbar}>
                     <View style={styles.brandRow}>
                         <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
-                        <View>
+                        <View style={{ justifyContent: 'center' }}>
                             <Text variant="h5" style={{ color: colors.primaryDark, marginBottom: 0 }}>TutorMatch UK</Text>
                             <Text variant="caption" style={styles.brandSub}>Find Your Perfect Tutor</Text>
                         </View>
@@ -219,6 +219,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
+        // Removed flex: 1 to prevent collapse
     },
     logo: {
         width: 44,
@@ -227,6 +228,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0, // Prevent logo from squishing
     },
     logoText: {
         color: colors.neutrals.surface,
@@ -243,6 +245,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
+        flexShrink: 0, // Prevent actions from shrinking
+        marginLeft: spacing.md,
     },
     navLink: {
         fontSize: typography.fontSize.base,
@@ -262,33 +266,47 @@ const styles = StyleSheet.create({
     },
     heroCentered: {
         alignItems: 'center',
-        paddingVertical: spacing.xl,
+        paddingVertical: spacing['2xl'],
         gap: spacing.lg,
     },
     heroTitle: {
-        maxWidth: 800,
+        maxWidth: 900,
         marginBottom: spacing.xs,
+        fontSize: Platform.OS === 'web' ? 48 : 32, // Responsive font size
+        lineHeight: Platform.OS === 'web' ? 56 : 40,
     },
     heroAmazing: {
         color: colors.primary,
         fontStyle: 'italic',
+        fontWeight: '800',
     },
     heroSubtitle: {
         color: colors.neutrals.textSecondary,
         maxWidth: 600,
+        fontSize: Platform.OS === 'web' ? 18 : 16,
+        lineHeight: 28, // Explicit line height to prevent overlap
     },
     searchContainer: {
         width: '100%',
         maxWidth: 800,
-        marginTop: spacing.md,
-        zIndex: 10,
+        marginTop: spacing.lg,
+        zIndex: 100, // Higher z-index for dropdowns
+        ...Platform.select({
+            web: {
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.1,
+                shadowRadius: 20,
+            }
+        }),
     },
     trustBadges: {
         flexDirection: 'row',
-        gap: spacing.xl,
-        marginTop: spacing.md,
+        gap: spacing['2xl'],
+        marginTop: spacing.xl,
         flexWrap: 'wrap',
         justifyContent: 'center',
+        opacity: 0.8,
     },
     trustBadge: {
         flexDirection: 'row',
@@ -321,16 +339,17 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: spacing.sm,
         ...shadows.sm,
         flexGrow: 1,
     },
     categoryEmoji: {
         fontSize: 32,
+        marginBottom: spacing.xs,
     },
     categoryLabel: {
         color: colors.neutrals.surface,
         textAlign: 'center',
+        zIndex: 1,
     },
     featuredGrid: {
         flexDirection: 'row',

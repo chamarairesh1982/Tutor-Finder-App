@@ -20,3 +20,4 @@ export { Card } from './Card';
 export { Chip } from './Chip';
 export { ErrorState } from './ErrorState';
 export { EmptyState } from './EmptyState';
+export { PaymentModal } from './PaymentModal';

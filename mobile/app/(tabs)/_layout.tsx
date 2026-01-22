@@ -89,6 +89,7 @@ export default function TabsLayout() {
                 name="index"
                 options={{
                     title: 'Discover',
+                    headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
                         <Ionicons name={focused ? "search" : "search-outline"} size={24} color={color} />
                     ),

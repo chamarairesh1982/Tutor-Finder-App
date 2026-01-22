@@ -71,8 +71,22 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
         return stars;
     };
 
+    const [isHovered, setIsHovered] = React.useState(false);
+
     return (
-        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+        <TouchableOpacity
+            style={[
+                styles.card,
+                isHovered && styles.cardHovered
+            ]}
+            onPress={onPress}
+            activeOpacity={0.9}
+            // @ts-ignore - Web only props
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            accessibilityRole="button"
+            accessibilityLabel={`View profile of ${tutor.fullName}, ${tutor.category} tutor, £${tutor.pricePerHour} per hour`}
+        >
             <View style={styles.content}>
                 <View style={styles.avatarContainer}>
                     {tutor.photoUrl ? (
@@ -87,7 +101,12 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
                 <View style={styles.info}>
                     <View style={styles.nameRow}>
                         <Text style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
-                        <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
+                        <TouchableOpacity
+                            onPress={toggleFavorite}
+                            style={styles.favoriteButton}
+                            accessibilityRole="button"
+                            accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        >
                             <Text style={[styles.heart, isFavorite && styles.heartFilled]}>
                                 {isFavorite ? '♥' : '♡'}
                             </Text>
@@ -149,13 +168,18 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: colors.neutrals.background,
-        borderRadius: borderRadius.lg,
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: borderRadius.xl, // Larger radius
         marginHorizontal: spacing.md,
-        marginBottom: spacing.md,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
-        ...shadows.md,
+        marginBottom: spacing.lg, // More breathing room
+        // Removed border for cleaner look
+        // borderColor: 'rgba(0,0,0,0.05)', 
+        ...shadows.sm, // Start with subtle shadow
+        transition: 'all 0.2s ease-in-out', // Web transition
+    } as any,
+    cardHovered: {
+        transform: [{ translateY: -4 }],
+        ...shadows.lg,
     },
     content: {
         flexDirection: 'row',

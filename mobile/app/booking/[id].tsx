@@ -7,7 +7,7 @@ import { useBooking, useSendMessage, useRespondToBooking, useCancelBooking, useC
 import { useCreateReview } from '../../src/hooks/useReviews';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { Button, ReviewComposer } from '../../src/components';
+import { Button, ReviewComposer, PaymentModal } from '../../src/components';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { BookingStatus, UserRole, BookingMessage } from '../../src/types';
 
@@ -29,6 +29,7 @@ export default function BookingDetailScreen() {
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewComment, setReviewComment] = useState('');
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
+    const [showPayment, setShowPayment] = useState(false);
 
     const scrollViewRef = useRef<ScrollView>(null);
 
@@ -222,9 +223,15 @@ export default function BookingDetailScreen() {
                                 <Button title="Decline" onPress={() => handleStatusChange(BookingStatus.Declined)} variant="outline" size="sm" style={{ flex: 1, borderColor: colors.error }} textStyle={{ color: colors.error }} isLoading={isResponding} />
                             </View>
                         )}
-                        {(!isTutor && (booking.status === BookingStatus.Pending || booking.status === BookingStatus.Accepted)) && (
+                        {(!isTutor && (booking.status === BookingStatus.Pending)) && (
                             <View style={styles.actionButtons}>
                                 <Button title="Cancel Booking" onPress={handleCancel} variant="outline" size="sm" style={{ flex: 1 }} isLoading={isCancelling} />
+                            </View>
+                        )}
+                        {(!isTutor && booking.status === BookingStatus.Accepted) && (
+                            <View style={styles.actionButtons}>
+                                <Button title="Pay Now" onPress={() => setShowPayment(true)} variant="primary" size="sm" style={{ flex: 2 }} />
+                                <Button title="Cancel" onPress={handleCancel} variant="outline" size="sm" style={{ flex: 1 }} isLoading={isCancelling} />
                             </View>
                         )}
                         {(isTutor && booking.status === BookingStatus.Accepted) && (
@@ -316,6 +323,16 @@ export default function BookingDetailScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            <PaymentModal
+                visible={showPayment}
+                amount={booking.pricePerHour} // Assuming 1 hour for now, logic can be more complex
+                onClose={() => setShowPayment(false)}
+                onSuccess={() => {
+                    setShowPayment(false);
+                    notify({ type: 'success', title: 'Payment Confirmed', message: 'The funds are being held securely.' });
+                }}
+            />
         </SafeAreaView>
     );
 }
