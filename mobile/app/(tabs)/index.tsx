@@ -64,20 +64,10 @@ export default function DiscoverScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <Stack.Screen options={{ headerShown: false }} />
-            <ScrollView
-                contentContainerStyle={[
-                    styles.page,
-                    { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }
-                ]}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={isLoadingFeatured} onRefresh={refetchFeatured} />
-                }
-            >
-                {/* Navbar */}
-                <View style={styles.navbar}>
+        <View style={styles.safeArea}>
+            <View style={{ backgroundColor: colors.neutrals.background, zIndex: 2000 }}>
+                <SafeAreaView edges={['top']} />
+                <View style={[styles.navbar, { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }]}>
                     <View style={styles.brandRow}>
                         <View style={styles.logo}><Text style={styles.logoText}>T</Text></View>
                         <View style={{ justifyContent: 'center' }}>
@@ -102,6 +92,18 @@ export default function DiscoverScreen() {
                         )}
                     </View>
                 </View>
+            </View>
+
+            <ScrollView
+                contentContainerStyle={[
+                    styles.page,
+                    { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }
+                ]}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={isLoadingFeatured} onRefresh={refetchFeatured} />
+                }
+            >
 
                 {/* Hero Section */}
                 <View style={styles.heroCentered}>
@@ -186,7 +188,7 @@ export default function DiscoverScreen() {
                     </View>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -214,6 +216,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: spacing.sm,
+        backgroundColor: colors.neutrals.background,
+        zIndex: 1100, // Higher than search bar
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutrals.surfaceAlt,
     },
     brandRow: {
         flexDirection: 'row',
@@ -268,6 +274,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: spacing['2xl'],
         gap: spacing.lg,
+        zIndex: 1000, // Keep hero block above others for dropdowns
     },
     heroTitle: {
         maxWidth: 900,
@@ -290,7 +297,8 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 800,
         marginTop: spacing.lg,
-        zIndex: 100, // Higher z-index for dropdowns
+        zIndex: 500, // High z-index for dropdowns
+        position: 'relative', // Critical for web z-index
         ...Platform.select({
             web: {
                 shadowColor: colors.primary,
@@ -330,26 +338,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.md,
+        justifyContent: 'center',
     },
     categoryCard: {
-        width: '32%',
-        minWidth: 160,
+        width: Platform.OS === 'web' ? '30%' : '45%',
+        minWidth: 140,
         height: 120,
         borderRadius: borderRadius.lg,
-        padding: spacing.lg,
+        padding: spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
+        gap: spacing.xs, // Use gap for reliable spacing
         ...shadows.sm,
         flexGrow: 1,
     },
     categoryEmoji: {
         fontSize: 32,
-        marginBottom: spacing.xs,
+        height: 40, // Fixed height to prevent collapse
+        textAlign: 'center',
+        lineHeight: 40,
     },
     categoryLabel: {
         color: colors.neutrals.surface,
         textAlign: 'center',
-        zIndex: 1,
+        fontWeight: '700',
     },
     featuredGrid: {
         flexDirection: 'row',

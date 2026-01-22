@@ -116,7 +116,7 @@ export function HomeSearchBar({
                     </View>
                 </View>
 
-                <View style={[styles.inputContainer, { flex: 0.6 }]}>
+                <View style={[styles.inputContainer, { flex: 0.6, zIndex: 70 }]}>
                     <Text style={styles.innerLabel}>When?</Text>
                     <View style={styles.radiusControlWrapper}>
                         <TouchableOpacity
@@ -131,7 +131,7 @@ export function HomeSearchBar({
                         </TouchableOpacity>
 
                         {dayOpen && (
-                            <View style={[styles.radiusMenu, { left: 0, right: 'auto' }]}>
+                            <View style={[styles.radiusMenu, { left: 0, right: 'auto', zIndex: 10000 }]}>
                                 {dayOptions.map((opt) => (
                                     <TouchableOpacity
                                         key={String(opt.value)}
@@ -202,9 +202,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: spacing.xs,
         paddingRight: spacing.sm,
+        zIndex: 50, // Added to help dropdown layer correctly
     },
     locationContainer: {
         flex: 1,
+        zIndex: 60, // Slightly higher to beat previous inputs if needed
     },
     innerLabel: {
         fontSize: 10,

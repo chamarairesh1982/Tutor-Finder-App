@@ -70,6 +70,7 @@ export default function TabsLayout() {
                         },
                     }),
                 },
+                headerShown: false,
                 headerStyle: {
                     backgroundColor: colors.neutrals.background,
                     elevation: 0,
