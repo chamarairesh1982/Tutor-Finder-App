@@ -17,33 +17,55 @@ export default function PrivacyPolicyScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-                <Text style={styles.lastUpdated}>Last updated: January 2026</Text>
+                <Text style={styles.lastUpdated}>Last updated: 24 January 2026</Text>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>1. Information We Collect</Text>
+                    <Text style={styles.heading}>1. UK GDPR Compliance</Text>
                     <Text style={styles.paragraph}>
-                        We collect information you provide directly to us, such as when you create or modify your account, request on-demand services, contact customer support, or otherwise communicate with us. This information may include: name, email, phone number, postal address, profile picture, payment method, items requested (for delivery services), delivery notes, and other information you choose to provide.
+                        TutorMatch is committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>2. How We Use Your Information</Text>
+                    <Text style={styles.heading}>2. Information We Collect</Text>
                     <Text style={styles.paragraph}>
-                        We use the information we collect to facilitate the connection between tutors and students. This includes sharing your profile information (like name and subjects) with potential matches. We also use your data to maintain the safety and security of our platform.
+                        We collect personal information that you provide to us, including:
+                        • Contact details (name, email, phone number)
+                        • Professional details for tutors (bio, qualifications, subjects)
+                        • Location data (postcode only) for search proximity
+                        • Identification documents (optional DBS certificates)
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>3. Data Security</Text>
+                    <Text style={styles.heading}>3. How We Use Your Data</Text>
                     <Text style={styles.paragraph}>
-                        We have implemented measures designed to secure your personal information from accidental loss and from unauthorized access, use, alteration, and disclosure. All payment transactions are encrypted using SSL technology.
+                        We use your data to:
+                        • Provide and manage your account
+                        • Facilitate connections between tutors and students
+                        • Communicate important service updates
+                        • Ensure the safety and security of our users
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>4. Contact Us</Text>
+                    <Text style={styles.heading}>4. Data Sharing</Text>
                     <Text style={styles.paragraph}>
-                        If you have any questions about this Privacy Policy, please contact us at: privacy@tutorfinder.uk
+                        We share your profile information (for tutors) with potential students through our search functionality. We do not sell your personal data to third parties.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.heading}>5. Your Rights</Text>
+                    <Text style={styles.paragraph}>
+                        Under UK GDPR, you have the right to access, rectify, or erase your personal data. You also have the right to object to or restrict certain processing activities.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.heading}>6. Contact Us</Text>
+                    <Text style={styles.paragraph}>
+                        If you have any questions about our privacy practices or wish to exercise your data rights, please contact us at: privacy@tutormatch.uk
                     </Text>
                 </View>
             </ScrollView>

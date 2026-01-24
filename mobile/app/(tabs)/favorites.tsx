@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../src/hooks/useFavorites';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
-import { TutorCard, Text, ErrorState, EmptyState } from '../../src/components';
+import { TutorCard, Text, ErrorState, EmptyState, SkeletonList } from '../../src/components';
 import { TutorSearchResult } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -56,8 +56,8 @@ export default function FavoritesScreen() {
             </View>
 
             {isLoading ? (
-                <View style={styles.centered}>
-                    <ActivityIndicator size="large" color={colors.primary} />
+                <View style={{ padding: spacing.lg }}>
+                    <SkeletonList count={4} />
                 </View>
             ) : isError ? (
                 <ErrorState

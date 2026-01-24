@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Input, Button } from '../../src/components';
+import { Input, Button, Text, Section } from '../../src/components';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { useMyTutorProfile, useUpdateTutorProfile } from '../../src/hooks/useTutors';
 import { Category, TeachingMode, AvailabilitySlot } from '../../src/types';
@@ -143,14 +143,20 @@ export default function TutorSettingsScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.neutrals.textPrimary} />
+                    <Ionicons name="chevron-back" size={24} color={colors.neutrals.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Tutor Profile Settings</Text>
+                <Text variant="h3" weight="heavy">Tutor Profile</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>General Information</Text>
+                <View style={styles.introBox}>
+                    <Text variant="body" color={colors.neutrals.textSecondary}>
+                        Your profile is your storefront. Tutors with complete bios and qualifications receive 70% more enquiries.
+                    </Text>
+                </View>
+
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>General Information</Text>
                     <Input
                         label="Public Full Name"
                         value={form.fullName}
@@ -172,10 +178,10 @@ export default function TutorSettingsScreen() {
                         onChangeText={(val) => setForm({ ...form, photoUrl: val })}
                         placeholder="Link to your profile picture"
                     />
-                </View>
+                </Section>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Main Category</Text>
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Main Category</Text>
                     <View style={styles.pickerRow}>
                         {categoryOptions.map((opt) => (
                             <TouchableOpacity
@@ -187,10 +193,10 @@ export default function TutorSettingsScreen() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
+                </Section>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Subjects</Text>
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Subjects</Text>
                     <View style={styles.tagInputRow}>
                         <Input
                             placeholder="Add a subject (e.g. Physics)"
@@ -212,10 +218,10 @@ export default function TutorSettingsScreen() {
                             </View>
                         ))}
                     </View>
-                </View>
+                </Section>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Pricing & Delivery</Text>
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Pricing & Delivery</Text>
                     <View style={styles.row}>
                         <View style={{ flex: 1 }}>
                             <Input
@@ -236,7 +242,9 @@ export default function TutorSettingsScreen() {
                         </View>
                     </View>
 
-                    <Text style={[styles.label, { marginTop: spacing.md }]}>Teaching Mode</Text>
+                    <Text variant="bodySmall" weight="bold" color={colors.neutrals.textSecondary} style={{ marginTop: spacing.md, marginBottom: 8 }}>
+                        Teaching Mode
+                    </Text>
                     <View style={styles.pickerRow}>
                         {modeOptions.map((opt) => (
                             <TouchableOpacity
@@ -255,16 +263,16 @@ export default function TutorSettingsScreen() {
                         onChangeText={(val) => setForm({ ...form, postcode: val })}
                         autoCapitalize="characters"
                     />
-                </View>
+                </Section>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Verification & Badges</Text>
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Verification & Badges</Text>
                     <TouchableOpacity
                         style={styles.toggleRow}
                         onPress={() => setForm({ ...form, hasDbs: !form.hasDbs })}
                     >
                         <Ionicons name={form.hasDbs ? "checkbox" : "square-outline"} size={22} color={form.hasDbs ? colors.primary : colors.neutrals.textMuted} />
-                        <Text style={styles.toggleLabel}>I have a valid DBS certificate</Text>
+                        <Text variant="body">I have a valid DBS certificate</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -272,15 +280,15 @@ export default function TutorSettingsScreen() {
                         onPress={() => setForm({ ...form, hasCertification: !form.hasCertification })}
                     >
                         <Ionicons name={form.hasCertification ? "checkbox" : "square-outline"} size={22} color={form.hasCertification ? colors.primary : colors.neutrals.textMuted} />
-                        <Text style={styles.toggleLabel}>I have professional teaching certifications</Text>
+                        <Text variant="body">I have professional teaching certifications</Text>
                     </TouchableOpacity>
-                </View>
+                </Section>
 
-                <View style={styles.section}>
+                <Section paddingVertical="md">
                     <View style={styles.rowBetween}>
-                        <Text style={styles.sectionTitle}>Availability Slots</Text>
+                        <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Availability Slots</Text>
                         <TouchableOpacity onPress={addAvailability}>
-                            <Text style={styles.addText}>+ Add Slot</Text>
+                            <Text variant="bodySmall" weight="heavy" color={colors.primary}>+ Add Slot</Text>
                         </TouchableOpacity>
                     </View>
                     {form.availability.map((slot, idx) => (
@@ -316,7 +324,7 @@ export default function TutorSettingsScreen() {
                             </View>
                         </View>
                     ))}
-                </View>
+                </Section>
 
                 <Button
                     title="Save Tutor Profile"
@@ -354,24 +362,27 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: spacing.lg,
     },
+    introBox: {
+        backgroundColor: colors.primarySoft,
+        padding: spacing.lg,
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
     centered: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    section: {
-        marginBottom: spacing.xl,
-    },
     sectionTitle: {
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primaryDark,
         marginBottom: spacing.md,
     },
     rowBetween: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: spacing.sm,
     },
     addText: {
         color: colors.primary,

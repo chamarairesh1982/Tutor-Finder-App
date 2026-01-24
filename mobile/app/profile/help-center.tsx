@@ -2,24 +2,25 @@ import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 
 const FAQS = [
     {
         question: "How do I book a tutor?",
-        answer: "Search for a tutor by subject or location, view their profile, and click 'Request Booking' options. You can propose a time and mode of teaching."
+        answer: "Browse for a tutor by subject, view their profile, and tap 'Book Session'. You can then message the tutor to propose dates and discuss your requirements."
     },
     {
-        question: "Is there a booking fee?",
-        answer: "Tutor Finder charges a small service fee on completed bookings to maintain the platform safety and security."
+        question: "How do I pay my tutor?",
+        answer: "In the current version, TutorMatch does not process payments. You should arrange payment directly with your tutor (e.g., via bank transfer) as agreed between you."
     },
     {
-        question: "how do refunds work?",
-        answer: "If a tutor cancels or does not show up, you are entitled to a full refund. Please contact support within 24 hours of the scheduled session."
+        question: "What if I need a refund?",
+        answer: "Since payments are handled directly between you and the tutor, any refunds must be negotiated with the tutor. We recommend agreeing on a cancellation policy before starting."
     },
     {
-        question: "Can I change my password?",
-        answer: "Yes, go to Profile > Account Settings > Change Password to update your login credentials."
+        question: "Are tutors background checked?",
+        answer: "Tutors can declare their DBS status on their profile. However, TutorMatch does not currently verify these documents. We strongly recommend students and parents perform their own due diligence."
     }
 ];
 
@@ -27,7 +28,7 @@ export default function HelpCenterScreen() {
     const router = useRouter();
 
     const handleEmailSupport = () => {
-        Linking.openURL('mailto:support@tutorfinder.uk');
+        Linking.openURL('mailto:support@tutormatch.uk');
     };
 
     return (
@@ -56,6 +57,13 @@ export default function HelpCenterScreen() {
                     <TouchableOpacity style={styles.contactButton} onPress={handleEmailSupport}>
                         <Text style={styles.contactButtonText}>Contact Support</Text>
                     </TouchableOpacity>
+                </View>
+
+                <View style={styles.safeguardingSection}>
+                    <Ionicons name="shield-outline" size={24} color={colors.neutrals.textMuted} />
+                    <Text style={styles.safeguardingText}>
+                        TutorMatch is a marketplace connecting students with tutors. We do not employ tutors or verify credentials. Parents and students should conduct their own due diligence.
+                    </Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -146,4 +154,19 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
         fontSize: typography.fontSize.base,
     },
+    safeguardingSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.lg,
+        gap: spacing.md,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: borderRadius.lg,
+        marginTop: spacing.xl,
+    },
+    safeguardingText: {
+        flex: 1,
+        fontSize: 10,
+        color: colors.neutrals.textMuted,
+        lineHeight: 16,
+    }
 });

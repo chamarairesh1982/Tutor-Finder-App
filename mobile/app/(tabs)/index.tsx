@@ -123,7 +123,7 @@ export default function DiscoverScreen() {
                 {/* Categories */}
                 <Section paddingVertical="2xl">
                     <View style={styles.sectionHeader}>
-                        <View>
+                        <View style={{ flex: 1 }}>
                             <Text variant="h3" weight="heavy">Expertise by Subject</Text>
                             <Text variant="bodySmall" color={colors.neutrals.textMuted}>Find specialized support for any discipline.</Text>
                         </View>
@@ -153,13 +153,13 @@ export default function DiscoverScreen() {
                 {/* Featured Tutors - Horizontal Scroll on Mobile, Grid on Web */}
                 <Section paddingVertical="2xl">
                     <View style={styles.sectionHeader}>
-                        <View>
+                        <View style={{ flex: 1 }}>
                             <Text variant="h2" weight="heavy">Featured Tutors</Text>
                             <Text variant="bodySmall" color={colors.neutrals.textMuted}>Highly-rated tutors in your area.</Text>
                         </View>
                         <TouchableOpacity onPress={() => router.push('/search')} style={styles.viewLink}>
                             <Text variant="bodySmall" color={colors.primary} weight="heavy">Browse All</Text>
-                            <Ionicons name="arrow-forward" size={16} color={colors.primary} style={{ marginLeft: 4 }} />
+                            <Ionicons name="arrow-forward" size={16} color={colors.primary} style={{ marginLeft: 6 }} />
                         </TouchableOpacity>
                     </View>
                     <Spacer size="xl" />
@@ -250,11 +250,12 @@ const styles = StyleSheet.create({
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-end',
+        alignItems: 'center',
     },
     viewLink: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 4,
     },
     categoryGrid: {
         flexDirection: 'row',

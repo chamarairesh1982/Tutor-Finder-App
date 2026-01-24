@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { useMyTutorStats } from '../../src/hooks/useTutors';
-import { TutorStats } from '../../src/types';
+import { Text, Card, Section } from '../../src/components';
 
 export default function TutorDashboard() {
     const router = useRouter();
@@ -40,72 +40,93 @@ export default function TutorDashboard() {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.header}>
-                    <Text style={styles.welcomeText}>Your Performance</Text>
-                    <Text style={styles.subText}>Insights and activity for your tutoring business.</Text>
+                    <Text variant="h1" weight="heavy">Performance</Text>
+                    <Text variant="body" color={colors.neutrals.textSecondary}>Insights for your tutoring business</Text>
                 </View>
 
                 {/* Main Stats Grid */}
                 <View style={styles.statsGrid}>
                     <StatCard
                         title="Profile Views"
-                        value={stats.totalViews.toString()}
-                        icon="eye"
+                        value={stats.totalViews.toLocaleString()}
+                        icon="eye-outline"
                         color="#6366f1"
                     />
                     <StatCard
                         title="Completed"
                         value={stats.completedBookings.toString()}
-                        icon="checkmark-done-circle"
-                        color="#10b981"
+                        icon="checkmark-done-circle-outline"
+                        color={colors.success}
                     />
                     <StatCard
                         title="Total Earnings"
-                        value={`£${stats.totalEarnings}`}
-                        icon="cash"
+                        value={`£${stats.totalEarnings.toLocaleString()}`}
+                        icon="cash-outline"
                         color="#f59e0b"
                         isFullWidth
                     />
                 </View>
 
-                {/* Booking Status Section */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Booking Status</Text>
-                </View>
 
-                <View style={styles.statusRow}>
-                    <StatusItem label="Pending" count={stats.pendingBookings} color={colors.status.pending.text} />
-                    <StatusItem label="Active" count={stats.activeBookings} color={colors.status.accepted.text} />
-                    <StatusItem label="Response Rate" count={`${Math.round(stats.responseRate)}%`} color={colors.primary} />
-                </View>
+
+                {/* Score & Health Section */}
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={{ marginBottom: spacing.md }}>Service Score</Text>
+                    <View style={styles.healthCard}>
+                        <View style={styles.healthItem}>
+                            <Text variant="h2" weight="heavy" color={colors.primary}>
+                                {Math.round(stats.responseRate)}%
+                            </Text>
+                            <Text variant="caption" color={colors.neutrals.textMuted} weight="bold">RESPONSE RATE</Text>
+                        </View>
+                        <View style={styles.healthDivider} />
+                        <View style={styles.healthItem}>
+                            <Text variant="h2" weight="heavy" color={colors.success}>
+                                {stats.activeBookings}
+                            </Text>
+                            <Text variant="caption" color={colors.neutrals.textMuted} weight="bold">ACTIVE SESSIONS</Text>
+                        </View>
+                        <View style={styles.healthDivider} />
+                        <View style={styles.healthItem}>
+                            <Text variant="h2" weight="heavy" color="#f59e0b">
+                                {stats.pendingBookings}
+                            </Text>
+                            <Text variant="caption" color={colors.neutrals.textMuted} weight="bold">PENDING</Text>
+                        </View>
+                    </View>
+                </Section>
 
                 {/* Quick Actions */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Quick Actions</Text>
-                </View>
-
-                <View style={styles.actionsContainer}>
-                    <ActionButton
-                        label="Manage Bookings"
-                        icon="calendar"
-                        onPress={() => router.push('/(tabs)/bookings')}
-                    />
-                    <ActionButton
-                        label="Edit Profile"
-                        icon="create"
-                        onPress={() => router.push('/profile/tutor-settings')}
-                    />
-                    <ActionButton
-                        label="View Public Profile"
-                        icon="person"
-                        onPress={() => router.push('/profile/tutor-settings')} // Placeholder, might need ID
-                    />
-                </View>
+                <Section paddingVertical="md">
+                    <Text variant="h3" weight="heavy" style={{ marginBottom: spacing.md }}>Operations</Text>
+                    <View style={styles.actionsContainer}>
+                        <ActionButton
+                            label="Manage Bookings"
+                            icon="calendar-outline"
+                            onPress={() => router.push('/(tabs)/bookings')}
+                        />
+                        <ActionButton
+                            label="Tutor Settings"
+                            icon="options-outline"
+                            onPress={() => router.push('/profile/tutor-settings')}
+                        />
+                        <ActionButton
+                            label="Public Preview"
+                            icon="share-outline"
+                            onPress={() => { }} // Placeholder
+                        />
+                    </View>
+                </Section>
 
                 <View style={styles.tipCard}>
-                    <Ionicons name="bulb" size={24} color={colors.primary} />
+                    <View style={[styles.statIconContainer, { backgroundColor: colors.primarySoft }]}>
+                        <Ionicons name="bulb-outline" size={24} color={colors.primary} />
+                    </View>
                     <View style={styles.tipContent}>
-                        <Text style={styles.tipTitle}>Pro Tip</Text>
-                        <Text style={styles.tipText}>Tutors with complete profiles and clear availability get 3x more bookings!</Text>
+                        <Text variant="bodySmall" weight="heavy" color={colors.primaryDark}>Pro Tip</Text>
+                        <Text variant="caption" color={colors.primaryDark} style={{ lineHeight: 18 }}>
+                            Tutors who update their availability weekly receive 3x more booking requests.
+                        </Text>
                     </View>
                 </View>
             </ScrollView>
@@ -113,37 +134,29 @@ export default function TutorDashboard() {
     );
 }
 
+// Sub-components with Design System alignment
 function StatCard({ title, value, icon, color, isFullWidth }: { title: string, value: string, icon: any, color: string, isFullWidth?: boolean }) {
     return (
-        <View style={[styles.statCard, isFullWidth && styles.statCardFull]}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${color}15` }]}>
+        <Card style={[styles.statCard, isFullWidth && styles.statCardFull]} variant="elevated">
+            <View style={[styles.statIconContainer, { backgroundColor: `${color}10` }]}>
                 <Ionicons name={icon} size={24} color={color} />
             </View>
             <View>
-                <Text style={styles.statValue}>{value}</Text>
-                <Text style={styles.statTitle}>{title}</Text>
+                <Text variant="h2" weight="heavy">{value}</Text>
+                <Text variant="caption" color={colors.neutrals.textMuted} weight="bold">{title.toUpperCase()}</Text>
             </View>
-        </View>
-    );
-}
-
-function StatusItem({ label, count, color }: { label: string, count: number | string, color: string }) {
-    return (
-        <View style={styles.statusItem}>
-            <Text style={[styles.statusCount, { color }]}>{count}</Text>
-            <Text style={styles.statusLabel}>{label}</Text>
-        </View>
+        </Card>
     );
 }
 
 function ActionButton({ label, icon, onPress }: { label: string, icon: any, onPress: () => void }) {
     return (
-        <TouchableOpacity style={styles.actionBtn} onPress={onPress}>
+        <TouchableOpacity style={styles.actionBtn} onPress={onPress} activeOpacity={0.7}>
             <View style={styles.actionIcon}>
-                <Ionicons name={icon} size={22} color={colors.neutrals.textPrimary} />
+                <Ionicons name={icon} size={20} color={colors.primary} />
             </View>
-            <Text style={styles.actionLabel}>{label}</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.neutrals.textMuted} />
+            <Text variant="body" weight="semibold" style={{ flex: 1 }}>{label}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.neutrals.borderAlt} />
         </TouchableOpacity>
     );
 }
@@ -164,16 +177,7 @@ const styles = StyleSheet.create({
     },
     header: {
         marginBottom: spacing.xl,
-    },
-    welcomeText: {
-        fontSize: typography.fontSize['2xl'],
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
-    subText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-        marginTop: 4,
+        marginTop: spacing.md,
     },
     statsGrid: {
         flexDirection: 'row',
@@ -184,12 +188,7 @@ const styles = StyleSheet.create({
     statCard: {
         flex: 1,
         minWidth: '45%',
-        backgroundColor: colors.neutrals.surface,
         padding: spacing.lg,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutrals.border,
-        ...shadows.sm,
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
@@ -204,52 +203,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    statValue: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
-    statTitle: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
-        fontWeight: typography.fontWeight.medium,
-    },
-    sectionHeader: {
-        marginBottom: spacing.md,
-    },
-    sectionTitle: {
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    statusRow: {
+    healthCard: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         backgroundColor: colors.neutrals.surface,
-        padding: spacing.lg,
         borderRadius: borderRadius.lg,
+        padding: spacing.lg,
         borderWidth: 1,
         borderColor: colors.neutrals.border,
-        marginBottom: spacing.xl,
+        ...shadows.sm,
     },
-    statusItem: {
-        alignItems: 'center',
+    healthItem: {
         flex: 1,
+        alignItems: 'center',
+        gap: 4,
     },
-    statusCount: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.bold,
-    },
-    statusLabel: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
-        marginTop: 4,
+    healthDivider: {
+        width: 1,
+        height: '60%',
+        backgroundColor: colors.neutrals.border,
+        alignSelf: 'center',
     },
     actionsContainer: {
         gap: spacing.sm,
-        marginBottom: spacing.xl,
     },
     actionBtn: {
         flexDirection: 'row',
@@ -259,21 +234,15 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         borderWidth: 1,
         borderColor: colors.neutrals.border,
+        gap: spacing.md,
     },
     actionIcon: {
         width: 36,
         height: 36,
-        borderRadius: 18,
-        backgroundColor: colors.neutrals.surfaceAlt,
+        borderRadius: 10,
+        backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: spacing.md,
-    },
-    actionLabel: {
-        flex: 1,
-        fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.medium,
-        color: colors.neutrals.textPrimary,
     },
     tipCard: {
         flexDirection: 'row',
@@ -283,20 +252,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.primaryLight,
         gap: spacing.md,
+        marginTop: spacing.xl,
     },
     tipContent: {
         flex: 1,
-    },
-    tipTitle: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.primaryDark,
-        marginBottom: 2,
-    },
-    tipText: {
-        fontSize: typography.fontSize.xs,
-        color: colors.primaryDark,
-        lineHeight: 18,
     },
     errorText: {
         color: colors.error,

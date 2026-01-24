@@ -141,17 +141,23 @@ export default function SearchPage() {
                         <Container padding="lg" fluid>
                             <View style={styles.resultsHeader}>
                                 <View>
-                                    <Text variant="bodyLarge" weight="heavy" style={{ fontSize: 18 }}>
-                                        {resultsCount} Tutors Available
+                                    <View style={styles.countBadge}>
+                                        <Text variant="label" color={colors.primary} weight="heavy">
+                                            {resultsCount} EXPERTS FOUND
+                                        </Text>
+                                    </View>
+                                    <Text variant="h2" weight="heavy" style={{ marginTop: spacing.sm }}>
+                                        {subject || 'All Tutors'} {location ? `in ${location}` : 'Near You'}
                                     </Text>
-                                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginTop: 2 }}>
-                                        {subject || 'All subjects'} · {location || 'Near you'}
+                                    <Text variant="caption" color={colors.neutrals.textMuted}>
+                                        Sorted by {sortLabel(sortBy)}
                                     </Text>
                                 </View>
+
                                 <TouchableOpacity style={styles.sortToggle} onPress={() => setSortOpen(true)}>
                                     <View style={styles.sortPill}>
-                                        <Text variant="bodySmall" weight="heavy" color={colors.primary}>{sortLabel(sortBy)}</Text>
-                                        <Ionicons name="chevron-down" size={12} color={colors.primary} style={{ marginLeft: 4 }} />
+                                        <Ionicons name="swap-vertical" size={16} color={colors.primary} />
+                                        <Text variant="bodySmall" weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>Sort</Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
@@ -361,6 +367,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: spacing.md,
     },
+    countBadge: {
+        backgroundColor: colors.primarySoft,
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: borderRadius.full,
+        alignSelf: 'flex-start',
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
     sortToggle: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -368,12 +383,13 @@ const styles = StyleSheet.create({
     sortPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primarySoft,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: borderRadius.full,
+        backgroundColor: colors.neutrals.surface,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: colors.primaryLight,
+        borderColor: colors.neutrals.border,
+        ...shadows.sm,
     },
     resultsGrid: {
         width: '100%',

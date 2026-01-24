@@ -17,40 +17,47 @@ export default function TermsScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-                <Text style={styles.lastUpdated}>Last updated: January 2026</Text>
+                <Text style={styles.lastUpdated}>Last updated: 24 January 2026</Text>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>1. Acceptance of Terms</Text>
+                    <Text style={styles.heading}>1. Marketplace Role</Text>
                     <Text style={styles.paragraph}>
-                        By accessing or using the Tutor Finder platform, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                        TutorMatch is a platform connecting students and tutors. We act as an intermediary to facilitate these connections and are not a party to any tutoring agreement or arrangement made between users.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>2. Use License</Text>
+                    <Text style={styles.heading}>2. No Employment</Text>
                     <Text style={styles.paragraph}>
-                        Permission is granted to temporarily download one copy of the materials (information or software) on Tutor Finder's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+                        Tutors using the platform are independent self-employed professionals. TutorMatch does not employ tutors, and no employment relationship is created between any tutor and the platform.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>3. User Accounts</Text>
+                    <Text style={styles.heading}>3. Verification & DBS</Text>
                     <Text style={styles.paragraph}>
-                        When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.
+                        While tutors may declare their DBS status and upload certificates, TutorMatch does not verify the authenticity of these documents. It is the responsibility of parents and students to conduct their own due diligence and verify credentials before starting lessons.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>4. Booking Guidelines</Text>
+                    <Text style={styles.heading}>4. Payments</Text>
                     <Text style={styles.paragraph}>
-                        Tutors and students are responsible for honoring confirmed bookings. Cancellations must be made at least 24 hours in advance. Repeated cancellations may result in account suspension.
+                        TutorMatch does not currently process payments. All financial arrangements, including rates and payment methods, must be arranged directly between the tutor and the student/parent.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.heading}>5. Limitation of Liability</Text>
                     <Text style={styles.paragraph}>
-                        In no event shall Tutor Finder or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Tutor Finder.
+                        TutorMatch is not liable for the quality of tutoring, the conduct of tutors or students, or any disputes arising from arrangements made through the platform. Use of the service is at your own risk.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.heading}>6. Safeguarding</Text>
+                    <Text style={styles.paragraph}>
+                        We take safeguarding seriously. Users are encouraged to report any concerns immediately through our "Report a Concern" feature available on tutor profiles and booking pages.
                     </Text>
                 </View>
             </ScrollView>

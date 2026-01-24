@@ -158,8 +158,13 @@ export default function ProfileScreen() {
                         />
                         <MenuItem
                             icon="lock-closed-outline"
-                            label="Security & Privacy"
-                            onPress={() => { }}
+                            label="Privacy Policy"
+                            onPress={() => router.push('/profile/privacy')}
+                        />
+                        <MenuItem
+                            icon="document-text-outline"
+                            label="Terms of Service"
+                            onPress={() => router.push('/profile/terms')}
                             isLast
                         />
                     </View>
@@ -171,12 +176,12 @@ export default function ProfileScreen() {
                         <MenuItem
                             icon="help-circle-outline"
                             label="Help Center"
-                            onPress={() => { }}
+                            onPress={() => router.push('/profile/help-center')}
                         />
                         <MenuItem
                             icon="chatbubble-outline"
-                            label="Give Feedback"
-                            onPress={() => { }}
+                            label="Report a Concern"
+                            onPress={() => router.push('/profile/report' as any)}
                             isLast
                         />
                     </View>

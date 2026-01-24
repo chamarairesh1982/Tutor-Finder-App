@@ -204,7 +204,13 @@ export default function TutorDetailScreen() {
                                 </View>
 
                                 <View style={styles.reportConcern}>
-                                    <TouchableOpacity style={styles.reportLink}>
+                                    <TouchableOpacity
+                                        style={styles.reportLink}
+                                        onPress={() => router.push({
+                                            pathname: '/profile/report' as any,
+                                            params: { tutorId: tutor.id, name: tutor.fullName }
+                                        })}
+                                    >
                                         <Ionicons name="flag-outline" size={16} color={colors.neutrals.textMuted} />
                                         <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginLeft: 6 }}>
                                             Report a concern

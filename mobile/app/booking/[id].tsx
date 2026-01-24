@@ -277,6 +277,17 @@ export default function BookingDetailScreen() {
                             </View>
                         </View>
 
+                        <TouchableOpacity
+                            style={styles.reportLink}
+                            onPress={() => router.push({
+                                pathname: '/profile/report' as any,
+                                params: { bookingId: booking.id, name: counterpartName }
+                            })}
+                        >
+                            <Ionicons name="flag-outline" size={12} color={colors.neutrals.textMuted} />
+                            <Text style={styles.reportText}>Report a concern</Text>
+                        </TouchableOpacity>
+
                         {/* Action Buttons Area */}
                         {(isTutor && booking.status === BookingStatus.Pending) && (
                             <View style={styles.actionButtons}>
@@ -666,5 +677,20 @@ const styles = StyleSheet.create({
     errorText: {
         color: colors.error,
         marginBottom: spacing.md,
+    },
+    reportLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: spacing.md,
+        gap: 4,
+        paddingTop: spacing.sm,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.border,
+    },
+    reportText: {
+        fontSize: 11,
+        color: colors.neutrals.textMuted,
+        fontWeight: typography.fontWeight.medium,
     }
 });

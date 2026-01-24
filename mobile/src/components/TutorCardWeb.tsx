@@ -55,7 +55,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                         <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
                     ) : (
                         <View style={styles.avatarFallback}>
-                            <Ionicons name="person" size={60} color={colors.neutrals.textMuted} />
+                            <Ionicons name="person" size={40} color={colors.neutrals.textMuted} />
                         </View>
                     )}
                     {tutor.teachingMode !== 0 && (
@@ -69,7 +69,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                 <View style={styles.detailsSection}>
                     <View style={styles.nameRow}>
                         <View style={styles.nameAndVerify}>
-                            <Text variant="h3" weight="heavy" style={styles.name}>{tutor.fullName}</Text>
+                            <Text variant="h3" weight="heavy" style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
                             {tutor.hasDbs && (
                                 <View style={styles.verifiedBadge}>
                                     <Ionicons name="shield-checkmark" size={14} color={colors.success} />
@@ -84,13 +84,13 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                         >
                             <Ionicons
                                 name={isFavorite ? "heart" : "heart-outline"}
-                                size={24}
+                                size={22}
                                 color={isFavorite ? colors.primary : colors.neutrals.textMuted}
                             />
                         </TouchableOpacity>
                     </View>
 
-                    <Text variant="body" weight="heavy" color={colors.primary} style={styles.subject}>
+                    <Text variant="body" weight="heavy" color={colors.primary} style={styles.subject} numberOfLines={1}>
                         {tutor.subjects?.slice(0, 3).join(', ') || 'Tutor'}
                     </Text>
 
@@ -99,7 +99,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                             <Ionicons name="star" size={16} color={colors.ratingStars} />
                             <Text weight="heavy" style={{ marginLeft: 6 }}>{tutor.averageRating.toFixed(1)}</Text>
                             <Text variant="bodySmall" color={colors.neutrals.textMuted} style={{ marginLeft: 4 }}>
-                                ({tutor.reviewCount} reviews)
+                                ({tutor.reviewCount})
                             </Text>
                         </View>
                         <View style={styles.dot} />
@@ -128,12 +128,6 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                                 <View style={styles.dbsBadge}>
                                     <Ionicons name="shield-checkmark" size={12} color={colors.trust.dbs} />
                                     <Text variant="caption" weight="heavy" color={colors.trust.dbs} style={{ marginLeft: 4 }}>DBS</Text>
-                                </View>
-                            )}
-                            {tutor.hasCertification && (
-                                <View style={styles.certBadge}>
-                                    <Ionicons name="ribbon" size={12} color={colors.trust.certified} />
-                                    <Text variant="caption" weight="heavy" color={colors.trust.certified} style={{ marginLeft: 4 }}>Qualified</Text>
                                 </View>
                             )}
                         </View>
@@ -190,21 +184,22 @@ const styles = StyleSheet.create({
     },
     content: {
         flexDirection: 'row',
-        padding: spacing.xl,
-        gap: spacing.xl,
+        padding: spacing.lg,
+        width: '100%',
     },
     avatarSection: {
         position: 'relative',
+        marginRight: spacing.lg,
     },
     avatar: {
-        width: 140,
-        height: 140,
+        width: 110,
+        height: 110,
         borderRadius: 16,
         backgroundColor: colors.neutrals.surfaceAlt,
     },
     avatarFallback: {
-        width: 140,
-        height: 140,
+        width: 110,
+        height: 110,
         borderRadius: 16,
         backgroundColor: colors.neutrals.surfaceAlt,
         alignItems: 'center',
@@ -214,21 +209,24 @@ const styles = StyleSheet.create({
     },
     onlineBadge: {
         position: 'absolute',
-        bottom: -6,
-        right: -6,
+        bottom: -4,
+        right: -4,
         backgroundColor: colors.neutrals.surface,
         padding: 3,
         borderRadius: 10,
         ...shadows.sm,
     },
     onlineDot: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
         backgroundColor: colors.success,
     },
     detailsSection: {
         flex: 1,
+        flexShrink: 1,
+        minWidth: 0,
+        marginRight: spacing.lg,
     },
     nameRow: {
         flexDirection: 'row',
@@ -290,15 +288,16 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textSecondary,
     },
     actionSection: {
-        width: 200,
+        width: 180,
         justifyContent: 'space-between',
         borderLeftWidth: 1,
         borderLeftColor: colors.neutrals.border,
-        paddingLeft: spacing.xl,
+        paddingLeft: spacing.lg,
     },
     priceBlock: {
         alignItems: 'flex-end',
-        gap: 4,
+        gap: 2,
+        marginBottom: spacing.md,
     },
     priceHeader: {
         flexDirection: 'row',
