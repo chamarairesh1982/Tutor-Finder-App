@@ -1,29 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme';
-import { TutorSearchResult, Category } from '../types';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { colors, spacing, borderRadius, shadows } from '../lib/theme';
+import { TutorSearchResult } from '../types';
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { Ionicons } from '@expo/vector-icons';
+import { Text } from './Text';
+import { Card } from './Card';
 
 interface TutorCardProps {
     tutor: TutorSearchResult;
     onPress: () => void;
 }
 
-const categoryLabels: Record<Category, string> = {
-    [Category.Music]: 'Music',
-    [Category.Maths]: 'Maths',
-    [Category.English]: 'English',
-    [Category.Science]: 'Science',
-    [Category.Languages]: 'Languages',
-    [Category.Programming]: 'Programming',
-    [Category.Other]: 'Other',
-};
-
 export function TutorCard({ tutor, onPress }: TutorCardProps) {
-    const { isAuthenticated, user } = useAuthStore();
+    const { isAuthenticated } = useAuthStore();
     const { addToast } = useNotificationStore();
     const { data: favoriteData } = useIsFavorite(tutor.id);
     const addFavorite = useAddFavorite();
@@ -32,243 +24,192 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
     const isFavorite = favoriteData?.isFavorite ?? false;
 
     const toggleFavorite = (e: any) => {
-        e.stopPropagation();
+        e?.stopPropagation?.();
         if (!isAuthenticated) {
-            addToast({ type: 'info', title: 'Sign in to save', message: 'Create an account to keep track of your favorite tutors.' });
+            addToast({ type: 'info', title: 'Sign in to save', message: 'Create an account to keep track of your favorites.' });
             return;
         }
         if (isFavorite) {
             removeFavorite.mutate(tutor.id);
         } else {
-            addFavorite.mutate(tutor.id, {
-                onError: (error: any) => {
-                    const message = error.response?.data?.detail || 'Could not save tutor';
-                    addToast({ type: 'error', title: 'Oops!', message });
-                }
-            });
+            addFavorite.mutate(tutor.id);
         }
     };
-
-    const renderStars = (rating: number) => {
-        const stars = [];
-        for (let i = 1; i <= 5; i++) {
-            stars.push(
-                <Ionicons
-                    key={i}
-                    name={i <= Math.round(rating) ? "star" : "star-outline"}
-                    size={14}
-                    color={i <= Math.round(rating) ? colors.ratingStars : colors.neutrals.border}
-                    style={{ marginRight: 2 }}
-                />
-            );
-        }
-        return stars;
-    };
-
-    const isOnline = tutor.teachingMode === 1 || tutor.teachingMode === 2;
 
     return (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={onPress}
-            activeOpacity={0.9}
-            accessibilityRole="button"
-        >
-            <View style={styles.topSection}>
-                <View style={styles.avatarContainer}>
-                    {tutor.photoUrl ? (
-                        <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
-                    ) : (
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
+        <Card variant="elevated" onPress={onPress} style={styles.card}>
+            <View style={styles.content}>
+                {/* Avatar Section */}
+                <View style={styles.avatarSection}>
+                    <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
+                    {tutor.teachingMode !== 0 && (
+                        <View style={styles.onlineBadge}>
+                            <View style={styles.onlineDot} />
                         </View>
                     )}
-                    {isOnline && <View style={styles.onlineBadge} />}
                 </View>
 
-                <View style={styles.mainInfo}>
-                    <View style={styles.nameHeader}>
-                        <Text style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
-                        <TouchableOpacity onPress={toggleFavorite} style={styles.favBtn}>
-                            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color={isFavorite ? colors.primary : colors.neutrals.textMuted} />
+                {/* Info Section */}
+                <View style={styles.infoSection}>
+                    <View style={styles.headerRow}>
+                        <View style={styles.nameBlock}>
+                            <Text variant="body" weight="heavy" numberOfLines={1}>{tutor.fullName}</Text>
+                            {tutor.hasDbs && (
+                                <View style={styles.verifiedIcon}>
+                                    <Ionicons name="shield-checkmark" size={14} color={colors.success} />
+                                </View>
+                            )}
+                        </View>
+                        <TouchableOpacity onPress={toggleFavorite} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                            <Ionicons
+                                name={isFavorite ? "heart" : "heart-outline"}
+                                size={22}
+                                color={isFavorite ? colors.primary : colors.neutrals.textMuted}
+                            />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={styles.categoryName}>{categoryLabels[tutor.category]}</Text>
+                    <Text variant="bodySmall" weight="bold" color={colors.primary} style={styles.subject}>
+                        {tutor.subjects?.[0]}
+                    </Text>
 
-                    <View style={styles.statsRow}>
-                        <View style={styles.ratingGroup}>
-                            <View style={styles.starRow}>{renderStars(tutor.averageRating)}</View>
-                            <Text style={styles.revCount}>{tutor.reviewCount} reviews</Text>
+                    <View style={styles.metaRow}>
+                        <View style={styles.ratingBlock}>
+                            <Ionicons name="star" size={14} color={colors.ratingStars} />
+                            <Text variant="caption" weight="heavy" style={{ marginLeft: 4 }}>
+                                {tutor.averageRating.toFixed(1)}
+                            </Text>
+                            <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginLeft: 2 }}>
+                                ({tutor.reviewCount})
+                            </Text>
+                        </View>
+                        <View style={styles.dot} />
+                        <Text variant="caption" color={colors.neutrals.textSecondary}>
+                            {tutor.distanceMiles > 0 ? `${tutor.distanceMiles.toFixed(1)} mi` : 'Online'}
+                        </Text>
+                    </View>
+
+                    <View style={styles.priceRow}>
+                        <Text variant="bodyLarge" weight="heavy">£{tutor.pricePerHour}<Text variant="caption">/hr</Text></Text>
+                        <View style={styles.trustBadges}>
+                            {tutor.hasDbs && (
+                                <View style={styles.dbsBadge}>
+                                    <Ionicons name="shield-checkmark" size={12} color={colors.trust.dbs} />
+                                    <Text variant="caption" weight="bold" color={colors.trust.dbs}> DBS</Text>
+                                </View>
+                            )}
+                            {tutor.hasCertification && (
+                                <View style={styles.certBadge}>
+                                    <Ionicons name="ribbon" size={12} color={colors.trust.certified} />
+                                    <Text variant="caption" weight="bold" color={colors.trust.certified}> Qualified</Text>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </View>
-
-                <View style={styles.priceTag}>
-                    <Text style={styles.priceValue}>£{tutor.pricePerHour}</Text>
-                    <Text style={styles.priceUnit}>/hr</Text>
-                </View>
             </View>
-
-            <View style={styles.footerDetails}>
-                <View style={styles.tagsRow}>
-                    {tutor.hasDbs && (
-                        <View style={[styles.statusTag, { backgroundColor: '#cdfbd4' }]}>
-                            <Ionicons name="shield-checkmark" size={10} color="#065f46" />
-                            <Text style={[styles.tagText, { color: '#065f46' }]}>DBS</Text>
-                        </View>
-                    )}
-                    <View style={styles.statusTag}>
-                        <Ionicons name="time-outline" size={10} color={colors.primaryDark} />
-                        <Text style={[styles.tagText, { color: colors.primaryDark }]}>{tutor.nextAvailableText || 'Next week'}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.footerRight}>
-                    {tutor.distanceMiles > 0 && <Text style={styles.milesText}>{tutor.distanceMiles.toFixed(1)} mi</Text>}
-                    <Ionicons name="chevron-forward" size={16} color={colors.neutrals.textMuted} />
-                </View>
-            </View>
-        </TouchableOpacity>
+        </Card>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: 24,
+        padding: spacing.md,
         marginHorizontal: spacing.md,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
+        borderRadius: borderRadius.lg,
         ...shadows.sm,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
     },
-    topSection: {
+    content: {
         flexDirection: 'row',
-        padding: spacing.lg,
-        alignItems: 'center',
+        gap: spacing.md,
     },
-    avatarContainer: {
+    avatarSection: {
         position: 'relative',
-        marginRight: spacing.lg,
     },
     avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 16,
-    },
-    avatarPlaceholder: {
-        width: 64,
-        height: 64,
-        borderRadius: 16,
-        backgroundColor: colors.primarySoft,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatarInitial: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.primary,
+        width: 80,
+        height: 80,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.neutrals.surfaceAlt,
     },
     onlineBadge: {
         position: 'absolute',
-        top: -4,
+        bottom: -4,
         right: -4,
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        backgroundColor: colors.success,
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-    mainInfo: {
-        flex: 1,
-        gap: 2,
-    },
-    nameHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    name: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: colors.neutrals.textPrimary,
-        flex: 1,
-    },
-    favBtn: {
-        padding: 4,
-    },
-    categoryName: {
-        fontSize: 13,
-        color: colors.primaryDark,
-        fontWeight: '600',
-    },
-    statsRow: {
-        marginTop: 4,
-    },
-    ratingGroup: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    starRow: {
-        flexDirection: 'row',
-    },
-    revCount: {
-        fontSize: 12,
-        color: colors.neutrals.textMuted,
-    },
-    priceTag: {
-        alignItems: 'flex-end',
-        marginLeft: spacing.md,
-    },
-    priceValue: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: colors.neutrals.textPrimary,
-    },
-    priceUnit: {
-        fontSize: 12,
-        color: colors.neutrals.textMuted,
-    },
-    footerDetails: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surfaceAlt + '40',
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
-    },
-    tagsRow: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    statusTag: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        backgroundColor: colors.neutrals.surface,
+        padding: 2,
         borderRadius: 8,
-        backgroundColor: colors.primarySoft,
+        ...shadows.sm,
     },
-    tagText: {
-        fontSize: 11,
-        fontWeight: 'bold',
+    onlineDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: colors.success,
     },
-    footerRight: {
+    infoSection: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 2,
+    },
+    nameBlock: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 1,
         gap: 4,
     },
-    milesText: {
-        fontSize: 12,
-        color: colors.neutrals.textMuted,
-        fontWeight: '600',
+    verifiedIcon: {
+        marginTop: 2,
+    },
+    subject: {
+        marginBottom: 4,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+    },
+    ratingBlock: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    dot: {
+        width: 3,
+        height: 3,
+        borderRadius: 2,
+        backgroundColor: colors.neutrals.borderAlt,
+        marginHorizontal: 8,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    trustBadges: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    dbsBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.trust.dbsLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: borderRadius.full,
+    },
+    certBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.trust.certifiedLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: borderRadius.full,
     },
 });

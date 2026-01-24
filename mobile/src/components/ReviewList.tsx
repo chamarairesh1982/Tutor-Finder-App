@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         borderRadius: borderRadius.full,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         backgroundColor: colors.neutrals.surfaceAlt,
     },
     sortPillActive: {
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         padding: spacing.md,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     reviewHeader: {
         flexDirection: 'row',

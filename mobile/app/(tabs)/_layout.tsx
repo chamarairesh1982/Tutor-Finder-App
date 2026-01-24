@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Text, Platform, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, typography } from '../../src/lib/theme';
+import { colors, spacing, borderRadius, typography, shadows } from '../../src/lib/theme';
 import { useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 
@@ -46,41 +46,39 @@ export default function TabsLayout() {
                 tabBarActiveTintColor: colors.primary,
                 tabBarInactiveTintColor: colors.neutrals.textMuted,
                 tabBarLabelStyle: {
-                    fontSize: 11,
-                    fontWeight: '600',
-                    marginBottom: 4,
+                    fontSize: 10,
+                    fontWeight: '800',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    paddingBottom: Platform.OS === 'ios' ? 0 : 4,
                 },
                 tabBarStyle: {
-                    backgroundColor: colors.neutrals.background,
+                    backgroundColor: colors.neutrals.surface,
                     borderTopWidth: 1,
-                    borderTopColor: colors.neutrals.surfaceAlt,
-                    height: 60,
-                    paddingBottom: 8,
+                    borderTopColor: colors.neutrals.border,
+                    height: Platform.OS === 'ios' ? 88 : 64,
+                    paddingBottom: Platform.OS === 'ios' ? 32 : 12,
                     paddingTop: 8,
                     ...Platform.select({
                         web: {
-                            boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.05)',
+                            height: 70,
+                            paddingBottom: 12,
+                            ...shadows.lg,
                         } as any,
-                        default: {
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: -2 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 4,
-                            elevation: 5,
-                        },
+                        default: shadows.md,
                     }),
                 },
                 headerShown: false,
                 headerStyle: {
-                    backgroundColor: colors.neutrals.background,
+                    backgroundColor: colors.neutrals.surface,
                     elevation: 0,
                     shadowOpacity: 0,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.neutrals.surfaceAlt,
+                    borderBottomColor: colors.neutrals.border,
                 },
                 headerTitleStyle: {
                     fontSize: 18,
-                    fontWeight: '700',
+                    fontWeight: '800',
                     color: colors.neutrals.textPrimary,
                 },
                 headerTintColor: colors.neutrals.textPrimary,

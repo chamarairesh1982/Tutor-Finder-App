@@ -1,19 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
-import { colors, typography, spacing, borderRadius, shadows } from '../lib/theme';
+import { View, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { colors, spacing, borderRadius, shadows, typography } from '../lib/theme';
 import { TutorSearchResult, TeachingMode } from '../types';
 import { Button } from './Button';
+import { Text } from './Text';
+import { Card } from './Card';
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
+import { Ionicons } from '@expo/vector-icons';
 
 interface TutorCardWebProps {
     tutor: TutorSearchResult;
     onPress?: () => void;
     onRequestBooking?: () => void;
     onViewProfile?: () => void;
-    onMouseEnter?: () => void;
-    onMouseLeave?: () => void;
 }
 
 const modeLabel: Record<TeachingMode, string> = {
@@ -22,8 +23,8 @@ const modeLabel: Record<TeachingMode, string> = {
     [TeachingMode.Both]: 'In-person & Online',
 };
 
-export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile, onMouseEnter, onMouseLeave }: TutorCardWebProps) {
-    const { isAuthenticated, user } = useAuthStore();
+export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }: TutorCardWebProps) {
+    const { isAuthenticated } = useAuthStore();
     const { addToast } = useNotificationStore();
     const { data: favoriteData } = useIsFavorite(tutor.id);
     const addFavorite = useAddFavorite();
@@ -32,343 +33,300 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile, 
     const isFavorite = favoriteData?.isFavorite ?? false;
 
     const toggleFavorite = (e: any) => {
-        e.stopPropagation();
-
+        e?.stopPropagation?.();
         if (!isAuthenticated) {
-            addToast({
-                type: 'info',
-                title: 'Sign in to save',
-                message: 'Create an account to keep track of your favorite tutors.'
-            });
+            addToast({ type: 'info', title: 'Sign in to save', message: 'Create an account to keep track of your favorites.' });
             return;
         }
-
         if (isFavorite) {
             removeFavorite.mutate(tutor.id);
         } else {
-            addFavorite.mutate(tutor.id, {
-                onError: (error: any) => {
-                    const message = error.response?.data?.detail || 'Could not save tutor';
-                    addToast({ type: 'error', title: 'Oops!', message });
-                }
-            });
+            addFavorite.mutate(tutor.id);
         }
     };
-    const badges: string[] = [];
-    if (tutor.hasDbs) badges.push('DBS verified');
-    if (tutor.hasCertification) badges.push('Certified');
-    if (tutor.badges?.length) badges.push(...tutor.badges);
-    if (badges.length === 0) badges.push('Profile verified');
-
-    const subjects = tutor.subjects.slice(0, 4);
 
     return (
-        <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.9}
-            onPress={onPress}
-            {...(Platform.OS === 'web' ? { onMouseEnter, onMouseLeave } : {})}
-        >
-            <View style={styles.accentBar} />
-            <View style={styles.cardMain}>
-                <View style={styles.avatarCol}>
-                    <View style={styles.avatarWrapper}>
-                        {tutor.photoUrl ? (
-                            <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} resizeMode="cover" />
-                        ) : (
-                            <View style={styles.avatarPlaceholder}>
-                                <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
-                            </View>
-                        )}
-                        <View style={styles.verifiedMini}><Text style={styles.verifiedMiniText}>✓</Text></View>
-                    </View>
-                    <View style={styles.badgeStack}>
-                        {badges.slice(0, 2).map((badge) => (
-                            <View key={badge} style={styles.badge}>
-                                <Text style={styles.badgeText}>{badge}</Text>
-                            </View>
-                        ))}
-                    </View>
+        <Card variant="elevated" onPress={onPress} style={styles.card}>
+            <View style={styles.premiumIndicator} />
+            <View style={styles.content}>
+                {/* Left: Avatar Section */}
+                <View style={styles.avatarSection}>
+                    {tutor.photoUrl ? (
+                        <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
+                    ) : (
+                        <View style={styles.avatarFallback}>
+                            <Ionicons name="person" size={60} color={colors.neutrals.textMuted} />
+                        </View>
+                    )}
+                    {tutor.teachingMode !== 0 && (
+                        <View style={styles.onlineBadge}>
+                            <View style={styles.onlineDot} />
+                        </View>
+                    )}
                 </View>
 
-                <View style={styles.infoCol}>
-                    <View style={styles.titleRow}>
-                        <View>
-                            <Text style={styles.name}>{tutor.fullName}</Text>
-                            <View style={styles.ratingRow}>
-                                <Text style={styles.ratingText}>★ {tutor.averageRating.toFixed(1)}</Text>
-                                <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
-                            </View>
+                {/* Center: Details Section */}
+                <View style={styles.detailsSection}>
+                    <View style={styles.nameRow}>
+                        <View style={styles.nameAndVerify}>
+                            <Text variant="h3" weight="heavy" style={styles.name}>{tutor.fullName}</Text>
+                            {tutor.hasDbs && (
+                                <View style={styles.verifiedBadge}>
+                                    <Ionicons name="shield-checkmark" size={14} color={colors.success} />
+                                    <Text variant="caption" weight="heavy" color={colors.success} style={{ marginLeft: 4 }}>DBS</Text>
+                                </View>
+                            )}
                         </View>
-                        <View style={styles.priceTag}>
-                            <Text style={styles.price}>£{tutor.pricePerHour}</Text>
-                            <Text style={styles.priceUnit}>/hr</Text>
-                        </View>
+                        <TouchableOpacity
+                            onPress={toggleFavorite}
+                            style={styles.favoriteBtn}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                            <Ionicons
+                                name={isFavorite ? "heart" : "heart-outline"}
+                                size={24}
+                                color={isFavorite ? colors.primary : colors.neutrals.textMuted}
+                            />
+                        </TouchableOpacity>
                     </View>
 
-                    <View style={styles.subjectRow}>
-                        {subjects.map((subject) => (
-                            <View key={subject} style={styles.subjectChip}>
-                                <Text style={styles.subjectText}>{subject}</Text>
-                            </View>
-                        ))}
-                    </View>
+                    <Text variant="body" weight="heavy" color={colors.primary} style={styles.subject}>
+                        {tutor.subjects?.slice(0, 3).join(', ') || 'Tutor'}
+                    </Text>
 
                     <View style={styles.metaRow}>
-                        <MetaItem icon="📍" text={tutor.distanceMiles > 0 ? `${tutor.distanceMiles.toFixed(1)} mi away` : 'Distance shown when location is set'} />
-                        <MetaItem icon="🕒" text={tutor.nextAvailableText || 'Next availability shared after enquiry'} />
-                        <MetaItem icon="💬" text={tutor.responseTimeText || 'Typically responds fast'} />
+                        <View style={styles.ratingBlock}>
+                            <Ionicons name="star" size={16} color={colors.ratingStars} />
+                            <Text weight="heavy" style={{ marginLeft: 6 }}>{tutor.averageRating.toFixed(1)}</Text>
+                            <Text variant="bodySmall" color={colors.neutrals.textMuted} style={{ marginLeft: 4 }}>
+                                ({tutor.reviewCount} reviews)
+                            </Text>
+                        </View>
+                        <View style={styles.dot} />
+                        <View style={styles.modeBlock}>
+                            <Ionicons name="location-outline" size={14} color={colors.neutrals.textSecondary} />
+                            <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>
+                                {modeLabel[tutor.teachingMode ?? TeachingMode.Both]}
+                            </Text>
+                        </View>
                     </View>
 
-                    <View style={styles.footerRow}>
-                        <View style={styles.modeTag}>
-                            <Text style={styles.modeTagText}>{modeLabel[tutor.teachingMode ?? TeachingMode.Both]}</Text>
+                    <Text variant="bodySmall" color={colors.neutrals.textSecondary} numberOfLines={2} style={styles.bio}>
+                        {tutor.bio || 'Tutor available for personalised sessions to help you reach your goals.'}
+                    </Text>
+                </View>
+
+                {/* Right: Actions Section */}
+                <View style={styles.actionSection}>
+                    <View style={styles.priceBlock}>
+                        <View style={styles.priceHeader}>
+                            <Text variant="h2" weight="heavy">£{tutor.pricePerHour}</Text>
+                            <Text variant="bodySmall" color={colors.neutrals.textMuted} style={{ marginLeft: 4, marginBottom: 4 }}>/ hr</Text>
                         </View>
-                        <View style={styles.ctaButtons}>
-                            <Button
-                                title="View profile"
-                                onPress={onViewProfile || onPress || (() => { })}
-                                size="sm"
-                                variant="outline"
-                            />
-                            <Button
-                                title="Book Now"
-                                onPress={onRequestBooking || onPress || (() => { })}
-                                size="sm"
-                            />
+                        <View style={styles.trustBadgeRow}>
+                            {tutor.hasDbs && (
+                                <View style={styles.dbsBadge}>
+                                    <Ionicons name="shield-checkmark" size={12} color={colors.trust.dbs} />
+                                    <Text variant="caption" weight="heavy" color={colors.trust.dbs} style={{ marginLeft: 4 }}>DBS</Text>
+                                </View>
+                            )}
+                            {tutor.hasCertification && (
+                                <View style={styles.certBadge}>
+                                    <Ionicons name="ribbon" size={12} color={colors.trust.certified} />
+                                    <Text variant="caption" weight="heavy" color={colors.trust.certified} style={{ marginLeft: 4 }}>Qualified</Text>
+                                </View>
+                            )}
                         </View>
+                    </View>
+
+                    <View style={styles.btnGroup}>
+                        <Button
+                            title="View Profile"
+                            variant="outline"
+                            size="md"
+                            onPress={onViewProfile || (onPress ? onPress : () => { })}
+                            fullWidth
+                        />
+                        <Button
+                            title="Request Booking"
+                            variant="primary"
+                            size="md"
+                            onPress={onRequestBooking || (onPress ? onPress : () => { })}
+                            fullWidth
+                            style={{ marginTop: spacing.sm }}
+                        />
                     </View>
                 </View>
             </View>
-
-            <TouchableOpacity
-                style={styles.saveButton}
-                onPress={toggleFavorite}
-            >
-                <Text style={[styles.saveIcon, isFavorite && styles.saveIconActive]}>{isFavorite ? '♥' : '♡'}</Text>
-            </TouchableOpacity>
-        </TouchableOpacity>
+        </Card>
     );
 }
-
-function MetaItem({ icon, text }: { icon: string; text: string }) {
-    return (
-        <View style={styles.metaItemRow}>
-            <Text style={styles.metaIcon}>{icon}</Text>
-            <Text style={styles.metaText} numberOfLines={1}>{text}</Text>
-        </View>
-    );
-}
-
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderRadius: 20,
+        marginBottom: spacing.lg,
         overflow: 'hidden',
-        position: 'relative',
-        ...shadows.sm,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
+        ...shadows.subtle,
         ...Platform.select({
             web: {
-                transition: 'all 150ms ease',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
-            } as any,
-        }),
+                ':hover': {
+                    transform: [{ translateY: -4 }],
+                    ...shadows.md,
+                    borderColor: colors.primary + '40',
+                }
+            } as any
+        })
     },
-    accentBar: {
-        height: 6,
-        backgroundColor: colors.primary,
+    premiumIndicator: {
+        height: 4,
         width: '100%',
+        backgroundColor: colors.primarySoft,
+        opacity: 0.5,
     },
-    cardMain: {
+    content: {
         flexDirection: 'row',
-        padding: spacing.lg,
-        gap: spacing.lg,
+        padding: spacing.xl,
+        gap: spacing.xl,
     },
-    avatarCol: {
-        width: 100,
-        alignItems: 'center',
-        gap: spacing.md,
-    },
-    avatarWrapper: {
+    avatarSection: {
         position: 'relative',
     },
     avatar: {
-        width: 88,
-        height: 88,
-        borderRadius: borderRadius.md,
+        width: 140,
+        height: 140,
+        borderRadius: 16,
+        backgroundColor: colors.neutrals.surfaceAlt,
     },
-    avatarPlaceholder: {
-        width: 88,
-        height: 88,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.primarySoft,
+    avatarFallback: {
+        width: 140,
+        height: 140,
+        borderRadius: 16,
+        backgroundColor: colors.neutrals.surfaceAlt,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
     },
-    avatarInitial: {
-        fontSize: typography.fontSize['3xl'],
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.primary,
-    },
-    verifiedMini: {
+    onlineBadge: {
         position: 'absolute',
-        bottom: -4,
-        right: -4,
-        width: 20,
-        height: 20,
+        bottom: -6,
+        right: -6,
+        backgroundColor: colors.neutrals.surface,
+        padding: 3,
         borderRadius: 10,
-        backgroundColor: colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: colors.neutrals.surface,
+        ...shadows.sm,
     },
-    verifiedMiniText: {
-        color: colors.neutrals.surface,
-        fontSize: 10,
-        fontWeight: 'bold',
+    onlineDot: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        backgroundColor: colors.success,
     },
-    badgeStack: {
-        gap: spacing.xxs,
-        width: '100%',
-    },
-    badge: {
-        paddingVertical: 2,
-        paddingHorizontal: spacing.sm,
-        backgroundColor: colors.primarySoft,
-        borderRadius: borderRadius.full,
-        alignSelf: 'center',
-    },
-    badgeText: {
-        fontSize: 10,
-        color: colors.primaryDark,
-        fontWeight: typography.fontWeight.bold,
-        textTransform: 'uppercase',
-    },
-    infoCol: {
+    detailsSection: {
         flex: 1,
-        gap: spacing.md,
     },
-    titleRow: {
+    nameRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingRight: spacing.xl, // Make room for save button
+        marginBottom: spacing.xs,
+    },
+    nameAndVerify: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     name: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
+        letterSpacing: -0.5,
     },
-    ratingRow: {
+    verifiedBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
-        marginTop: 2,
+        backgroundColor: '#ECFDF5',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: '#A7F3D0',
     },
-    ratingText: {
-        fontWeight: typography.fontWeight.bold,
-        color: colors.ratingStars,
-        fontSize: typography.fontSize.sm,
+    favoriteBtn: {
+        backgroundColor: colors.neutrals.surface,
+        padding: 8,
+        borderRadius: 12,
+        ...shadows.sm,
     },
-    reviewCount: {
-        fontSize: typography.fontSize.xs,
-        color: colors.neutrals.textMuted,
-        fontWeight: typography.fontWeight.medium,
-    },
-    priceTag: {
-        alignItems: 'flex-end',
-    },
-    price: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.primaryDark,
-    },
-    priceUnit: {
-        fontSize: 10,
-        color: colors.neutrals.textMuted,
-        marginTop: -4,
-    },
-    subjectRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.xs,
-    },
-    subjectChip: {
-        paddingVertical: 4,
-        paddingHorizontal: spacing.md,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        borderRadius: borderRadius.full,
-    },
-    subjectText: {
-        fontSize: 11,
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.semibold,
+    subject: {
+        marginBottom: spacing.sm,
+        fontSize: 15,
     },
     metaRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.md,
-        paddingVertical: spacing.xs,
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(0,0,0,0.03)',
+        alignItems: 'center',
+        marginBottom: spacing.lg,
     },
-    metaItemRow: {
+    ratingBlock: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
     },
-    metaIcon: {
+    modeBlock: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    dot: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: colors.neutrals.borderAlt,
+        marginHorizontal: spacing.md,
+    },
+    bio: {
+        lineHeight: 22,
         fontSize: 14,
-    },
-    metaText: {
-        fontSize: typography.fontSize.xs,
         color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
     },
-    footerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    actionSection: {
+        width: 200,
         justifyContent: 'space-between',
-        marginTop: spacing.xs,
+        borderLeftWidth: 1,
+        borderLeftColor: colors.neutrals.border,
+        paddingLeft: spacing.xl,
     },
-    modeTag: {
-        paddingVertical: 4,
-        paddingHorizontal: spacing.md,
-        borderRadius: borderRadius.full,
-        backgroundColor: 'rgba(217, 70, 239, 0.08)',
+    priceBlock: {
+        alignItems: 'flex-end',
+        gap: 4,
     },
-    modeTagText: {
-        fontSize: 11,
-        color: colors.primaryDark,
-        fontWeight: typography.fontWeight.bold,
-    },
-    ctaButtons: {
+    priceHeader: {
         flexDirection: 'row',
-        gap: spacing.sm,
+        alignItems: 'flex-end',
     },
-    saveButton: {
-        position: 'absolute',
-        top: spacing.lg,
-        right: spacing.lg,
-        width: 32,
-        height: 32,
+    trustBadgeRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: 8,
+        justifyContent: 'flex-end',
+    },
+    dbsBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.trust.dbsLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
         borderRadius: borderRadius.full,
-        backgroundColor: colors.neutrals.surface,
-        ...shadows.sm,
-        zIndex: 10,
     },
-    saveIcon: {
-        fontSize: 20,
-        color: colors.neutrals.textMuted,
+    certBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.trust.certifiedLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: borderRadius.full,
     },
-    saveIconActive: {
-        color: colors.primary,
-    },
+    btnGroup: {
+        width: '100%',
+    }
 });

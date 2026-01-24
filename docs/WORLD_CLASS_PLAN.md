@@ -1,79 +1,56 @@
-# World-Class Tutor Finder App - Upgrade Plan
+# World-Class Upgrade Plan: TutorMatch UK
 
-## Vision
-Transform the existing MVP into a production-grade, secure, scalable, and beautifully designed application. We prioritize "Clean Architecture" integrity, mobile-first UX, and developer experience.
+## Phase 0: Diagnosis Summary
 
-## Phase 1: World-Class Foundation (Backbone & Security)
+### Backend (.NET 8 Clean Architecture)
+- **Strengths**: Clean Architecture structure, API Versioning, Rate Limiting, OpenTelemetry base, ProblemDetails, Seeding restricted to Dev.
+- **Gaps**:
+    - CORS is "AllowAnyOrigin" in Dev but configurable in Prod.
+    - Missing DB pattern optimization (NetTopologySuite is used but need to verify indexes).
+    - Health checks are basic (generic check for Postgres).
+    - Lack of request size limits.
+    - Refresh token rotation exists in code but needs verification for security edge cases (family revocation).
+    - Caching exists (MemoryCache) but more strategic application needed for geocoding.
 
-### P0 - Critical Infrastructure (Immediate)
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| B1 | **Secure CORS & Headers** | Replace `AllowAnyOrigin` with config-based origins. Add HSTS, Security Headers policy. | **Done** |
-| B2 | **Rate Limiting & Safety** | Add ASP.NET Core Rate Limiting (Global + Auth endpoints). | **Done** |
-| B3 | **API Versioning** | Implement `Asp.Versioning.Http`. Ensure `api/v1/...` routing is strict. | **Done** |
-| B4 | **Observability** | Add OpenTelemetry (logs, traces, metrics) + Serilog usage. | **Done** |
-| B5 | **Seeding Safety** | Wrap `DbSeeder` in `IsDevelopment` check to prevent prod data wipes. | **Done** |
-| B6 | **Caching Strategy** | Add `IMemoryCache` for high-read endpoints (Search/Geocoding). | **Done** |
+### Mobile (Expo)
+- **Strengths**: Rich design system tokens, responsive layout base, TanStack Query integrated.
+- **Gaps**:
+    - Design System implementation: Components exist but need to be the *source of truth* for all screens.
+    - Accessibility Audit: Contrast ratios updated, but dynamic type and focus states need more work.
+    - Navigation: Deep links and auth gate logic need verification.
+    - Web Optimization: Responsive layouts improved, but keyboard navigation and desktop sidebars need polish.
+    - Error/Loading UX: Inconsistent usage of Skeleton/ErrorState components.
 
-### P1 - Mobile UX & Design System
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| M1 | **Design System Components** | Build `Text`, `Card`, `Button`, `Chip` wrapping `theme.ts`. | **Done** |
-| M2 | **Error & Load States** | Standardize React Query `isLoading` / `isError` UI. | **Done** |
-| M3 | **Search Experience** | Sticky search bar, filters, empty states. | **Done** |
+---
 
-### P2 - Quality & CI/CD
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| Q1 | **CI Pipeline** | GitHub Actions for Build/Test/Lint. | **Done** |
-| Q2 | **Architecture Tests** | Verify "Clean Architecture" rules (Reflection-based). | **Done** |
+## P0 Priorities (Foundation & Security)
 
-## Phase 2: Feature Polish (UX Perfection)
+| Task ID | Component | Task Description | Effort (Est.) |
+| :--- | :--- | :--- | :--- |
+| **P0-01** | Backend | **Harden CORS Policy**: Replace generic dev CORS with structured origin matching. | 1h |
+| **P0-02** | Backend | **Request Integrity**: Add request size limits and security headers (Antiforgery/XSS). | 1h |
+| **P0-03** | Backend | **Geo-Search Optimization**: Ensure DB indexes match `NetTopologySuite` query patterns and add geocoding cache. | 3h |
+| **P0-04** | Backend | **Health Check Depth**: Implement deep health checks for DB (actual connectivity/query test). | 1h |
+| **P0-05** | Backend | **Consistent CancellationToken**: Audit and propagate `CancellationToken` end-to-end. | 2h |
+| **P0-06** | Mobile | **Standardized Typography**: Propagate `Text` component across all screens as the single source of truth. | 2h |
+| **P0-07** | Mobile | **Global Loading/Error Pattern**: Implement TanStack Query `defaultOptions` for global error handling with `ErrorState`. | 2h |
+| **P0-08** | Mobile | **Auth Gate & Session Recovery**: Hardened auth middleware with persistent refresh logic. | 3h |
+| **P0-09** | Mobile | **Accessibility Overlay**: Add `accessible`, `accessibilityLabel`, and `accessibilityRole` to all interactive components. | 3h |
+| **P0-10** | Mobile | **Web-First Sidebar**: Implement a proper fixed sidebar for the Search screen on desktop (>1024px). | 2h |
+| **P0-11** | Backend | **Family-Based Refresh Token Revocation**: Ensure old refresh tokens are revoked when a new one is used from a suspicious context. | 3h |
+| **P0-12** | CI/CD | **GitHub Actions Foundation**: Basic build/lint pipeline for Backend and Mobile. | 2h |
 
-### P3 - Real-Time Interactivity (SignalR)
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| R1 | **Backend Hub** | Helper `NotificationHub`, secure it with JWT, integrate with `NotificationService`. | **Done** |
-| R2 | **Mobile Client** | Connect to SignalR, handle reconnections, show Toast on message. | **Done** |
+---
 
-### P4 - Navigation & Accessibility
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| N1 | **Deep Linking** | Typed routes for `tutor/:id`, `booking/:id` in `expo-router` config. | **Done** (Configured scheme) |
-| N2 | **A11y & Focus** | Audit `accessibilityLabel`, fix keyboard focus rings on Web. | **Done** (TutorCard) |
+## P1 Priorities (Polish & Performance)
+- Implement `Skeleton` loaders for every data-fetching component.
+- Add Keyboard Navigation support for Web (shortcuts and TAB index).
+- Enhanced geocoding with radius-based caching.
+- Real-time notification SignalR status check in Header.
 
-### P5 - Payments (Foundation)
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| P1 | **Payment Intent** | Backend endpoint to create PaymentIntent (Stripe pattern). | **Done** (Mock) |
-| P2 | **Payment UI** | Simple checkout UI (Mock/Stub for now) to complete booking flow. | **Done** (Mock) |
+---
 
-## Phase 3: Production Readiness (Scaling & Polish)
-
-### P6 - Revenue & Reliability
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| R3 | **Real Stripe Flow** | Replace `PaymentModal` mock with real Stripe Elements/PaymentSheet. | [ ] |
-| R4 | **Payouts System** | Backend logic for Tutor payouts (Connect pattern). | [ ] |
-| R5 | **Error Boundary** | Global React Error Boundaries + Sentry integration. | [ ] |
-
-### P7 - User Experience & Growth
-| ID | Task | Description | Status |
-|----|------|-------------|--------|
-| G1 | **Advanced Search** | Filter by Price Range, Distance (Slider), and Rating threshold. | [ ] |
-| G2 | **Messaging Polish** | SignalR 'Typing...' status and 'Read' indicators. | [ ] |
-| G3 | **Social Sharing** | Native share sheets for Tutor Profiles. | [ ] |
-
-## Implementation Log
-- [x] Plan Created
-- [x] **Backend**: Secure CORS, Rate Limiting, Versioning, Observability, Safe Seeding, Caching.
-- [x] **Mobile**: Design System (Text, Card, Chip, Empty/Error States), Discover Screen UX upgrade.
-- [x] **Tests**: Added unit tests for GeocodingService caching.
-- [x] **Quality**: Added GitHub Actions CI and Architecture Tests (enforcing Clean Arch boundaries).
-- [x] **Real-time**: Implemented SignalR NotificationHub (Backend) + Mobile connection management.
-- [x] **Payments**: Mock Payment Intent API (Backend) and Payment Modal/Checkout Flow (Mobile).
-
-## Next Steps
-- [ ] User testing and feedback.
-- [ ] Real Stripe keys integration.
-- [ ] Production deployment.
+## P2 Priorities (Quality & Delivery)
+- Playwright Smoke Tests for Web.
+- Docker production compose with SSL termination.
+- Performance Metrics (OpenTelemetry) Dashboard setup.

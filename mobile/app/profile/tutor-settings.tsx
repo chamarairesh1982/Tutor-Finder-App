@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
+        borderBottomColor: colors.neutrals.border,
         gap: spacing.md,
     },
     backButton: {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.full,
         backgroundColor: colors.neutrals.surfaceAlt,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     pillActive: {
         backgroundColor: colors.primarySoft,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         borderRadius: borderRadius.sm,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     tagText: {
         fontSize: 12,

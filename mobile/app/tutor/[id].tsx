@@ -1,16 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, Image, Alert, ActivityIndicator, Platform, Modal, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, ActivityIndicator, Platform, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTutorProfile } from '../../src/hooks/useTutors';
 import { useCreateBooking, useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { BookingPanel, ReviewList, AvailabilitySchedule, SchedulePickerModal } from '../../src/components';
-import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
-import { BookingStatus, Category, TeachingMode } from '../../src/types';
+import {
+    BookingPanel, ReviewList, AvailabilitySchedule, SchedulePickerModal,
+    Text, ErrorState, Screen, Container, Section, Spacer, Button, IconButton, Card, Badge
+} from '../../src/components';
+import { colors, spacing, layout, shadows, borderRadius, typography } from '../../src/lib/theme';
+import { BookingStatus, TeachingMode } from '../../src/types';
 import { useBreakpoint } from '../../src/lib/responsive';
-import { Button } from '../../src/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TutorDetailScreen() {
@@ -22,7 +23,7 @@ export default function TutorDetailScreen() {
     const { data: tutor, isLoading, isError } = useTutorProfile(id!);
     const { data: myBookings } = useMyBookings(isAuthenticated);
     const { mutate: createBooking, isPending: isBookingPending } = useCreateBooking();
-    const { isLg, width } = useBreakpoint();
+    const { isLg } = useBreakpoint();
 
     const [initialMessage, setInitialMessage] = useState('');
     const [preferredMode, setPreferredMode] = useState<TeachingMode>(TeachingMode.Both);
@@ -33,15 +34,7 @@ export default function TutorDetailScreen() {
 
     const activeBooking = useMemo(() => {
         const list = Array.isArray(myBookings) ? myBookings : [];
-        const relevant = list
-            .filter((b) => b.tutorId === id)
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        return relevant.find((b) =>
-            b.status === BookingStatus.Pending ||
-            b.status === BookingStatus.Accepted ||
-            b.status === BookingStatus.Completed
-        );
+        return list.find((b) => b.tutorId === id && b.status !== BookingStatus.Declined);
     }, [id, myBookings]);
 
     const handleBooking = () => {
@@ -49,17 +42,11 @@ export default function TutorDetailScreen() {
             router.push('/(auth)/login');
             return;
         }
-
         if (activeBooking) {
-            notify({
-                type: 'info',
-                title: 'You already have a booking',
-                message: 'Open the existing request to message or check status.',
-            });
+            notify({ type: 'info', title: 'Existing booking', message: 'You already have an active request.' });
             router.push(`/booking/${activeBooking.id}`);
             return;
         }
-
         if (!initialMessage.trim()) {
             notify({ type: 'error', title: 'Message required', message: 'Please add a short message for the tutor.' });
             return;
@@ -75,213 +62,192 @@ export default function TutorDetailScreen() {
             {
                 onSuccess: (booking) => {
                     setBookingModalOpen(false);
-                    setScheduleModalOpen(false);
                     notify({ type: 'success', title: 'Request sent', message: 'The tutor will reply soon.' });
-                    setInitialMessage('');
-                    setPreferredDate('');
                     router.push(`/booking/${booking.id}`);
                 },
-                onError: (error: any) => {
-                    const msg = error?.response?.data?.detail || 'Failed to send booking request.';
-                    notify({ type: 'error', title: 'Request failed', message: msg });
-                }
             }
         );
     };
 
-    const openBookingModal = () => {
-        if (!isAuthenticated) {
-            router.push('/(auth)/login');
-            return;
-        }
-
-        if (activeBooking) {
-            notify({
-                type: 'info',
-                title: 'Booking already in progress',
-                message: 'Open your booking to continue the chat.',
-            });
-            router.push(`/booking/${activeBooking.id}`);
-            return;
-        }
-
-        setBookingModalOpen(true);
-    }
-
-    const handleSlotSelect = (day: string, time: string) => {
-        const formatted = `${day} at ${time.substring(0, 5)}`;
-        setPreferredDate(formatted);
-        setScheduleModalOpen(false);
-        if (!isLg && !bookingModalOpen) {
-            setBookingModalOpen(true);
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <View style={styles.centered}>
-                <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-        );
-    }
-
-    if (isError || !tutor) {
-        return (
-            <View style={styles.centered}>
-                <Text style={styles.errorText}>Tutor profile not found.</Text>
-                <Button title="Go Back" onPress={() => router.back()} style={{ marginTop: spacing.md }} />
-            </View>
-        );
-    }
-
-    const teachingModeLabel = (() => {
-        switch (tutor.teachingMode) {
-            case TeachingMode.InPerson: return 'In-person';
-            case TeachingMode.Online: return 'Online';
-            default: return 'In-person & online';
-        }
-    })();
-
-    const infoSections = [
-        { title: 'About', icon: 'person', body: tutor.bio?.trim() || 'This tutor is updating their bio.' },
-        {
-            title: 'Qualifications',
-            icon: 'school',
-            items: [
-                ...(tutor.qualifications?.split('\n').filter(l => l.trim()) ?? []),
-                ...(tutor.hasDbs ? ['DBS Checked & Verified'] : []),
-                ...(tutor.hasCertification ? ['Certified Tutor'] : []),
-                'Verified Profile'
-            ],
-            isChecklist: true
-        },
-        { title: 'Teaching style', icon: 'bulb', body: tutor.teachingStyle?.trim() || 'Practical, confidence-building lessons tailored to each learner.' },
-        { title: 'Specialties', icon: 'star', items: (tutor.specialities?.length ? tutor.specialities : tutor.subjects) ?? [], isPill: true },
-        { title: 'Location', icon: 'location', body: tutor.locationSummary ?? `Based around ${tutor.postcode}. Offers ${teachingModeLabel.toLowerCase()}.` },
-        { title: 'Availability', icon: 'time', body: tutor.availabilitySummary ?? tutor.nextAvailableText ?? 'Share your preferred times in the request.', slots: tutor.availabilitySlots },
-        { title: 'Response Time', icon: 'chatbubbles', body: tutor.responseTimeText ?? 'Usually replies within 24 hours' },
-    ];
-
-    const bookingCta = (() => {
-        if (!activeBooking) return { title: 'Request booking', onPress: openBookingModal, badge: null };
-        switch (activeBooking.status) {
-            case BookingStatus.Pending: return { title: 'View request', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Pending' };
-            case BookingStatus.Accepted: return { title: 'Message tutor', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: 'Accepted' };
-            default: return { title: 'View booking', onPress: () => router.push(`/booking/${activeBooking.id}`), badge: null };
-        }
-    })();
-
-    const horizontalPadding = width > layout.contentMaxWidth ? spacing['2xl'] : spacing.lg;
+    if (isLoading) return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    if (isError || !tutor) return <ErrorState title="Profile not found" onRetry={() => router.back()} />;
 
     return (
-        <SafeAreaView style={styles.container} edges={['bottom', 'top']}>
-            {isLg && (
-                <View style={styles.desktopNav}>
-                    <View style={styles.desktopNavInner}>
-                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
-                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
-                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
+        <Screen scrollable backgroundColor={colors.neutrals.background}>
+            {/* World Class Header / Hero */}
+            <View style={styles.header}>
+                <Container maxWidth={layout.contentMaxWidth} padding="lg">
+                    <View style={styles.headerToolbar}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                            <Ionicons name="chevron-back" size={24} color={colors.neutrals.textPrimary} />
+                            <Text weight="bold" style={{ marginLeft: 4 }}>Back</Text>
                         </TouchableOpacity>
-                        <View style={styles.desktopActions}>
-                            {isAuthenticated ? (
-                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
-                                    <Text style={styles.navLinkText}>My Dashboard</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
-                                    <Text style={styles.navLinkText}>Login</Text>
-                                </TouchableOpacity>
-                            )}
+                        <View style={styles.toolbarActions}>
+                            <IconButton icon={<Ionicons name="share-outline" size={20} />} onPress={() => { }} />
+                            <IconButton icon={<Ionicons name="heart-outline" size={20} />} onPress={() => { }} />
                         </View>
                     </View>
-                </View>
-            )}
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.pageContent}>
-                    <View style={styles.heroSection}>
-                        <View style={styles.heroBackground}>
+
+                    <View style={[styles.profileHero, isLg && styles.profileHeroWeb]}>
+                        <View style={styles.avatarContainer}>
                             {tutor.photoUrl ? (
-                                <Image source={{ uri: tutor.photoUrl }} style={styles.heroBlur} blurRadius={Platform.OS === 'ios' ? 20 : 5} />
+                                <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
                             ) : (
-                                <View style={[styles.heroBlur, { backgroundColor: colors.primary }]} />
+                                <View style={styles.avatarFallback}>
+                                    <Ionicons name="person" size={48} color={colors.neutrals.textMuted} />
+                                </View>
                             )}
-                            <View style={styles.heroOverlay} />
+                            <View style={styles.onlineStatus} />
                         </View>
 
-                        <View style={styles.heroContent}>
-                            <View style={styles.profileHeaderRow}>
-                                <View style={[styles.avatarLarge, isLg && styles.avatarLargeDesktop]}>
-                                    {tutor.photoUrl ? (
-                                        <Image source={{ uri: tutor.photoUrl }} style={styles.avatarImg} />
-                                    ) : (
-                                        <Text style={styles.avatarInitial}>{tutor.fullName.charAt(0)}</Text>
-                                    )}
-                                </View>
-                                <View style={styles.heroText}>
-                                    <View style={styles.nameHeader}>
-                                        <TouchableOpacity onPress={() => router.back()} style={styles.backFab}>
-                                            <Ionicons name="arrow-back" size={20} color="#fff" />
-                                        </TouchableOpacity>
-                                        <Text style={[styles.fullName, isLg && styles.fullNameDesktop]}>{tutor.fullName}</Text>
-                                        {(tutor.hasDbs || tutor.hasCertification) && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Ionicons name="checkmark-circle" size={12} color="#fff" />
-                                                <Text style={styles.verifiedText}>Verified</Text>
-                                            </View>
-                                        )}
+                        <View style={styles.heroMain}>
+                            <View style={styles.nameSection}>
+                                <Text variant="h1" weight="heavy" style={styles.profileName}>{tutor.fullName}</Text>
+                                {tutor.hasDbs && (
+                                    <View style={styles.verifiedChip}>
+                                        <Ionicons name="shield-checkmark" size={14} color={colors.success} />
+                                        <Text variant="caption" weight="heavy" color={colors.success} style={{ marginLeft: 4 }}>DBS Checked</Text>
                                     </View>
-                                    <Text style={styles.heroCategory}>{Category[tutor.category]}</Text>
-                                    <View style={styles.heroRatingRow}>
-                                        <Ionicons name="star" size={16} color={colors.ratingStars} />
-                                        <Text style={styles.ratingValue}>{tutor.averageRating.toFixed(1)}</Text>
-                                        <Text style={styles.reviewCount}>({tutor.reviewCount} reviews)</Text>
-                                    </View>
-                                </View>
+                                )}
                             </View>
 
-                            {isLg && (
-                                <View style={styles.heroPriceSection}>
-                                    <Text style={styles.heroPrice}>£{tutor.pricePerHour}<Text style={styles.heroPriceUnit}>/hr</Text></Text>
-                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} size="lg" style={styles.heroBtn} />
+                            <Text variant="bodyLarge" weight="heavy" color={colors.primary} style={styles.topSubject}>
+                                {tutor.subjects?.[0]} Specialist
+                            </Text>
+
+                            <View style={styles.metaRow}>
+                                <View style={styles.ratingBox}>
+                                    <Ionicons name="star" size={18} color={colors.ratingStars} />
+                                    <Text weight="heavy" style={{ fontSize: 16, marginLeft: 6 }}>{tutor.averageRating.toFixed(1)}</Text>
+                                    <Text variant="bodySmall" color={colors.neutrals.textMuted} style={{ marginLeft: 4 }}>({tutor.reviewCount} reviews)</Text>
                                 </View>
-                            )}
+                                <View style={styles.dot} />
+                                <View style={styles.locationBox}>
+                                    <Ionicons name="location-sharp" size={16} color={colors.neutrals.textSecondary} />
+                                    <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>London, UK</Text>
+                                </View>
+                            </View>
                         </View>
                     </View>
+                </Container>
+            </View>
 
-                    <View style={[styles.bodyLayout, isLg && styles.bodyLayoutWide, { paddingHorizontal: horizontalPadding }]}>
-                        <View style={styles.contentColumn}>
-                            {infoSections.map((section) => (
-                                <InfoSection key={section.title} section={section} />
-                            ))}
+            {/* Profile Content Layout */}
+            <Container maxWidth={layout.contentMaxWidth} padding="lg">
+                <View style={[styles.mainLayout, isLg && styles.mainLayoutWeb]}>
+                    {/* Left Column: Information Sections */}
+                    <View style={styles.contentColumn}>
+                        <Section paddingVertical="xl">
+                            <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Meet Your Tutor</Text>
+                            <Card variant="subtle" style={styles.infoCard}>
+                                <Text variant="body" color={colors.neutrals.textSecondary} style={styles.bioText}>
+                                    {tutor.bio || 'Qualified tutor with over 5 years of experience in helping students reach their full potential.'}
+                                </Text>
+                            </Card>
+                        </Section>
 
-                            <View style={styles.reviewsHeader}>
-                                <Text style={styles.reviewSectionTitle}>Student Reviews</Text>
-                                <ReviewList
-                                    reviews={tutor.reviews ?? []}
-                                    averageRating={tutor.averageRating}
-                                    totalCount={tutor.reviewCount}
-                                    ratingBreakdown={tutor.ratingBreakdown}
-                                    sort={reviewSort}
-                                    onSortChange={setReviewSort}
-                                />
-                            </View>
-                        </View>
+                        <Section paddingVertical="md">
+                            <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Teaching Methodology</Text>
+                            <Card variant="subtle" style={styles.infoCard}>
+                                <Text variant="body" color={colors.neutrals.textSecondary} style={styles.bioText}>
+                                    {tutor.teachingStyle || 'I believe in a personalized approach that builds core confidence, making complex concepts easy to digest.'}
+                                </Text>
+                            </Card>
+                        </Section>
 
-                        <View style={[styles.bookingColumn, isLg && styles.bookingSticky]}>
-                            {activeBooking ? (
-                                <View style={styles.bookingStatusCard}>
-                                    <View style={styles.bookingStatusTop}>
-                                        <Text style={styles.bookingStatusLabel}>Current Booking</Text>
-                                        {!!bookingCta.badge && (
-                                            <View style={styles.bookingStatusBadge}>
-                                                <Text style={styles.bookingStatusBadgeText}>{bookingCta.badge.toUpperCase()}</Text>
-                                            </View>
-                                        )}
+                        {/* Trust & Safety Section */}
+                        <Section paddingVertical="md">
+                            <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Trust & Safety</Text>
+                            <Card variant="subtle" style={styles.infoCard}>
+                                <View style={styles.trustItems}>
+                                    <View style={styles.trustItem}>
+                                        <View style={[styles.trustBadge, tutor.hasDbs && styles.trustBadgeActive]}>
+                                            <Ionicons
+                                                name="shield-checkmark"
+                                                size={20}
+                                                color={tutor.hasDbs ? colors.trust.dbs : colors.neutrals.textMuted}
+                                            />
+                                        </View>
+                                        <View style={styles.trustText}>
+                                            <Text variant="body" weight="semibold">
+                                                DBS Check {tutor.hasDbs ? '(Declared)' : 'Not Declared'}
+                                            </Text>
+                                            <Text variant="caption" color={colors.neutrals.textMuted}>
+                                                {tutor.hasDbs
+                                                    ? 'This tutor has declared they hold a valid DBS certificate.'
+                                                    : 'DBS status has not been declared by this tutor.'}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <Text style={styles.bookingStatusHint}>Message this tutor directly from your active booking.</Text>
-                                    <Button title={bookingCta.title} onPress={bookingCta.onPress} size="lg" />
+
+                                    <View style={styles.trustDivider} />
+
+                                    <View style={styles.trustItem}>
+                                        <View style={[styles.trustBadge, tutor.hasCertification && styles.trustBadgeActive]}>
+                                            <Ionicons
+                                                name="ribbon"
+                                                size={20}
+                                                color={tutor.hasCertification ? colors.trust.certified : colors.neutrals.textMuted}
+                                            />
+                                        </View>
+                                        <View style={styles.trustText}>
+                                            <Text variant="body" weight="semibold">
+                                                {tutor.hasCertification ? 'Qualified Teacher' : 'Qualifications Not Declared'}
+                                            </Text>
+                                            <Text variant="caption" color={colors.neutrals.textMuted}>
+                                                {tutor.hasCertification
+                                                    ? 'This tutor has declared they are a qualified teacher or hold relevant certifications.'
+                                                    : 'Teaching qualifications have not been declared.'}
+                                            </Text>
+                                        </View>
+                                    </View>
                                 </View>
-                            ) : (
+
+                                <View style={styles.reportConcern}>
+                                    <TouchableOpacity style={styles.reportLink}>
+                                        <Ionicons name="flag-outline" size={16} color={colors.neutrals.textMuted} />
+                                        <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginLeft: 6 }}>
+                                            Report a concern
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Card>
+                        </Section>
+
+                        <Section paddingVertical="md">
+                            <View style={styles.sectionHeaderRow}>
+                                <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Habitual Availability</Text>
+                                <TouchableOpacity onPress={() => setScheduleModalOpen(true)}>
+                                    <Text variant="bodySmall" color={colors.primary} weight="heavy">View Full Schedule</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Spacer size="md" />
+                            <AvailabilitySchedule slots={tutor.availabilitySlots || []} />
+                        </Section>
+
+                        <Section paddingVertical="xl">
+                            <View style={styles.sectionHeaderRow}>
+                                <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Student Reviews</Text>
+                                <View style={styles.reviewSummary}>
+                                    <Ionicons name="star" size={14} color={colors.ratingStars} />
+                                    <Text weight="heavy" style={{ marginLeft: 4 }}>{tutor.averageRating.toFixed(1)}</Text>
+                                </View>
+                            </View>
+                            <Spacer size="lg" />
+                            <ReviewList
+                                reviews={tutor.reviews ?? []}
+                                averageRating={tutor.averageRating}
+                                totalCount={tutor.reviewCount}
+                                sort={reviewSort}
+                                onSortChange={setReviewSort}
+                            />
+                        </Section>
+                    </View>
+
+                    {/* Column 2: Sticky Sidebar (Web) */}
+                    {isLg && (
+                        <View style={styles.sidebar}>
+                            <View style={styles.sidebarSticky}>
                                 <BookingPanel
                                     pricePerHour={tutor.pricePerHour}
                                     mode={preferredMode}
@@ -292,35 +258,52 @@ export default function TutorDetailScreen() {
                                     onMessageChange={setInitialMessage}
                                     onSubmit={handleBooking}
                                     isSubmitting={isBookingPending}
-                                    responseTimeText={tutor.responseTimeText}
                                     availabilitySlots={tutor.availabilitySlots}
                                     onSelectFromSchedule={() => setScheduleModalOpen(true)}
                                 />
-                            )}
+                                <View style={styles.trustFooter}>
+                                    <Ionicons name="lock-closed" size={14} color={colors.neutrals.textMuted} />
+                                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginLeft: 6 }}>
+                                        Arrange payment directly with the tutor.
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
-                    </View>
+                    )}
                 </View>
-            </ScrollView>
+            </Container>
 
+            {/* Mobile Bottom Booking Bar */}
             {!isLg && (
-                <View style={styles.mobileBookingBar}>
-                    <View>
-                        <Text style={styles.mobilePrice}>£{tutor.pricePerHour}<Text style={styles.mobilePriceUnit}>/hr</Text></Text>
-                        <Text style={styles.mobilePriceCaption}>Secure payment</Text>
+                <View style={styles.mobileActions}>
+                    <View style={styles.mobilePriceInfo}>
+                        <Text variant="h2" weight="heavy">£{tutor.pricePerHour}<Text variant="caption">/hr</Text></Text>
+                        <Text variant="caption" color={colors.neutrals.textMuted}>Contact to arrange lesson</Text>
                     </View>
-                    <Button title={bookingCta.title} onPress={bookingCta.onPress} isLoading={isBookingPending} style={styles.mobileBookingBtn} />
+                    <Button
+                        title={activeBooking ? 'Manage Booking' : 'Book Session'}
+                        onPress={() => setBookingModalOpen(true)}
+                        variant="primary"
+                        style={styles.mobileBookBtn}
+                        size="lg"
+                    />
                 </View>
             )}
 
-            <Modal visible={bookingModalOpen} animationType="slide" onRequestClose={() => setBookingModalOpen(false)}>
-                <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Request a Session</Text>
-                        <TouchableOpacity onPress={() => setBookingModalOpen(false)} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color={colors.neutrals.textMuted} />
-                        </TouchableOpacity>
-                    </View>
-                    <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+            {/* Mobile Booking Overlay */}
+            <Modal visible={bookingModalOpen && !isLg} animationType="slide">
+                <Screen edges={['top', 'bottom']} backgroundColor={colors.neutrals.background}>
+                    <Container padding="lg">
+                        <View style={styles.modalHeader}>
+                            <View>
+                                <Text variant="h3" weight="heavy">Secure Booking</Text>
+                                <Text variant="caption" color={colors.neutrals.textMuted}>Sending request to {tutor.fullName.split(' ')[0]}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.modalClose} onPress={() => setBookingModalOpen(false)}>
+                                <Ionicons name="close" size={24} color={colors.neutrals.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+                        <Spacer size="xl" />
                         <BookingPanel
                             pricePerHour={tutor.pricePerHour}
                             mode={preferredMode}
@@ -331,450 +314,269 @@ export default function TutorDetailScreen() {
                             onMessageChange={setInitialMessage}
                             onSubmit={handleBooking}
                             isSubmitting={isBookingPending}
-                            responseTimeText={tutor.responseTimeText}
                             availabilitySlots={tutor.availabilitySlots}
-                            onSelectFromSchedule={() => setScheduleModalOpen(true)}
                         />
-                    </ScrollView>
-                </SafeAreaView>
+                    </Container>
+                </Screen>
             </Modal>
 
             <SchedulePickerModal
                 visible={scheduleModalOpen}
                 onClose={() => setScheduleModalOpen(false)}
                 slots={tutor.availabilitySlots || []}
-                onSelect={handleSlotSelect}
+                onSelect={(d, t) => {
+                    setPreferredDate(`${d} at ${t.substring(0, 5)}`);
+                    setScheduleModalOpen(false);
+                }}
             />
-        </SafeAreaView>
-    );
-}
-
-function InfoSection({ section }: { section: any }) {
-    return (
-        <View style={styles.sectionCard}>
-            <View style={styles.sectionTitleRow}>
-                <View style={styles.iconCircle}>
-                    <Ionicons name={(section.icon + '-outline') as any} size={20} color={colors.primaryDark} />
-                </View>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-            </View>
-
-            {section.body && <Text style={[styles.sectionBody, section.slots && { marginBottom: spacing.md }]}>{section.body}</Text>}
-
-            {section.title === 'Availability' && section.slots && (
-                <AvailabilitySchedule slots={section.slots} />
-            )}
-
-            {section.isChecklist && (
-                <View style={[styles.checklist, { marginTop: spacing.sm }]}>
-                    {section.items.map((item: string, idx: number) => (
-                        <View key={idx} style={styles.checkItem}>
-                            <Ionicons name="checkmark-circle-sharp" size={18} color={colors.success} />
-                            <Text style={styles.checkText}>{item}</Text>
-                        </View>
-                    ))}
-                </View>
-            )}
-
-            {section.isPill && (
-                <View style={styles.pillRow}>
-                    {section.items.map((item: string, idx: number) => (
-                        <View key={idx} style={styles.specialtyPill}>
-                            <Text style={styles.specialtyText}>{item}</Text>
-                        </View>
-                    ))}
-                </View>
-            )}
-        </View>
+            <Spacer size="5xl" />
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.neutrals.background,
-    },
-    desktopNav: {
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    header: {
         backgroundColor: colors.neutrals.surface,
+        paddingTop: spacing.lg,
+        paddingBottom: spacing['2xl'],
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
-        zIndex: 2000,
-        height: 80,
-        justifyContent: 'center',
+        borderBottomColor: colors.neutrals.border,
     },
-    desktopNavInner: {
+    headerToolbar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: spacing.xl,
-        maxWidth: layout.wideContentMaxWidth,
-        width: '100%',
-        alignSelf: 'center',
+        marginBottom: spacing.xl,
     },
-    brandRow: {
+    backBtn: {
         flexDirection: 'row',
         alignItems: 'center',
+        padding: 4,
+    },
+    toolbarActions: {
+        flexDirection: 'row',
         gap: spacing.sm,
     },
-    logoMini: {
-        width: 32,
-        height: 32,
-        backgroundColor: colors.primary,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    logoMiniText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
-    brandTitleDesktop: {
-        fontSize: 24,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
-    },
-    desktopActions: {
-        flexDirection: 'row',
+    profileHero: {
         alignItems: 'center',
         gap: spacing.xl,
     },
-    navLink: {
-        paddingVertical: spacing.sm,
-    },
-    navLinkText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.neutrals.textSecondary,
-    },
-    scrollContent: {
-        paddingBottom: spacing['4xl'],
-    },
-    pageContent: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    heroSection: {
-        width: '100%',
-        height: 280,
-        justifyContent: 'flex-end',
-        overflow: 'hidden',
-    },
-    heroBackground: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    heroBlur: {
-        ...StyleSheet.absoluteFillObject,
-        width: '100%',
-        height: '100%',
-    },
-    heroOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.35)',
-    },
-    heroContent: {
-        maxWidth: layout.wideContentMaxWidth,
-        width: '100%',
-        alignSelf: 'center',
-        paddingHorizontal: spacing.xl,
-        paddingBottom: spacing.xl,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-    },
-    profileHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xl,
-    },
-    avatarLarge: {
-        width: 100,
-        height: 100,
-        borderRadius: 24,
-        backgroundColor: colors.neutrals.surface,
-        borderWidth: 4,
-        borderColor: '#fff',
-        overflow: 'hidden',
-        ...shadows.lg,
-    },
-    avatarLargeDesktop: {
-        width: 140,
-        height: 140,
-        borderRadius: 32,
-    },
-    avatarImg: {
-        width: '100%',
-        height: '100%',
-    },
-    avatarInitial: {
-        fontSize: 40,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.primaryDark,
-        lineHeight: 100,
-        textAlign: 'center',
-    },
-    heroText: {
-        gap: 4,
-    },
-    nameHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-    },
-    backFab: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: spacing.sm,
-        ...Platform.select({ web: { display: 'none' } as any }),
-    },
-    fullName: {
-        fontSize: 32,
-        fontWeight: typography.fontWeight.heavy,
-        color: '#fff',
-    },
-    fullNameDesktop: {
-        fontSize: 44,
-    },
-    heroCategory: {
-        fontSize: 16,
-        color: 'rgba(255,255,255,0.9)',
-        fontWeight: typography.fontWeight.semibold,
-    },
-    heroRatingRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        marginTop: 4,
-    },
-    ratingValue: {
-        fontSize: 16,
-        fontWeight: typography.fontWeight.bold,
-        color: '#fff',
-    },
-    reviewCount: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.8)',
-    },
-    heroPriceSection: {
-        alignItems: 'flex-end',
-        gap: spacing.md,
-    },
-    heroPrice: {
-        fontSize: 36,
-        fontWeight: typography.fontWeight.heavy,
-        color: '#fff',
-    },
-    heroPriceUnit: {
-        fontSize: 16,
-        fontWeight: typography.fontWeight.normal,
-    },
-    heroBtn: {
-        backgroundColor: '#fff',
-        borderColor: '#fff',
-        paddingHorizontal: spacing.xl,
-    },
-    bodyLayout: {
-        width: '100%',
-        maxWidth: layout.wideContentMaxWidth,
-        marginTop: spacing.xl,
-        gap: spacing.xl,
-    },
-    bodyLayoutWide: {
+    profileHeroWeb: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        textAlign: 'left',
     },
-    contentColumn: {
-        flex: 1.2,
-        gap: spacing.lg,
+    avatarContainer: {
+        position: 'relative',
     },
-    bookingColumn: {
-        flex: 0.8,
-        maxWidth: 420,
-        width: '100%',
-    },
-    bookingSticky: {
-        position: 'sticky' as any,
-        top: spacing.lg,
-    },
-    sectionCard: {
-        backgroundColor: colors.neutrals.surface,
+    avatar: {
+        width: 160,
+        height: 160,
         borderRadius: 24,
-        padding: spacing.xl,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderWidth: 6,
+        borderColor: '#fff',
+        ...shadows.lg,
     },
-    sectionTitleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        marginBottom: spacing.md,
-    },
-    iconCircle: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        backgroundColor: colors.primarySoft,
+    avatarFallback: {
+        width: 160,
+        height: 160,
+        borderRadius: 24,
+        backgroundColor: colors.neutrals.surfaceAlt,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 6,
+        borderColor: '#fff',
+        ...shadows.lg,
+    },
+    onlineStatus: {
+        position: 'absolute',
+        bottom: 4,
+        right: 4,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: colors.success,
+        borderWidth: 5,
+        borderColor: '#fff',
+        ...shadows.sm,
+    },
+    heroMain: {
+        flex: 1,
+        alignItems: Platform.OS === 'web' ? 'flex-start' : 'center',
+    },
+    nameSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        justifyContent: Platform.OS === 'web' ? 'flex-start' : 'center',
+        gap: 12,
+        marginBottom: 8,
+    },
+    profileName: {
+        letterSpacing: -1,
+    },
+    verifiedChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ECFDF5',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#A7F3D0',
+    },
+    topSubject: {
+        marginBottom: 12,
+        fontSize: 18,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    locationBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    dot: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: colors.neutrals.borderAlt,
+        marginHorizontal: spacing.lg,
+    },
+    mainLayout: {
+        paddingVertical: spacing.xl,
+        gap: spacing['2xl'],
+    },
+    mainLayoutWeb: {
+        flexDirection: 'row',
+    },
+    contentColumn: {
+        flex: 1,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
+        marginBottom: spacing.md,
     },
-    sectionBody: {
-        fontSize: 16,
-        color: colors.neutrals.textSecondary,
-        lineHeight: 26,
-    },
-    checklist: {
-        gap: 12,
-    },
-    checkItem: {
+    sectionHeaderRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    checkText: {
-        fontSize: 15,
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    pillRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    specialtyPill: {
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        backgroundColor: colors.primarySoft,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-    },
-    specialtyText: {
-        color: colors.primaryDark,
-        fontSize: 13,
-        fontWeight: typography.fontWeight.bold,
-    },
-    reviewsHeader: {
-        marginTop: spacing.xl,
-    },
-    reviewSectionTitle: {
-        fontSize: 22,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        marginBottom: spacing.lg,
-    },
-    bookingStatusCard: {
-        backgroundColor: colors.neutrals.surface,
-        borderRadius: 24,
-        padding: spacing.xl,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        gap: spacing.md,
-    },
-    bookingStatusTop: {
-        flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
     },
-    bookingStatusLabel: {
-        fontSize: 12,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
+    infoCard: {
+        padding: spacing.xl,
+        borderRadius: 20,
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
     },
-    bookingStatusBadge: {
-        backgroundColor: colors.primary,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 6,
+    bioText: {
+        lineHeight: 26,
+        fontSize: 16,
     },
-    bookingStatusBadgeText: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#fff',
+    reviewSummary: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutrals.surfaceAlt,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
     },
-    bookingStatusHint: {
-        fontSize: 14,
-        color: colors.neutrals.textSecondary,
-        lineHeight: 20,
+    sidebar: {
+        width: 400,
     },
-    mobileBookingBar: {
+    sidebarSticky: {
+        ...Platform.select({
+            web: {
+                position: 'sticky' as any,
+                top: spacing.xl,
+            }
+        })
+    },
+    trustFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: spacing.lg,
+    },
+    mobileActions: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: spacing.lg,
+        paddingBottom: spacing.xl,
         backgroundColor: colors.neutrals.surface,
         borderTopWidth: 1,
-        borderTopColor: colors.neutrals.cardBorder,
+        borderTopColor: colors.neutrals.border,
         ...shadows.lg,
+        zIndex: 50,
     },
-    mobilePrice: {
-        fontSize: 24,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
+    mobilePriceInfo: {
+        flex: 1,
     },
-    mobilePriceUnit: {
-        fontSize: 14,
-        fontWeight: typography.fontWeight.normal,
-        color: colors.neutrals.textMuted,
-    },
-    mobilePriceCaption: {
-        fontSize: 12,
-        color: colors.success,
-        fontWeight: 'bold',
-    },
-    mobileBookingBtn: {
-        minWidth: 160,
-    },
-    verifiedBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: colors.success,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 6,
-    },
-    verifiedText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
+    mobileBookBtn: {
+        flex: 1.2,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
+        alignItems: 'flex-start',
     },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: typography.fontWeight.bold,
-    },
-    closeBtn: {
-        padding: 4,
-    },
-    centered: {
-        flex: 1,
+    modalClose: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.neutrals.surfaceAlt,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    errorText: {
-        color: colors.error,
-        fontSize: 16,
+    // Trust & Safety styles
+    trustItems: {
+        gap: spacing.lg,
+    },
+    trustItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: spacing.md,
+    },
+    trustBadge: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    trustBadgeActive: {
+        backgroundColor: colors.trust.dbsLight,
+    },
+    trustText: {
+        flex: 1,
+        gap: 2,
+    },
+    trustDivider: {
+        height: 1,
+        backgroundColor: colors.neutrals.border,
+        marginVertical: spacing.xs,
+    },
+    reportConcern: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.border,
+    },
+    reportLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });

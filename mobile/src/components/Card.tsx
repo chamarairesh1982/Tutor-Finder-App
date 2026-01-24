@@ -4,7 +4,7 @@ import { colors, borderRadius, spacing, shadows } from '../lib/theme';
 
 interface CardProps {
     children: React.ReactNode;
-    variant?: 'elevated' | 'outlined' | 'filled' | 'glass';
+    variant?: 'elevated' | 'outlined' | 'filled' | 'glass' | 'subtle';
     padding?: keyof typeof spacing;
     onPress?: () => void;
     style?: StyleProp<ViewStyle>;
@@ -47,15 +47,21 @@ const styles = StyleSheet.create({
     base: {
         borderRadius: borderRadius.lg,
         backgroundColor: colors.neutrals.surface,
+        ...Platform.select({
+            web: {
+                transitionProperty: 'all',
+                transitionDuration: '200ms',
+            } as any,
+        }),
     },
     pressed: {
         opacity: 0.95,
         transform: [{ scale: 0.99 }],
     },
     elevated: {
-        ...shadows.sm,
+        ...shadows.subtle,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     outlined: {
         backgroundColor: 'transparent',
@@ -65,6 +71,11 @@ const styles = StyleSheet.create({
     filled: {
         backgroundColor: colors.neutrals.surfaceAlt,
         borderWidth: 0,
+    },
+    subtle: {
+        backgroundColor: colors.neutrals.surface,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
     },
     glass: {
         backgroundColor: 'rgba(255, 255, 255, 0.7)',

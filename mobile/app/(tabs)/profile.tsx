@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     },
     headerGradient: {
         height: 180,
-        backgroundColor: colors.primary,
+        backgroundColor: colors.primaryDark,
         paddingHorizontal: spacing.xl,
     },
     headerTop: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
         padding: spacing.xl,
         ...shadows.lg,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         marginBottom: spacing.xl,
     },
     profileMain: {
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingTop: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutrals.cardBorder,
+        borderTopColor: colors.neutrals.border,
     },
     statItem: {
         flex: 1,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     statDivider: {
         width: 1,
         height: 24,
-        backgroundColor: colors.neutrals.cardBorder,
+        backgroundColor: colors.neutrals.border,
     },
     section: {
         marginBottom: spacing.xl,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         ...shadows.sm,
     },
     menuItem: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
+        borderBottomColor: colors.neutrals.border,
     },
     menuItemLast: {
         borderBottomWidth: 0,

@@ -160,9 +160,9 @@ export default function BookingDetailScreen() {
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
-            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText, icon: "time-outline" };
-            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText, icon: "checkmark-circle-outline" };
-            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText, icon: "close-circle-outline" };
+            case BookingStatus.Pending: return { bg: colors.status.pending.bg, text: colors.status.pending.text, icon: "time-outline" };
+            case BookingStatus.Accepted: return { bg: colors.status.accepted.bg, text: colors.status.accepted.text, icon: "checkmark-circle-outline" };
+            case BookingStatus.Declined: return { bg: colors.status.declined.bg, text: colors.status.declined.text, icon: "close-circle-outline" };
             default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary, icon: "help-circle-outline" };
         }
     };
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         ...shadows.sm,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     topRow: {
         flexDirection: 'row',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: colors.neutrals.cardBorder,
+        backgroundColor: colors.neutrals.border,
         marginVertical: spacing.md,
     },
     metaRow: {
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         padding: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     reviewThanksTitle: {
         fontSize: typography.fontSize.lg,
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     bubbleOther: {
         backgroundColor: colors.neutrals.surface,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         borderBottomLeftRadius: 4,
     },
     messageText: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
         paddingBottom: Platform.OS === 'ios' ? 0 : spacing.sm,
         backgroundColor: colors.neutrals.background,
         borderTopWidth: 1,
-        borderTopColor: colors.neutrals.cardBorder,
+        borderTopColor: colors.neutrals.border,
     },
     attachButton: {
         padding: spacing.sm,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
         marginHorizontal: spacing.xs,
         fontSize: 15,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     sendButton: {
         width: 40,

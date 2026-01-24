@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
+        borderBottomColor: colors.neutrals.border,
     },
     title: {
         fontSize: typography.fontSize.lg,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     footer: {
         padding: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutrals.cardBorder,
+        borderTopColor: colors.neutrals.border,
     },
     emptyState: {
         paddingVertical: spacing['3xl'],

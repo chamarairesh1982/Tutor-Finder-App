@@ -140,7 +140,7 @@ export function PaymentModal({ visible, amount, bookingId, onClose, onSuccess }:
 
                     {step === 'success' && (
                         <View style={styles.centered}>
-                            <Ionicons name="checkmark-circle" size={64} color={colors.statusAccepted} />
+                            <Ionicons name="checkmark-circle" size={64} color={colors.success} />
                             <Text variant="h4" style={{ marginTop: spacing.md }}>Payment Successful!</Text>
                         </View>
                     )}

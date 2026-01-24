@@ -1,74 +1,76 @@
-// Design System Tokens based on DESIGN_SYSTEM.md with desktop-friendly scale
+// TutorMatch UK — MVP Design System Tokens
+// A calm, professional, world-class design system for UK trust and clarity.
+// 8pt Grid System
 
 export const colors = {
-  // Brand - AAA/AA compliant contrast (4.5:1+ against white)
-  primary: '#A21CAF', // Fuchsia-700 (5.4:1 contrast)
-  primaryDark: '#701A75', // Fuchsia-900
-  primaryLight: '#F0ABFC', // Fuchsia-300
-  primarySoft: '#FDF4FF', // Fuchsia-50
+  // Primary — Deep blue, trustworthy. Use sparingly for CTAs and key highlights.
+  primary: '#1E40AF',
+  primaryDark: '#1E3A8A',
+  primaryHover: '#1E3A8A',
+  primaryLight: '#DBEAFE',
+  primarySoft: '#EFF6FF',
 
-  secondary: '#6D28D9', // Violet-700 (6.8:1 contrast)
-  secondaryDark: '#4C1D95', // Violet-900
-  secondaryLight: '#C4B5FD', // Violet-300
+  // Secondary accent (reserved for future use)
+  secondary: '#6366F1',
+  accent: '#8B5CF6',
+  focusRing: 'rgba(30, 64, 175, 0.4)',
 
-  accent: '#E11D48', // Rose-600 (WCAG AA Compliant)
-
-  // Semantic Categories (Text-safe variants for labels)
-  categories: {
-    purple: '#7E22CE', // Purple-700
-    blue: '#1D4ED8', // Blue-700
-    green: '#047857', // Emerald-700
-    pink: '#BE185D', // Pink-700
-    orange: '#C2410C', // Orange-700
-    indigo: '#4338CA', // Indigo-700
-  },
-
-  // Rating
-  ratingStars: '#D97706', // Amber-600 (Safe AA)
-
-  // Neutrals - Light Mode
+  // Neutrals — The calm foundation of the UI
   neutrals: {
-    background: '#F6F7FB',
-    surface: '#FFFFFF',
-    surfaceAlt: '#F3F4F6',
-    border: '#E2E8F0',
-    cardBorder: '#E5E7EB',
-    textPrimary: '#0F172A', // Slate-900 (High contrast)
-    textSecondary: '#334155', // Slate-700 (Safe AA)
-    textMuted: '#475569', // Slate-600 (WCAG AA compliant 4.5:1)
-    placeholder: '#94A3B8',
+    background: '#FAFBFC',    // Page background (slightly cooler)
+    surface: '#FFFFFF',       // Cards, panels
+    surfaceAlt: '#F4F6F8',    // Subtle alternate backgrounds
+    border: '#E5E7EB',        // Default borders
+    borderAlt: '#D1D5DB',     // Stronger borders when needed
+    textPrimary: '#111827',   // Main headings and important text
+    textSecondary: '#4B5563', // Body text (WCAG AA compliant)
+    textMuted: '#9CA3AF',     // Hints, placeholders, captions
+    placeholder: '#9CA3AF',
   },
 
-  // Neutrals - Dark Mode
-  darkNeutrals: {
-    background: '#0B1221',
-    surface: '#111827',
-    surfaceAlt: '#1F2937',
-    border: '#1F2937',
-    cardBorder: '#334155',
-    textPrimary: '#F8FAFC',
-    textSecondary: '#E2E8F0',
-    textMuted: '#94A3B8',
-    placeholder: '#94A3B8',
+  // Semantic Status Colours
+  success: '#059669',
+  successLight: '#ECFDF5',
+  warning: '#D97706',
+  warningLight: '#FEF3C7',
+  error: '#DC2626',
+  errorLight: '#FEF2F2',
+  info: '#2563EB',
+  infoLight: '#DBEAFE',
+
+  // Rating stars
+  ratingStars: '#F59E0B',
+  ratingMuted: '#E5E7EB',
+
+  // Trust Badge Colours (UK-appropriate, subtle)
+  trust: {
+    dbs: '#059669',           // DBS green
+    dbsLight: '#ECFDF5',
+    certified: '#1E40AF',     // Certification blue
+    certifiedLight: '#EFF6FF',
+    verified: '#6366F1',      // Future verified status
+    verifiedLight: '#EEF2FF',
   },
 
-  // Semantic
-  success: '#059669', // Green-600 (Safe AA)
-  warning: '#B45309', // Amber-700 (Darker for better warning visibility)
-  error: '#DC2626', // Red-600 (Safe AA)
-  info: '#2563EB', // Blue-600 (Safe AA)
+  // Booking Status Chips
+  status: {
+    pending: { bg: '#FEF3C7', text: '#92400E' },
+    accepted: { bg: '#ECFDF5', text: '#065F46' },
+    declined: { bg: '#FEF2F2', text: '#991B1B' },
+    completed: { bg: '#F4F6F8', text: '#4B5563' },
+  },
 
-  // Status Chip
-  statusPending: '#FEF3C7',
-  statusPendingText: '#92400E',
-  statusAccepted: '#D1FAE5',
-  statusAcceptedText: '#065F46',
-  statusDeclined: '#FEE2E2',
-  statusDeclinedText: '#991B1B',
-
-  // Accessibility
-  focusRing: '#F5D0FE',
-  focusRingStrong: '#F0ABFC',
+  // Category accent colours (for category tiles only)
+  categories: {
+    purple: '#8B5CF6',
+    blue: '#3B82F6',
+    green: '#10B981',
+    pink: '#EC4899',
+    orange: '#F59E0B',
+    indigo: '#6366F1',
+    red: '#EF4444',
+    teal: '#14B8A6',
+  }
 };
 
 export const typography = {
@@ -85,13 +87,12 @@ export const typography = {
     '2xl': 24,
     '3xl': 30,
     '4xl': 36,
-    '5xl': 44,
-    '6xl': 56, // Added for big hero titles
+    '5xl': 48,
   },
   lineHeight: {
-    tight: 1.25,
+    tight: 1.2,
     normal: 1.5,
-    relaxed: 1.625,
+    relaxed: 1.6,
   },
   fontWeight: {
     normal: '400' as const,
@@ -103,67 +104,80 @@ export const typography = {
 };
 
 export const spacing = {
+  none: 0,
   xxs: 2,
-  xs: 6,
-  sm: 10,
+  xs: 4,
+  sm: 8,
   md: 16,
   lg: 24,
   xl: 32,
   '2xl': 48,
   '3xl': 64,
   '4xl': 80,
-  '5xl': 120, // Added for hero spacing
+  '5xl': 96,
 };
 
 export const borderRadius = {
   sm: 8,
   md: 12,
-  lg: 18,
+  lg: 16,
   xl: 24,
   full: 9999,
 };
 
 export const shadows = {
   sm: {
-    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  floating: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.15,
+    shadowRadius: 30,
+    elevation: 12,
+  },
+  subtle: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  glass: {
+    shadowColor: 'rgba(0,0,0,0.08)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 4,
-  },
-  md: {
-    shadowColor: 'rgba(217, 70, 239, 0.12)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 22,
-    elevation: 8,
-  },
-  lg: {
-    shadowColor: 'rgba(15, 23, 42, 0.12)',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
-    elevation: 12,
-  },
-  glass: {
-    shadowColor: 'rgba(15, 23, 42, 0.08)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 14,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.55)',
-  },
+  }
+};
+
+export const layout = {
+  contentMaxWidth: 1200, // Standard web grid width
+  wideContentMaxWidth: 1440,
+  pageGutter: spacing.md,
 };
 
 export const animation = {
   fast: 150,
   normal: 250,
   slow: 350,
-};
-
-export const layout = {
-  contentMaxWidth: 1280,
-  wideContentMaxWidth: 1440,
-  pageGutter: spacing.lg,
 };

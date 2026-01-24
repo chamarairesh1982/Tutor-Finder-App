@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { useMyBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/store/authStore';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { Booking, BookingStatus } from '../../src/types';
+import { Text, ErrorState, EmptyState } from '../../src/components';
 
 export default function BookingsScreen() {
     const router = useRouter();
@@ -17,9 +18,9 @@ export default function BookingsScreen() {
 
     const getStatusColor = (status: BookingStatus) => {
         switch (status) {
-            case BookingStatus.Pending: return { bg: colors.statusPending, text: colors.statusPendingText };
-            case BookingStatus.Accepted: return { bg: colors.statusAccepted, text: colors.statusAcceptedText };
-            case BookingStatus.Declined: return { bg: colors.statusDeclined, text: colors.statusDeclinedText };
+            case BookingStatus.Pending: return colors.status.pending;
+            case BookingStatus.Accepted: return colors.status.accepted;
+            case BookingStatus.Declined: return colors.status.declined;
             case BookingStatus.Completed: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary };
             default: return { bg: colors.neutrals.surfaceAlt, text: colors.neutrals.textSecondary };
         }
@@ -89,17 +90,25 @@ export default function BookingsScreen() {
     if (!isAuthenticated) {
         return (
             <SafeAreaView style={styles.container} edges={['top']}>
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="lock-closed-outline" size={64} color={colors.neutrals.surfaceAlt} />
-                    <Text style={styles.emptyTitle}>Sign in to view</Text>
-                    <Text style={styles.emptyText}>Track your learning requests and chat with tutors once you’re signed in.</Text>
-                    <TouchableOpacity
-                        style={styles.browseButton}
-                        onPress={() => router.push('/(auth)/login')}
-                    >
-                        <Text style={styles.browseButtonText}>Sign In</Text>
-                    </TouchableOpacity>
-                </View>
+                <EmptyState
+                    title="Sign in to view"
+                    message="Track your learning requests and chat with tutors once you’re signed in."
+                    icon="lock-closed-outline"
+                    actionLabel="Sign In"
+                    onAction={() => router.push('/(auth)/login')}
+                />
+            </SafeAreaView>
+        );
+    }
+
+    if (isError) {
+        return (
+            <SafeAreaView style={styles.container} edges={['top']}>
+                <ErrorState
+                    title="Could't load bookings"
+                    message="We had trouble reaching the server. Please check your connection."
+                    onRetry={() => refetch()}
+                />
             </SafeAreaView>
         );
     }
@@ -122,17 +131,13 @@ export default function BookingsScreen() {
                 contentContainerStyle={styles.listContent}
                 refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />}
                 ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="calendar-clear-outline" size={64} color={colors.neutrals.surfaceAlt} />
-                        <Text style={styles.emptyTitle}>No Bookings Yet</Text>
-                        <Text style={styles.emptyText}>Find a tutor and start your first lesson today.</Text>
-                        <TouchableOpacity
-                            style={styles.browseButton}
-                            onPress={() => router.push('/')}
-                        >
-                            <Text style={styles.browseButtonText}>Browse Tutors</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <EmptyState
+                        title="No Bookings Yet"
+                        message="Find a tutor and start your first lesson today."
+                        icon="calendar-clear-outline"
+                        actionLabel="Browse Tutors"
+                        onAction={() => router.push('/')}
+                    />
                 )}
             />
         </SafeAreaView>
@@ -180,7 +185,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         ...shadows.sm,
     },
     statusIndicator: {

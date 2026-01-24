@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     question: {
         fontSize: typography.fontSize.base,

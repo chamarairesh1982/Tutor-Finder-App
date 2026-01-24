@@ -39,7 +39,7 @@ public class TutorProfileConfiguration : IEntityTypeConfiguration<TutorProfile>
             .HasColumnType("geography");
 
 
-        // builder.HasSpatialIndex(t => t.Location);
+        builder.HasIndex(t => t.Location);
 
         // Relationships
         builder.HasOne(t => t.User)

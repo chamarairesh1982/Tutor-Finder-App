@@ -18,6 +18,13 @@ using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// B2: Kestrel Hardening
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB limit
+});
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -42,7 +49,7 @@ builder.Services.AddControllers(options =>
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ProductionCorsPolicy", policy =>
+    options.AddPolicy("DefaultCorsPolicy", policy =>
     {
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
@@ -206,7 +213,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     }
     else
     {
-        healthChecks.AddCheck("database", () => HealthCheckResult.Healthy("Configured connection"));
+        healthChecks.AddNpgSql(connectionString!);
     }
 }
 
@@ -215,14 +222,12 @@ var app = builder.Build();
 // Middleware
 app.UseRateLimiter(); // B2
 
-if (app.Environment.IsDevelopment())
+app.UseCors("DefaultCorsPolicy"); // B1
+
+if (!app.Environment.IsDevelopment())
 {
-    app.UseCors(x => x.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials()); 
-}
-else
-{
-    app.UseCors("ProductionCorsPolicy"); // B1
     app.UseHsts(); // B1
+    app.UseHttpsRedirection();
 }
 
 app.UseExceptionHandler();

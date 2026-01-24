@@ -81,6 +81,7 @@ export interface TutorSearchResult {
     id: string;
     fullName: string;
     photoUrl?: string;
+    bio?: string;
     category: Category;
     subjects: string[];
     pricePerHour: number;

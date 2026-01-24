@@ -3,9 +3,9 @@ import { Text as RNText, TextProps as RNTextProps, StyleSheet, TextStyle, StyleP
 import { colors, typography } from '../lib/theme';
 
 export type TextVariant =
-    | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+    | 'h1' | 'h2' | 'h3' | 'h4'
     | 'bodyLarge' | 'body' | 'bodySmall'
-    | 'caption';
+    | 'caption' | 'label';
 
 export type TextWeight = keyof typeof typography.fontWeight;
 
@@ -49,58 +49,47 @@ const styles = StyleSheet.create({
     },
     h1: {
         fontSize: typography.fontSize['4xl'],
-        lineHeight: typography.lineHeight.tight,
-        fontWeight: typography.fontWeight.bold,
-        marginBottom: 8,
+        lineHeight: typography.fontSize['4xl'] * 1.1,
+        fontWeight: typography.fontWeight.heavy,
     },
     h2: {
         fontSize: typography.fontSize['3xl'],
-        lineHeight: typography.lineHeight.tight,
-        fontWeight: typography.fontWeight.semibold,
-        marginBottom: 6,
+        lineHeight: typography.fontSize['3xl'] * 1.2,
+        fontWeight: typography.fontWeight.bold,
     },
     h3: {
         fontSize: typography.fontSize['2xl'],
-        lineHeight: typography.lineHeight.tight,
-        fontWeight: typography.fontWeight.semibold,
-        marginBottom: 4,
+        lineHeight: typography.fontSize['2xl'] * 1.2,
+        fontWeight: typography.fontWeight.bold,
     },
     h4: {
         fontSize: typography.fontSize.xl,
-        lineHeight: typography.lineHeight.normal,
+        lineHeight: typography.fontSize.xl * 1.3,
         fontWeight: typography.fontWeight.semibold,
-        marginBottom: 4,
-    },
-    h5: {
-        fontSize: typography.fontSize.lg,
-        lineHeight: typography.lineHeight.normal,
-        fontWeight: typography.fontWeight.semibold,
-        marginBottom: 2,
-    },
-    h6: {
-        fontSize: typography.fontSize.base,
-        lineHeight: typography.lineHeight.normal,
-        fontWeight: typography.fontWeight.semibold,
-        marginBottom: 2,
     },
     bodyLarge: {
         fontSize: typography.fontSize.lg,
-        lineHeight: typography.lineHeight.relaxed,
-        fontWeight: typography.fontWeight.normal,
+        lineHeight: typography.fontSize.lg * 1.5,
     },
     body: {
         fontSize: typography.fontSize.base,
-        lineHeight: typography.lineHeight.relaxed,
-        fontWeight: typography.fontWeight.normal,
+        lineHeight: typography.fontSize.base * 1.5,
     },
     bodySmall: {
         fontSize: typography.fontSize.sm,
-        lineHeight: typography.lineHeight.normal,
-        fontWeight: typography.fontWeight.normal,
+        lineHeight: typography.fontSize.sm * 1.5,
     },
     caption: {
         fontSize: typography.fontSize.xs,
-        lineHeight: typography.lineHeight.normal,
+        lineHeight: typography.fontSize.xs * 1.4,
+        color: colors.neutrals.textMuted,
+    },
+    label: {
+        fontSize: 11,
+        lineHeight: 14,
+        fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
         color: colors.neutrals.textMuted,
     },
 });

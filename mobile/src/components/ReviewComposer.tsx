@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         padding: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         gap: spacing.md,
     },
     headerRow: {
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         borderRadius: borderRadius.full,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         backgroundColor: colors.neutrals.surfaceAlt,
     },
     starPillActive: {
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     input: {
         minHeight: 90,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         borderRadius: borderRadius.md,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +13,27 @@ import { View, Platform, StyleSheet } from 'react-native';
 import { SafeStripeProvider } from '../src/components';
 
 const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+        onError: (error, query) => {
+            // Show toast for background refetch failures if data already exists
+            if (query.state.data !== undefined) {
+                useNotificationStore.getState().addToast({
+                    type: 'error',
+                    title: 'Sync failed',
+                    message: error.message || 'Could not refresh some data.'
+                });
+            }
+        },
+    }),
+    mutationCache: new MutationCache({
+        onError: (error) => {
+            useNotificationStore.getState().addToast({
+                type: 'error',
+                title: 'Action failed',
+                message: error.message || 'Something went wrong. Please try again.'
+            });
+        },
+    }),
     defaultOptions: {
         queries: {
             retry: 2,

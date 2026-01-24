@@ -1,47 +1,46 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FilterSidebar, MapPanelPlaceholder, TutorCard, TutorCardWeb, HomeSearchBar, SkeletonList } from '../src/components';
-import { colors, spacing, typography, borderRadius, layout, shadows } from '../src/lib/theme';
+import {
+    FilterSidebar, TutorCard, TutorCardWeb, HomeSearchBar,
+    SkeletonList, ErrorState, Text, Screen, Container, Spacer, IconButton, EmptyState, MapPanel
+} from '../src/components';
+import { colors, spacing, layout, shadows, borderRadius, typography } from '../src/lib/theme';
 import { useBreakpoint } from '../src/lib/responsive';
 import { useSearchTutors } from '../src/hooks/useTutors';
 import { SearchFiltersState } from '../src/components/FilterSidebar';
 import { TeachingMode, TutorSearchRequest, TutorSearchResult } from '../src/types';
-import { useAuthStore } from '../src/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SearchPage() {
     const router = useRouter();
-    const { isAuthenticated } = useAuthStore();
-    const params = useLocalSearchParams<{ subject?: string; location?: string; radius?: string; mode?: string; rating45?: string; midPrice?: string; dbs?: string; weekends?: string; availabilityDay?: string }>();
-    const { isLg, width } = useBreakpoint();
+    const params = useLocalSearchParams<{
+        subject?: string; location?: string; radius?: string; mode?: string;
+        rating45?: string; midPrice?: string; dbs?: string; weekends?: string;
+    }>();
+    const { isLg } = useBreakpoint();
 
+    // Search State
     const [subject, setSubject] = useState(params.subject ?? '');
     const [location, setLocation] = useState(params.location ?? '');
     const [sortBy, setSortBy] = useState<TutorSearchRequest['sortBy']>('best');
-    const [availabilityDay, setAvailabilityDay] = useState<number | undefined>(params.availabilityDay ? Number(params.availabilityDay) : undefined);
-    const [sortOpen, setSortOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'list' | 'map'>(isLg ? 'list' : 'list');
-
-    const quickDefaults = {
-        dbs: params.dbs === '1',
-        weekends: params.weekends === '1',
-        rating45: params.rating45 === '1',
-        midPrice: params.midPrice === '1',
-    } as const;
-
     const [filters, setFilters] = useState<SearchFiltersState>({
-        radiusMiles: params.radius ? Number(params.radius) : 10,
+        radiusMiles: params.radius ? Number(params.radius) : 25,
         mode: params.mode ? Number(params.mode) as TeachingMode : undefined,
-        minRating: quickDefaults.rating45 ? 4.5 : undefined,
-        priceMin: quickDefaults.midPrice ? 20 : undefined,
-        priceMax: quickDefaults.midPrice ? 40 : undefined,
-        quickFilters: quickDefaults,
+        quickFilters: {
+            dbs: params.dbs === '1',
+            weekends: params.weekends === '1',
+            rating45: params.rating45 === '1',
+            midPrice: params.midPrice === '1',
+        },
     });
+
+    // UI State
+    const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [sortOpen, setSortOpen] = useState(false);
     const [page, setPage] = useState(1);
-    const [pageSize] = useState(20);
+    const [allResults, setAllResults] = useState<TutorSearchResult[]>([]);
 
     const searchParams = useMemo<TutorSearchRequest>(() => ({
         subject: subject || undefined,
@@ -52,26 +51,15 @@ export default function SearchPage() {
         priceMin: filters.priceMin,
         priceMax: filters.priceMax,
         page,
-        pageSize,
+        pageSize: 20,
         sortBy,
-        availabilityDay,
-    }), [subject, location, filters, sortBy, page, pageSize, availabilityDay]);
+    }), [subject, location, filters, sortBy, page]);
 
     const { data: tutorsPage, isLoading, isError, refetch, isFetching } = useSearchTutors(searchParams);
 
-    const [allResults, setAllResults] = useState<TutorSearchResult[]>([]);
     const results = allResults;
     const resultsCount = tutorsPage?.total ?? 0;
     const hasMore = tutorsPage ? results.length < tutorsPage.total : false;
-
-    const handleCardPress = (tutor: TutorSearchResult) => {
-        router.push(`/tutor/${tutor.id}`);
-    };
-
-    const handleSearch = () => {
-        setPage(1);
-        refetch();
-    };
 
     useEffect(() => {
         setPage(1);
@@ -84,436 +72,337 @@ export default function SearchPage() {
             if (searchParams.page === 1) return tutorsPage.items ?? [];
             const incoming = tutorsPage.items ?? [];
             const existingIds = new Set(prev.map((p) => p.id));
-            const merged = [...prev, ...incoming.filter((i: TutorSearchResult) => !existingIds.has(i.id))];
+            const merged = [...prev, ...incoming.filter((i) => !existingIds.has(i.id))];
             return merged;
         });
     }, [tutorsPage, searchParams.page]);
 
     const handleLoadMore = () => {
-        if (!hasMore || isFetching) return;
-        setPage((prev) => prev + 1);
-    };
-
-    const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-        const paddingToBottom = 200;
-        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-            handleLoadMore();
-        }
-    };
-
-    const renderTopBar = () => (
-        <View style={styles.topBar}>
-            <Text style={styles.resultCountText}>{resultsCount} experts found</Text>
-            <View style={styles.topBarRight}>
-                <TouchableOpacity style={styles.filterBtn} onPress={() => setFiltersOpen(true)}>
-                    <Ionicons name="options-outline" size={18} color={colors.primaryDark} />
-                    <Text style={styles.filterBtnText}>Filters</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.sortBtn} onPress={() => setSortOpen(true)}>
-                    <Ionicons name="swap-vertical" size={18} color={colors.primaryDark} />
-                    <Text style={styles.sortBtnText}>{sortLabel(sortBy)}</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-
-    const renderContent = () => {
-        if (isLoading && results.length === 0) {
-            return (
-                <View style={styles.cardStack}>
-                    <SkeletonList count={5} />
-                </View>
-            );
-        }
-
-        if (isError) {
-            return (
-                <View style={styles.centered}>
-                    <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
-                    <Text style={styles.errorText}>We couldn't load the tutors.</Text>
-                    <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-                        <Text style={styles.retryBtnText}>Try Again</Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        }
-
-        if (results.length === 0 && !isFetching) {
-            return (
-                <View style={styles.centered}>
-                    <Ionicons name="search-outline" size={48} color={colors.neutrals.textMuted} />
-                    <Text style={styles.emptyText}>No results found.</Text>
-                    <TouchableOpacity style={styles.clearBtn} onPress={() => {
-                        setSubject('');
-                        setLocation('');
-                        setFilters({ ...filters, radiusMiles: 10, mode: undefined });
-                    }}>
-                        <Text style={styles.clearBtnText}>Clear Filters</Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        }
-
-        return (
-            <View style={[styles.cardStack, isLg && styles.cardStackDesktop]}>
-                {results.map((tutor) => (
-                    <View key={tutor.id} style={isLg && styles.cardWrapperDesktop}>
-                        {isLg ? (
-                            <TutorCardWeb
-                                tutor={tutor}
-                                onPress={() => handleCardPress(tutor)}
-                                onViewProfile={() => handleCardPress(tutor)}
-                                onRequestBooking={() => handleCardPress(tutor)}
-                            />
-                        ) : (
-                            <TutorCard tutor={tutor} onPress={() => handleCardPress(tutor)} />
-                        )}
-                    </View>
-                ))}
-            </View>
-        );
+        if (!hasMore || isFetching || isLoading) return;
+        setPage((p) => p + 1);
     };
 
     return (
-        <View style={styles.container}>
-            {isLg ? (
-                <View style={styles.desktopNav}>
-                    <View style={styles.desktopNavInner}>
-                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
-                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
-                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
+        <Screen safe={false} backgroundColor={colors.neutrals.surface}>
+            {/* World Class Search Header */}
+            <View style={styles.header}>
+                <Container maxWidth={layout.wideContentMaxWidth} fluid padding="lg">
+                    <View style={styles.headerInner}>
+                        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                            <Ionicons name="chevron-back" size={24} color={colors.neutrals.textPrimary} />
                         </TouchableOpacity>
-                        <View style={styles.desktopActions}>
-                            {isAuthenticated ? (
-                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
-                                    <Text style={styles.navLinkText}>My Dashboard</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
-                                    <Text style={styles.navLinkText}>Login</Text>
-                                </TouchableOpacity>
-                            )}
+                        <View style={styles.searchWrapper}>
+                            <HomeSearchBar
+                                subject={subject}
+                                location={location}
+                                onSubjectChange={setSubject}
+                                onLocationChange={setLocation}
+                                onSubmit={refetch}
+                                compact
+                            />
                         </View>
-                    </View>
-                </View>
-            ) : (
-                <View style={styles.mobileNav}>
-                    <SafeAreaView edges={['top']}>
-                        <View style={styles.navContent}>
-                            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                                <Ionicons name="arrow-back" size={24} color={colors.neutrals.textPrimary} />
+                        {!isLg && (
+                            <TouchableOpacity style={styles.mobileFilterToggle} onPress={() => setFiltersOpen(true)}>
+                                <Ionicons name="options-outline" size={20} color={colors.neutrals.textPrimary} />
                             </TouchableOpacity>
-                            <Text style={styles.navTitle}>Search results</Text>
-                            <View style={{ width: 40 }} />
-                        </View>
-                    </SafeAreaView>
-                </View>
-            )}
+                        )}
+                    </View>
+                </Container>
+            </View>
 
-            <View style={[styles.mainLayout, isLg && styles.mainLayoutDesktop]}>
+            {/* 3-Column Layout Area */}
+            <View style={styles.layout}>
+                {/* Column 1: Filters (Lg Only) */}
                 {isLg && (
-                    <View style={styles.sidebarSticky}>
-                        <FilterSidebar filters={filters} onChange={setFilters} />
+                    <View style={styles.sidebarWrapper}>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <FilterSidebar
+                                filters={filters}
+                                onChange={setFilters}
+                                onClose={() => { }}
+                                compact
+                            />
+                        </ScrollView>
                     </View>
                 )}
 
-                <ScrollView
-                    contentContainerStyle={[styles.scrollContent, isLg && styles.scrollContentDesktop]}
-                    onScroll={onScroll}
-                    scrollEventThrottle={250}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View style={[styles.searchBlock, isLg && styles.searchBlockDesktop]}>
-                        <HomeSearchBar
-                            subject={subject}
-                            location={location}
-                            radius={filters.radiusMiles}
-                            mode={filters.mode ?? TeachingMode.Both}
-                            availabilityDay={availabilityDay}
-                            onSubjectChange={setSubject}
-                            onLocationChange={setLocation}
-                            onRadiusChange={(val) => setFilters((prev) => ({ ...prev, radiusMiles: val }))}
-                            onModeChange={(val) => setFilters((prev) => ({ ...prev, mode: val }))}
-                            onAvailabilityDayChange={setAvailabilityDay}
-                            onSubmit={handleSearch}
-                        />
-                    </View>
+                {/* Column 2: Results Stream */}
+                <View style={[styles.resultsWrapper, (isLg || viewMode === 'list') ? styles.visible : styles.hidden]}>
+                    <ScrollView
+                        onScroll={({ nativeEvent }) => {
+                            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+                            if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 400) {
+                                handleLoadMore();
+                            }
+                        }}
+                        scrollEventThrottle={400}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Container padding="lg" fluid>
+                            <View style={styles.resultsHeader}>
+                                <View>
+                                    <Text variant="bodyLarge" weight="heavy" style={{ fontSize: 18 }}>
+                                        {resultsCount} Tutors Available
+                                    </Text>
+                                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginTop: 2 }}>
+                                        {subject || 'All subjects'} · {location || 'Near you'}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity style={styles.sortToggle} onPress={() => setSortOpen(true)}>
+                                    <View style={styles.sortPill}>
+                                        <Text variant="bodySmall" weight="heavy" color={colors.primary}>{sortLabel(sortBy)}</Text>
+                                        <Ionicons name="chevron-down" size={12} color={colors.primary} style={{ marginLeft: 4 }} />
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
 
-                    <View style={[styles.resultsContainer, isLg && styles.resultsContainerDesktop]}>
-                        {renderTopBar()}
+                            <Spacer size="lg" />
 
-                        <View style={styles.resultsArea}>
-                            {renderContent()}
+                            <View style={styles.resultsGrid}>
+                                {isLoading && results.length === 0 ? (
+                                    <SkeletonList count={6} variant={isLg ? 'web' : 'mobile'} />
+                                ) : isError ? (
+                                    <ErrorState onRetry={refetch} />
+                                ) : results.length === 0 ? (
+                                    <EmptyState
+                                        title="No tutors found in this area"
+                                        message="Try broadening your subject or increasing the search radius."
+                                        icon="search-outline"
+                                    />
+                                ) : (
+                                    results.map((t) => (
+                                        <View key={t.id} style={styles.cardWrapper}>
+                                            {isLg ? (
+                                                <TutorCardWeb tutor={t} onPress={() => router.push(`/tutor/${t.id}`)} />
+                                            ) : (
+                                                <TutorCard tutor={t} onPress={() => router.push(`/tutor/${t.id}`)} />
+                                            )}
+                                        </View>
+                                    ))
+                                )}
+                            </View>
 
                             {isFetching && hasMore && (
-                                <View style={styles.loadingMore}>
-                                    <ActivityIndicator size="small" color={colors.primary} />
-                                    <Text style={styles.loadingMoreText}>Fetching more experts...</Text>
+                                <View style={styles.loaderBox}>
+                                    <ActivityIndicator color={colors.primary} size="large" />
+                                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginTop: 8 }}>Loading more tutors...</Text>
                                 </View>
                             )}
-                        </View>
+                            <Spacer size="5xl" />
+                        </Container>
+                    </ScrollView>
+                </View>
+
+                {/* Column 3: Map View (Lg Only) */}
+                {isLg && (
+                    <View style={styles.mapWrapperWeb}>
+                        <MapPanel tutors={results} />
                     </View>
-                </ScrollView>
+                )}
             </View>
 
+            {/* Mobile Map Overlay View */}
+            {!isLg && viewMode === 'map' && (
+                <View style={styles.mapWrapperMobile}>
+                    <MapPanel tutors={results} />
+                </View>
+            )}
+
+            {/* Mobile Sticky Toggle */}
+            {!isLg && (
+                <View style={styles.mobileActions}>
+                    <TouchableOpacity
+                        style={styles.toggleBtn}
+                        onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+                        activeOpacity={0.9}
+                    >
+                        <Ionicons name={viewMode === 'list' ? 'map' : 'list'} size={20} color="#fff" />
+                        <Text weight="heavy" color="#fff" style={{ marginLeft: 10 }}>
+                            {viewMode === 'list' ? 'Map View' : 'List Results'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {/* Modals */}
             <Modal visible={filtersOpen} animationType="slide">
-                <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutrals.background }}>
-                    <FilterSidebar filters={filters} onChange={setFilters} onClose={() => setFiltersOpen(false)} compact />
-                </SafeAreaView>
+                <Screen edges={['top', 'bottom']} backgroundColor={colors.neutrals.background}>
+                    <FilterSidebar
+                        filters={filters}
+                        onChange={setFilters}
+                        onClose={() => setFiltersOpen(false)}
+                        compact
+                    />
+                </Screen>
             </Modal>
 
             <Modal visible={sortOpen} transparent animationType="fade">
-                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSortOpen(false)}>
+                <TouchableOpacity style={styles.modalOverlay} onPress={() => setSortOpen(false)} activeOpacity={1}>
                     <View style={styles.bottomSheet}>
-                        <Text style={styles.sheetTitle}>Sort tutors by</Text>
-                        {(['best', 'nearest', 'rating', 'price'] as TutorSearchRequest['sortBy'][]).map((option) => (
+                        <View style={styles.sheetHandle} />
+                        <Text variant="h3" weight="heavy" align="center">Sort By</Text>
+                        <Spacer size="xl" />
+                        {(['best', 'nearest', 'rating', 'price'] as TutorSearchRequest['sortBy'][]).map(opt => (
                             <TouchableOpacity
-                                key={option}
-                                style={[styles.sheetOption, sortBy === option && styles.sheetOptionActive]}
-                                onPress={() => { setSortBy(option); setSortOpen(false); }}
+                                key={opt}
+                                style={[styles.sheetOption, sortBy === opt && styles.sheetOptionActive]}
+                                onPress={() => { setSortBy(opt); setSortOpen(false); }}
                             >
-                                <Text style={[styles.sheetOptionText, sortBy === option && styles.sheetOptionTextActive]}>
-                                    {sortLabel(option)}
-                                </Text>
-                                {sortBy === option && <Ionicons name="checkmark" size={20} color={colors.primaryDark} />}
+                                <View style={styles.optionLeft}>
+                                    <Ionicons
+                                        name={opt === 'best' ? 'sparkles' : opt === 'nearest' ? 'location' : opt === 'rating' ? 'star' : 'cash'}
+                                        size={20}
+                                        color={sortBy === opt ? colors.primary : colors.neutrals.textSecondary}
+                                    />
+                                    <Text style={[styles.optionText, sortBy === opt && styles.optionTextActive]}>
+                                        {sortLabel(opt)}
+                                    </Text>
+                                </View>
+                                {sortBy === opt && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
                             </TouchableOpacity>
                         ))}
                     </View>
                 </TouchableOpacity>
             </Modal>
-        </View>
+        </Screen>
     );
 }
 
-function sortLabel(value: TutorSearchRequest['sortBy']) {
-    switch (value) {
-        case 'nearest': return 'Nearest';
-        case 'rating': return 'Top Rated';
-        case 'price': return 'Price Low-High';
-        default: return 'Best Match';
+function sortLabel(s: TutorSearchRequest['sortBy']) {
+    switch (s) {
+        case 'nearest': return 'Nearest First';
+        case 'rating': return 'Highest Rated';
+        case 'price': return 'Lowest Price';
+        default: return 'Best Relevance';
     }
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.neutrals.background,
-    },
-    desktopNav: {
+    header: {
+        paddingVertical: spacing.md,
         backgroundColor: colors.neutrals.surface,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
-        zIndex: 2000,
-        height: 80,
-        justifyContent: 'center',
+        borderBottomColor: colors.neutrals.border,
+        zIndex: 100,
+        ...shadows.sm,
     },
-    desktopNavInner: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.xl,
-        maxWidth: layout.wideContentMaxWidth,
-        width: '100%',
-        alignSelf: 'center',
-    },
-    brandRow: {
+    headerInner: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.sm,
-    },
-    logoMini: {
-        width: 32,
-        height: 32,
-        backgroundColor: colors.primary,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    logoMiniText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
-    brandTitleDesktop: {
-        fontSize: 24,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
-    },
-    desktopActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xl,
-    },
-    navLink: {
-        paddingVertical: spacing.sm,
-    },
-    navLinkText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.neutrals.textSecondary,
-    },
-    mobileNav: {
-        backgroundColor: colors.neutrals.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
-        zIndex: 1000,
-    },
-    navContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: 60,
-        paddingHorizontal: spacing.md,
+        gap: spacing.md,
     },
     backBtn: {
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: colors.neutrals.surfaceAlt,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    navTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: colors.neutrals.textPrimary,
-    },
-    mainLayout: {
+    searchWrapper: {
         flex: 1,
     },
-    mainLayoutDesktop: {
+    mobileFilterToggle: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    layout: {
+        flex: 1,
         flexDirection: 'row',
-        maxWidth: layout.wideContentMaxWidth,
-        width: '100%',
-        alignSelf: 'center',
-        paddingHorizontal: spacing.xl,
-        gap: spacing.xl,
-    },
-    sidebarSticky: {
-        width: 300,
-        paddingTop: spacing.xl,
-    },
-    scrollContent: {
-        paddingBottom: spacing['4xl'],
-    },
-    scrollContentDesktop: {
-        flex: 1,
-    },
-    searchBlock: {
-        padding: spacing.lg,
         backgroundColor: colors.neutrals.background,
     },
-    searchBlockDesktop: {
-        paddingHorizontal: 0,
-        paddingVertical: spacing.xl,
+    sidebarWrapper: {
+        width: 320,
+        backgroundColor: colors.neutrals.surface,
+        borderRightWidth: 1,
+        borderRightColor: colors.neutrals.border,
+        ...Platform.select({
+            web: {
+                height: 'calc(100vh - 73px)' as any,
+                position: 'sticky' as any,
+                top: 73,
+            }
+        }),
     },
-    resultsContainer: {
-        flex: 1,
+    resultsWrapper: {
+        flex: 2,
     },
-    resultsContainerDesktop: {
-        paddingBottom: spacing['4xl'],
+    mapWrapperWeb: {
+        flex: 1.5,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        borderLeftWidth: 1,
+        borderLeftColor: colors.neutrals.border,
+        ...Platform.select({
+            web: {
+                height: 'calc(100vh - 73px)' as any,
+                position: 'sticky' as any,
+                top: 73,
+            }
+        }),
     },
-    topBar: {
+    mapWrapperMobile: {
+        ...StyleSheet.absoluteFillObject,
+        top: 73,
+    },
+    visible: {
+        display: 'flex',
+    },
+    hidden: {
+        display: 'none',
+    },
+    resultsHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
     },
-    resultCountText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: colors.neutrals.textPrimary,
-    },
-    topBarRight: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-    },
-    filterBtn: {
+    sortToggle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+    },
+    sortPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: colors.primarySoft,
-        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: borderRadius.full,
         borderWidth: 1,
         borderColor: colors.primaryLight,
     },
-    filterBtnText: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: colors.primaryDark,
+    resultsGrid: {
+        width: '100%',
     },
-    sortBtn: {
+    cardWrapper: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+    },
+    loaderBox: {
+        paddingVertical: 48,
+        alignItems: 'center',
+    },
+    mobileActions: {
+        position: 'absolute',
+        bottom: spacing.xl,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 200,
+    },
+    toggleBtn: {
         flexDirection: 'row',
+        backgroundColor: colors.neutrals.textPrimary,
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: borderRadius.full,
         alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-    },
-    sortBtnText: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: colors.neutrals.textPrimary,
-    },
-    resultsArea: {
-        paddingVertical: spacing.lg,
-    },
-    cardStack: {
-        gap: spacing.sm,
-    },
-    cardStackDesktop: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginHorizontal: -spacing.sm,
-    },
-    cardWrapperDesktop: {
-        width: '50%',
-        padding: spacing.sm,
-    },
-    centered: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: spacing['5xl'],
-        gap: spacing.md,
-    },
-    errorText: {
-        color: colors.error,
-        fontSize: 16,
-    },
-    retryBtn: {
-        padding: spacing.md,
-    },
-    retryBtnText: {
-        color: colors.primary,
-        fontWeight: 'bold',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: colors.neutrals.textSecondary,
-    },
-    clearBtn: {
-        padding: spacing.md,
-    },
-    clearBtnText: {
-        color: colors.primary,
-        fontWeight: 'bold',
-    },
-    loadingMore: {
-        paddingVertical: spacing.xl,
-        alignItems: 'center',
-        gap: 8,
-    },
-    loadingMoreText: {
-        fontSize: 12,
-        color: colors.neutrals.textMuted,
+        ...shadows.lg,
     },
     modalOverlay: {
         flex: 1,
@@ -522,38 +411,41 @@ const styles = StyleSheet.create({
     },
     bottomSheet: {
         backgroundColor: colors.neutrals.surface,
+        padding: spacing.xl,
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
-        padding: spacing.xl,
         paddingBottom: spacing['4xl'],
     },
-    sheetTitle: {
-        fontSize: 20,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        marginBottom: spacing.xl,
-        textAlign: 'center',
+    sheetHandle: {
+        width: 40,
+        height: 5,
+        backgroundColor: colors.neutrals.border,
+        borderRadius: 3,
+        alignSelf: 'center',
+        marginBottom: spacing.lg,
     },
     sheetOption: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        padding: spacing.lg,
+        borderRadius: 16,
+        marginBottom: spacing.xs,
     },
     sheetOptionActive: {
-        backgroundColor: colors.primarySoft + '40',
-        borderRadius: 12,
-        paddingHorizontal: spacing.md,
+        backgroundColor: colors.primarySoft,
     },
-    sheetOptionText: {
+    optionLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    optionText: {
         fontSize: 16,
+        fontWeight: '600',
         color: colors.neutrals.textPrimary,
-        fontWeight: '500',
     },
-    sheetOptionTextActive: {
-        color: colors.primaryDark,
-        fontWeight: '700',
-    },
+    optionTextActive: {
+        color: colors.primary,
+    }
 });

@@ -77,7 +77,7 @@ export function PaymentModal({ visible, amount, onClose, onSuccess }: PaymentMod
 
                     {step === 'success' && (
                         <View style={styles.centered}>
-                            <Ionicons name="checkmark-circle" size={64} color={colors.statusAccepted} />
+                            <Ionicons name="checkmark-circle" size={64} color={colors.success} />
                             <Text variant="h4" style={{ marginTop: spacing.md }}>Payment Successful!</Text>
                             <Text variant="body" color={colors.neutrals.textSecondary}>Simulation complete.</Text>
                         </View>

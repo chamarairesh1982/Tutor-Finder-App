@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../src/hooks/useFavorites';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
-import { TutorCard } from '../../src/components';
+import { TutorCard, Text, ErrorState, EmptyState } from '../../src/components';
 import { TutorSearchResult } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -13,18 +13,13 @@ export default function FavoritesScreen() {
     const router = useRouter();
 
     const renderEmpty = () => (
-        <View style={styles.centered}>
-            <View style={styles.emptyIconContainer}>
-                <Ionicons name="heart-outline" size={64} color={colors.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>Keep your favorites here</Text>
-            <Text style={styles.emptyText}>
-                Tap the heart on any tutor profile to save them for later. It’s the easiest way to find your perfect match again.
-            </Text>
-            <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/')}>
-                <Text style={styles.browseButtonText}>Explore Tutors</Text>
-            </TouchableOpacity>
-        </View>
+        <EmptyState
+            title="Keep your favorites here"
+            message="Tap the heart on any tutor profile to save them for later. It’s the easiest way to find your perfect match again."
+            icon="heart-outline"
+            actionLabel="Explore Tutors"
+            onAction={() => router.push('/')}
+        />
     );
 
     const renderFavorite = ({ item }: { item: any }) => {
@@ -65,13 +60,11 @@ export default function FavoritesScreen() {
                     <ActivityIndicator size="large" color={colors.primary} />
                 </View>
             ) : isError ? (
-                <View style={styles.centered}>
-                    <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
-                    <Text style={styles.errorText}>Something went wrong</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-                        <Text style={styles.retryText}>Try Again</Text>
-                    </TouchableOpacity>
-                </View>
+                <ErrorState
+                    title="Something went wrong"
+                    message="We couldn't load your saved tutors."
+                    onRetry={() => refetch()}
+                />
             ) : (
                 <FlatList
                     data={favorites}

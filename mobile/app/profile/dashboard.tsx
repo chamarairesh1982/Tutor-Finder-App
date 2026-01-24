@@ -73,8 +73,8 @@ export default function TutorDashboard() {
                 </View>
 
                 <View style={styles.statusRow}>
-                    <StatusItem label="Pending" count={stats.pendingBookings} color={colors.statusPending} />
-                    <StatusItem label="Active" count={stats.activeBookings} color={colors.statusAccepted} />
+                    <StatusItem label="Pending" count={stats.pendingBookings} color={colors.status.pending.text} />
+                    <StatusItem label="Active" count={stats.activeBookings} color={colors.status.accepted.text} />
                     <StatusItem label="Response Rate" count={`${Math.round(stats.responseRate)}%`} color={colors.primary} />
                 </View>
 
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         borderRadius: borderRadius.lg,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         ...shadows.sm,
         flexDirection: 'row',
         alignItems: 'center',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         borderRadius: borderRadius.lg,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
         marginBottom: spacing.xl,
     },
     statusItem: {
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
     },
     actionIcon: {
         width: 36,

@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography, borderRadius, shadows } from '../lib/theme';
+import { colors, spacing, borderRadius, shadows, typography } from '../lib/theme';
 import { TeachingMode } from '../types';
 import { Button } from './Button';
 import { Slider } from './Slider';
 import { RangeSlider } from './RangeSlider';
+import { Text } from './Text';
+import { Spacer } from './Layout';
 
 export interface SearchFiltersState {
     radiusMiles: number;
@@ -29,10 +31,10 @@ interface FilterSidebarProps {
 }
 
 const quickFilterConfig = [
-    { key: 'dbs' as const, label: 'DBS' },
-    { key: 'rating45' as const, label: '4.5+' },
-    { key: 'weekends' as const, label: 'Available weekends' },
-    { key: 'midPrice' as const, label: '£20–£40' },
+    { key: 'dbs' as const, label: 'DBS Verified', icon: 'shield-checkmark-outline' },
+    { key: 'rating45' as const, label: 'Top Rated 4.5+', icon: 'star-outline' },
+    { key: 'weekends' as const, label: 'Weekends', icon: 'calendar-outline' },
+    { key: 'midPrice' as const, label: 'Budget Friendly', icon: 'cash-outline' },
 ];
 
 export function FilterSidebar({ filters, onChange, onClose, compact = false }: FilterSidebarProps) {
@@ -40,123 +42,156 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
         const nextQuick = { ...filters.quickFilters, [key]: !filters.quickFilters[key] };
         const next: SearchFiltersState = { ...filters, quickFilters: nextQuick };
 
-        if (key === 'rating45') {
-            next.minRating = nextQuick.rating45 ? 4.5 : undefined;
-        }
+        if (key === 'rating45') next.minRating = nextQuick.rating45 ? 4.5 : undefined;
         if (key === 'midPrice') {
-            next.priceMin = nextQuick.midPrice ? 20 : undefined;
-            next.priceMax = nextQuick.midPrice ? 40 : undefined;
+            next.priceMin = nextQuick.midPrice ? 15 : undefined;
+            next.priceMax = nextQuick.midPrice ? 35 : undefined;
         }
-
         onChange(next);
-    };
-
-    const setMode = (value?: TeachingMode) => {
-        onChange({ ...filters, mode: value });
-    };
-
-    const setRadius = (value: number) => {
-        onChange({ ...filters, radiusMiles: value });
     };
 
     return (
         <View style={[styles.container, compact && styles.compact]}>
-            <View style={styles.headerRow}>
-                <Text style={styles.title}>Filters</Text>
-                {onClose && (
-                    <TouchableOpacity onPress={onClose} accessibilityRole="button">
-                        <Text style={styles.close}>Close</Text>
+            <View style={styles.header}>
+                <View>
+                    <Text variant="h3" weight="heavy">Filters</Text>
+                    <Text variant="caption" color={colors.neutrals.textMuted}>Refine your search results</Text>
+                </View>
+                {onClose && Platform.OS !== 'web' && (
+                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                        <Ionicons name="close" size={24} color={colors.neutrals.textPrimary} />
                     </TouchableOpacity>
                 )}
             </View>
 
-            <Text style={styles.sectionLabel}>Price range (£/hr)</Text>
-            <RangeSlider
-                min={0}
-                max={100}
-                initialMin={filters.priceMin ?? 0}
-                initialMax={filters.priceMax ?? 100}
-                onMinChange={(val) => onChange({ ...filters, priceMin: val })}
-                onMaxChange={(val) => onChange({ ...filters, priceMax: val })}
-            />
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Price Range (£/hr)</Text>
+                        <Text variant="bodySmall" weight="bold" color={colors.primary}>
+                            £{filters.priceMin || 0} - £{filters.priceMax || 100}
+                        </Text>
+                    </View>
+                    <Spacer size="md" />
+                    <RangeSlider
+                        min={0}
+                        max={100}
+                        initialMin={filters.priceMin ?? 0}
+                        initialMax={filters.priceMax ?? 100}
+                        onMinChange={(val) => onChange({ ...filters, priceMin: val })}
+                        onMaxChange={(val) => onChange({ ...filters, priceMax: val })}
+                    />
+                </View>
 
-            <Text style={styles.sectionLabel}>Minimum Rating</Text>
-            <View style={styles.ratingRow}>
-                {[1, 2, 3, 4, 5].map((star) => {
-                    const isActive = (filters.minRating || 0) >= star;
-                    return (
-                        <TouchableOpacity
-                            key={star}
-                            onPress={() => onChange({ ...filters, minRating: star })}
-                            style={styles.starTouch}
-                        >
-                            <Ionicons
-                                name={isActive ? "star" : "star-outline"}
-                                size={28}
-                                color={isActive ? colors.ratingStars : colors.neutrals.border}
-                            />
-                        </TouchableOpacity>
-                    );
-                })}
-                {filters.minRating && (
-                    <TouchableOpacity onPress={() => onChange({ ...filters, minRating: undefined })}>
-                        <Text style={styles.clearRating}>Clear</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
+                <View style={styles.section}>
+                    <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Minimum Rating</Text>
+                    <Spacer size="sm" />
+                    <View style={styles.ratingRow}>
+                        {[1, 2, 3, 4, 5].map((star) => {
+                            const isActive = (filters.minRating || 0) >= star;
+                            return (
+                                <TouchableOpacity
+                                    key={star}
+                                    onPress={() => onChange({ ...filters, minRating: star })}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons
+                                        name={isActive ? "star" : "star-outline"}
+                                        size={24}
+                                        color={isActive ? colors.ratingStars : colors.neutrals.border}
+                                    />
+                                </TouchableOpacity>
+                            );
+                        })}
+                        {filters.minRating && (
+                            <TouchableOpacity onPress={() => onChange({ ...filters, minRating: undefined })}>
+                                <Text variant="caption" color={colors.primary} weight="heavy" style={{ marginLeft: spacing.md }}>Clear</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
 
-            <Text style={styles.sectionLabel}>Distance ({filters.radiusMiles} miles)</Text>
-            <Slider
-                min={1}
-                max={50}
-                value={filters.radiusMiles}
-                onChange={(val) => onChange({ ...filters, radiusMiles: val })}
-            />
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Distance</Text>
+                        <Text variant="bodySmall" weight="bold" color={colors.primary}>{filters.radiusMiles} miles</Text>
+                    </View>
+                    <Spacer size="md" />
+                    <Slider
+                        min={1}
+                        max={50}
+                        value={filters.radiusMiles}
+                        onChange={(val) => onChange({ ...filters, radiusMiles: val })}
+                    />
+                </View>
 
-            <Text style={styles.sectionLabel}>Quick picks</Text>
-            <View style={styles.chipRow}>
-                {quickFilterConfig.map((chip) => {
-                    const isActive = filters.quickFilters[chip.key];
-                    return (
-                        <TouchableOpacity
-                            key={chip.key}
-                            style={[styles.chip, isActive && styles.chipActive]}
-                            onPress={() => toggleQuick(chip.key)}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{chip.label}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+                <View style={styles.section}>
+                    <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Quick Selects</Text>
+                    <Spacer size="sm" />
+                    <View style={styles.chipRow}>
+                        {quickFilterConfig.map((chip) => {
+                            const isActive = filters.quickFilters[chip.key];
+                            return (
+                                <TouchableOpacity
+                                    key={chip.key}
+                                    style={[styles.chip, isActive && styles.chipActive]}
+                                    onPress={() => toggleQuick(chip.key)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name={chip.icon as any} size={14} color={isActive ? colors.primary : colors.neutrals.textSecondary} />
+                                    <Text variant="caption" weight="heavy" color={isActive ? colors.primary : colors.neutrals.textPrimary} style={{ marginLeft: 6 }}>
+                                        {chip.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
 
-            <Text style={styles.sectionLabel}>Teaching mode</Text>
-            <View style={styles.modeRow}>
-                {[TeachingMode.InPerson, TeachingMode.Online, TeachingMode.Both].map((value) => {
-                    const isActive = filters.mode === value;
-                    const label = value === TeachingMode.InPerson ? 'In-person' : value === TeachingMode.Online ? 'Online' : 'Both';
-                    return (
-                        <TouchableOpacity
-                            key={value}
-                            style={[styles.modeButton, isActive && styles.modeButtonActive]}
-                            onPress={() => setMode(value)}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={[styles.modeText, isActive && styles.modeTextActive]}>{label}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+                <View style={styles.section}>
+                    <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Teaching Options</Text>
+                    <Spacer size="sm" />
+                    <View style={styles.modeRow}>
+                        {[TeachingMode.InPerson, TeachingMode.Online, TeachingMode.Both].map((val) => {
+                            const isActive = filters.mode === val;
+                            const label = val === TeachingMode.InPerson ? 'In-person' : val === TeachingMode.Online ? 'Online' : 'Both';
+                            const icon = val === TeachingMode.InPerson ? 'people' : val === TeachingMode.Online ? 'videocam' : 'layers';
 
-            <View style={styles.divider} />
+                            return (
+                                <TouchableOpacity
+                                    key={val}
+                                    style={[styles.modeBtn, isActive && styles.modeBtnActive]}
+                                    onPress={() => onChange({ ...filters, mode: val })}
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name={icon as any} size={16} color={isActive ? '#fff' : colors.neutrals.textSecondary} />
+                                    <Spacer size={4} horizontal />
+                                    <Text variant="caption" weight="heavy" color={isActive ? '#fff' : colors.neutrals.textPrimary}>
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+            </ScrollView>
 
-            <View style={styles.footerButtons}>
-                <Button title="Show Results" onPress={onClose || (() => { })} fullWidth size="md" />
-                <TouchableOpacity onPress={() => onChange({
-                    radiusMiles: 10,
-                    quickFilters: { dbs: false, weekends: false, rating45: false, midPrice: false }
-                })} style={{ alignSelf: 'center' }}>
-                    <Text style={styles.clearAllText}>Clear all filters</Text>
+            <View style={styles.footer}>
+                <Button
+                    title="Apply Filters"
+                    onPress={onClose || (() => { })}
+                    size="lg"
+                    variant="primary"
+                    fullWidth
+                />
+                <TouchableOpacity
+                    onPress={() => onChange({
+                        radiusMiles: 10,
+                        quickFilters: { dbs: false, weekends: false, rating45: false, midPrice: false }
+                    })}
+                    style={styles.clearAll}
+                >
+                    <Text variant="label" color={colors.neutrals.textMuted} weight="heavy">Reset to Defaults</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -166,37 +201,33 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.neutrals.surface,
-        borderRadius: borderRadius.lg,
         padding: spacing.xl,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        ...shadows.sm,
-        gap: spacing.lg,
+        flex: 1,
     },
     compact: {
         padding: spacing.lg,
     },
-    headerRow: {
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: spacing.xl,
+    },
+    scrollContent: {
+        paddingBottom: spacing.xl,
+    },
+    section: {
+        marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+    },
+    ratingRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: spacing.xs,
-    },
-    title: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textPrimary,
-    },
-    close: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
-    },
-    sectionLabel: {
-        fontSize: 11,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.neutrals.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
+        gap: spacing.sm,
     },
     chipRow: {
         flexDirection: 'row',
@@ -204,128 +235,55 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     chip: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.full,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        ...Platform.select({ web: { cursor: 'pointer' } }),
+        borderColor: colors.neutrals.border,
+        backgroundColor: colors.neutrals.surface,
     },
     chipActive: {
-        backgroundColor: 'rgba(217, 70, 239, 0.1)',
-        borderColor: colors.primary,
-    },
-    chipText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textSecondary,
-        fontWeight: typography.fontWeight.medium,
-    },
-    chipTextActive: {
-        color: colors.primaryDark,
-        fontWeight: typography.fontWeight.bold,
-    },
-    modeRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.sm,
-    },
-    modeButton: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.xl,
-        borderRadius: borderRadius.md,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
-        backgroundColor: colors.neutrals.surfaceAlt,
-        ...Platform.select({ web: { cursor: 'pointer' } }),
-    },
-    modeButtonActive: {
         backgroundColor: colors.primarySoft,
         borderColor: colors.primary,
     },
-    modeText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.neutrals.textPrimary,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    modeTextActive: {
-        color: colors.primaryDark,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: colors.neutrals.cardBorder,
-        opacity: 0.5,
-    },
-    footerButtons: {
-        gap: spacing.md,
-        marginTop: spacing.md,
-    },
-    helper: {
-        fontSize: 11,
-        color: colors.neutrals.textMuted,
-        textAlign: 'center',
-        lineHeight: 16,
-    },
-    priceRow: {
+    modeRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    priceInputWrapper: {
-        flex: 1,
-    },
-    priceLabelSmall: {
-        fontSize: 10,
-        color: colors.neutrals.textMuted,
-        marginBottom: 4,
-        fontWeight: 'bold',
-    },
-    priceInputInner: {
-        flexDirection: 'row',
-        alignItems: 'center',
         backgroundColor: colors.neutrals.surfaceAlt,
-        borderRadius: borderRadius.md,
-        paddingHorizontal: spacing.sm,
-        height: 44,
-        borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        padding: 4,
+        borderRadius: 14,
+        gap: 4,
     },
-    priceCurrency: {
-        fontSize: 16,
-        color: colors.neutrals.textSecondary,
-        marginRight: 4,
-    },
-    priceTextInput: {
+    modeBtn: {
         flex: 1,
-        fontSize: 16,
-        color: colors.neutrals.textPrimary,
-        height: '100%',
-        padding: 0,
-    },
-    priceDivider: {
-        width: 12,
-        height: 1,
-        backgroundColor: colors.neutrals.cardBorder,
-        marginTop: 18, // Align with inputs
-    },
-    ratingRow: {
+        paddingVertical: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        justifyContent: 'center',
+        borderRadius: 10,
     },
-    starTouch: {
-        padding: 2,
+    modeBtnActive: {
+        backgroundColor: colors.primary,
+        ...shadows.sm,
     },
-    clearRating: {
-        fontSize: 12,
-        color: colors.primary,
-        fontWeight: 'bold',
-        marginLeft: spacing.md,
+    footer: {
+        marginTop: 'auto',
+        gap: spacing.lg,
+        paddingTop: spacing.xl,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutrals.border,
     },
-    clearAllText: {
-        fontSize: 14,
-        color: colors.neutrals.textMuted,
-        textDecorationLine: 'underline',
-        marginTop: spacing.sm,
+    clearAll: {
+        alignSelf: 'center',
+        paddingVertical: spacing.sm,
     },
+    closeBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
 });

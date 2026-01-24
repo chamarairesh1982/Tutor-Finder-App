@@ -1,29 +1,32 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, RefreshControl, Platform, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { HomeSearchBar, Text, Card, ErrorState, EmptyState, SkeletonList } from '../../src/components';
-import { colors, spacing, typography, borderRadius, layout, shadows } from '../../src/lib/theme';
+import { useRouter } from 'expo-router';
+import {
+    HomeSearchBar, Text, Card, ErrorState,
+    SkeletonList, TutorCardWeb, TutorCard, Screen, Container, Section, Spacer
+} from '../../src/components';
+import { colors, spacing, layout, shadows, borderRadius, typography } from '../../src/lib/theme';
 import { useBreakpoint } from '../../src/lib/responsive';
 import { TeachingMode } from '../../src/types';
-import { useAuthStore } from '../../src/store/authStore';
 import { useSearchTutors } from '../../src/hooks/useTutors';
-import { TutorCard } from '../../src/components/TutorCard';
 
 const categoryCards = [
-    { key: 'all', label: 'All Subjects', color: colors.categories.purple, emoji: '🎯' },
-    { key: 'Music', label: 'Music', color: colors.categories.blue, emoji: '🎸' },
-    { key: 'Sports', label: 'Sports', color: colors.categories.green, emoji: '⚽' },
-    { key: 'Arts', label: 'Arts & Crafts', color: colors.categories.pink, emoji: '🎨' },
-    { key: 'Academic', label: 'Academic', color: colors.categories.orange, emoji: '📚' },
-    { key: 'Languages', label: 'Languages', color: colors.categories.indigo, emoji: '🗣️' },
+    { key: 'Music', label: 'Music', color: '#8B5CF6', icon: 'musical-notes' },
+    { key: 'Maths', label: 'Maths', color: '#EC4899', icon: 'calculator' },
+    { key: 'Science', label: 'Science', color: '#10B981', icon: 'flask' },
+    { key: 'Languages', label: 'Languages', color: '#3B82F6', icon: 'language' },
+    { key: 'Programming', label: 'Programming', color: '#6366F1', icon: 'code-slash' },
+    { key: 'Academic', label: 'Academic', color: '#F59E0B', icon: 'school' },
+    { key: 'Arts', label: 'Arts & Crafts', color: '#EF4444', icon: 'brush' },
+    { key: 'Sports', label: 'Sports', color: '#22C55E', icon: 'fitness' },
+    { key: 'Yoga', label: 'Yoga & Fitness', color: '#8B5CF6', icon: 'leaf' },
+    { key: 'Business', label: 'Business', color: '#64748B', icon: 'stats-chart' },
 ];
 
 export default function DiscoverScreen() {
     const router = useRouter();
-    const { width, isLg } = useBreakpoint();
-    const { isAuthenticated } = useAuthStore();
+    const { isLg } = useBreakpoint();
     const [subject, setSubject] = useState('');
     const [location, setLocation] = useState('');
     const [radius, setRadius] = useState(10);
@@ -36,10 +39,9 @@ export default function DiscoverScreen() {
         isError: isFeaturedError,
         refetch: refetchFeatured
     } = useSearchTutors({
-        lat: undefined, lng: undefined, postcode: undefined, radiusMiles: 50,
-        subject: undefined, category: undefined, minRating: 4,
-        priceMin: undefined, priceMax: undefined, mode: undefined,
-        page: 1, pageSize: 4, sortBy: 'rating'
+        radiusMiles: 50,
+        minRating: 4,
+        page: 1, pageSize: 8, sortBy: 'rating'
     });
 
     const featuredTutors = featuredData?.items ?? [];
@@ -60,454 +62,251 @@ export default function DiscoverScreen() {
     const handleCategorySelect = (key: string) => {
         router.push({
             pathname: '/search',
-            params: { subject: key === 'All Subjects' ? '' : key }
+            params: { subject: key }
         });
     };
 
     return (
-        <View style={styles.safeArea}>
-            {isLg ? (
-                <View style={styles.desktopNav}>
-                    <View style={styles.desktopNavInner}>
-                        <TouchableOpacity onPress={() => router.push('/')} style={styles.brandRow}>
-                            <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
-                            <Text style={styles.brandTitleDesktop}>TutorMatch UK</Text>
-                        </TouchableOpacity>
-                        <View style={styles.desktopActions}>
-                            {isAuthenticated ? (
-                                <TouchableOpacity style={styles.navLink} onPress={() => router.push('/profile')}>
-                                    <Text style={styles.navLinkText}>My Dashboard</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <>
-                                    <TouchableOpacity style={styles.navLink} onPress={() => router.push('/(auth)/login')}>
-                                        <Text style={styles.navLinkText}>Login</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.navCtaDesktop} onPress={() => router.push('/(auth)/register')}>
-                                        <Text style={styles.navCtaTextDesktop}>Get Started</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </View>
-                    </View>
-                </View>
-            ) : (
-                <View style={styles.mobileNav}>
-                    <SafeAreaView edges={['top']}>
-                        <View style={styles.navContent}>
-                            <View style={styles.brandRow}>
-                                <View style={styles.logoMini}><Text style={styles.logoMiniText}>T</Text></View>
-                                <Text style={styles.brandTitle}>TutorMatch</Text>
-                            </View>
-                            <View style={styles.navActions}>
-                                {isAuthenticated ? (
-                                    <TouchableOpacity style={styles.profileCircle} onPress={() => router.push('/profile')}>
-                                        <Ionicons name="person" size={20} color={colors.primary} />
-                                    </TouchableOpacity>
-                                ) : (
-                                    <TouchableOpacity style={styles.loginBtnSmall} onPress={() => router.push('/(auth)/login')}>
-                                        <Text style={styles.loginBtnText}>Log In</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </View>
-                    </SafeAreaView>
-                </View>
-            )}
-
-            <ScrollView
-                contentContainerStyle={[
-                    styles.page,
-                    { paddingHorizontal: width > layout.contentMaxWidth ? spacing.xl : spacing.lg }
-                ]}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={isLoadingFeatured} onRefresh={refetchFeatured} />
-                }
+        <Screen
+            scrollable
+            backgroundColor={colors.neutrals.background}
+            refreshControl={<RefreshControl refreshing={isLoadingFeatured} onRefresh={refetchFeatured} tintColor={colors.primary} />}
+        >
+            {/* World Class Hero Section */}
+            <ImageBackground
+                source={{ uri: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=2000' }} // Premium education bg
+                style={[styles.hero, isLg && styles.heroWeb]}
+                imageStyle={{ opacity: 0.05 }}
             >
+                <Container padding="lg">
+                    <Section paddingVertical={isLg ? "5xl" : "3xl"} style={styles.heroInner}>
+                        <View style={styles.heroText}>
+                            <View style={styles.badgeWrapper}>
+                                <Text variant="label" color={colors.primary} weight="heavy" style={styles.heroLabel}>
+                                    UK Tutoring Marketplace
+                                </Text>
+                            </View>
+                            <Spacer size="md" />
+                            <Text variant="h1" weight="heavy" style={[styles.heroTitle, isLg && styles.heroTitleWeb]}>
+                                Find the Right{"\n"}
+                                <Text variant="h1" color={colors.primary} weight="heavy">Tutor</Text> for You
+                            </Text>
+                            <Spacer size="lg" />
+                            <Text variant="bodyLarge" color={colors.neutrals.textSecondary} style={styles.heroSubtitle}>
+                                Connect with qualified tutors near you. Browse profiles, read reviews, and book lessons online or in-person.
+                            </Text>
+                        </View>
 
-                {/* Hero Section */}
-                <View style={[styles.heroSection, isLg && styles.heroSectionDesktop]}>
-                    <View style={styles.heroHeader}>
-                        <Text style={styles.heroPreTitle}>FIND YOUR PERFECT MATCH</Text>
-                        <Text style={[styles.heroMainTitle, isLg && styles.heroMainTitleDesktop]}>
-                            Learn Something <Text style={styles.heroHighlight}>Amazing</Text>
-                        </Text>
-                        <Text style={[styles.heroDesc, isLg && styles.heroDescDesktop]}>
-                            Connect with verified experts for music, academics, languages and more. Quality learning starts here.
-                        </Text>
+                        <View style={[styles.searchContainer, isLg && styles.searchContainerWeb]}>
+                            <Card variant="elevated" style={styles.searchCard}>
+                                <HomeSearchBar
+                                    subject={subject}
+                                    location={location}
+                                    radius={radius}
+                                    mode={mode}
+                                    availabilityDay={availabilityDay}
+                                    onSubjectChange={setSubject}
+                                    onLocationChange={setLocation}
+                                    onRadiusChange={setRadius}
+                                    onModeChange={setMode}
+                                    onAvailabilityDayChange={setAvailabilityDay}
+                                    onSubmit={handleSearch}
+                                />
+                            </Card>
+                        </View>
+                    </Section>
+                </Container>
+            </ImageBackground>
+
+            {/* Main Content */}
+            <Container padding="lg">
+                {/* Categories */}
+                <Section paddingVertical="2xl">
+                    <View style={styles.sectionHeader}>
+                        <View>
+                            <Text variant="h3" weight="heavy">Expertise by Subject</Text>
+                            <Text variant="bodySmall" color={colors.neutrals.textMuted}>Find specialized support for any discipline.</Text>
+                        </View>
                     </View>
-
-                    <View style={styles.searchContainer}>
-                        <HomeSearchBar
-                            subject={subject}
-                            location={location}
-                            radius={radius}
-                            mode={mode}
-                            availabilityDay={availabilityDay}
-                            onSubjectChange={setSubject}
-                            onLocationChange={setLocation}
-                            onRadiusChange={setRadius}
-                            onModeChange={setMode}
-                            onAvailabilityDayChange={setAvailabilityDay}
-                            onSubmit={handleSearch}
-                        />
-                    </View>
-
-                    <View style={styles.trustBadges}>
-                        <TrustBadge icon="🛡️" label="Verified Tutors" />
-                        <TrustBadge icon="⭐" label="5000+ Reviews" />
-                        <TrustBadge icon="📅" label="Easy Booking" />
-                    </View>
-                </View>
-
-                <View style={styles.sectionHeader}>
-                    <Text variant="h4" style={isLg && { fontSize: 24 }}>What would you like to learn?</Text>
-                </View>
-
-                {isLg ? (
+                    <Spacer size="xl" />
                     <View style={styles.categoryGrid}>
                         {categoryCards.map((cat) => (
                             <TouchableOpacity
                                 key={cat.key}
-                                style={[styles.categoryCardDesktop, { backgroundColor: cat.color + '15', borderColor: cat.color + '30' }]}
+                                style={[styles.categoryBtn, isLg ? styles.categoryBtnWeb : styles.categoryBtnMobile]}
                                 onPress={() => handleCategorySelect(cat.label)}
-                                activeOpacity={0.8}
+                                activeOpacity={0.9}
                             >
-                                <View style={[styles.categoryEmojiBg, { backgroundColor: cat.color, width: 44, height: 44 }]}>
-                                    <Text style={[styles.categoryEmoji, { fontSize: 22 }]}>{cat.emoji}</Text>
+                                <View style={[styles.categoryInner, { borderColor: cat.color + '20' }]}>
+                                    <View style={[styles.iconBox, { backgroundColor: cat.color + '10' }]}>
+                                        <Ionicons name={cat.icon as any} size={28} color={cat.color} />
+                                    </View>
+                                    <Spacer size="sm" />
+                                    <Text variant="bodySmall" weight="heavy" color={colors.neutrals.textPrimary}>{cat.label}</Text>
+                                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ fontSize: 10 }}>120+ Tutors</Text>
                                 </View>
-                                <Text weight="bold" style={[styles.categoryLabel, { color: cat.color, fontSize: 14 }]}>{cat.label}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.categoryScroll}
-                    >
-                        {categoryCards.map((cat) => (
-                            <TouchableOpacity
-                                key={cat.key}
-                                style={[styles.categoryCard, { backgroundColor: cat.color + '15', borderColor: cat.color + '30' }]}
-                                onPress={() => handleCategorySelect(cat.label)}
-                                activeOpacity={0.8}
-                            >
-                                <View style={[styles.categoryEmojiBg, { backgroundColor: cat.color }]}>
-                                    <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                                </View>
-                                <Text weight="bold" style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                )}
+                </Section>
 
-                {/* Featured Section */}
-                <View style={styles.sectionHeader}>
-                    <View style={styles.sectionTitleRow}>
-                        <Text variant="h4">Featured Tutors</Text>
-                        <TouchableOpacity onPress={() => router.push('/search')}>
-                            <Text style={styles.viewAllText}>View all →</Text>
+                {/* Featured Tutors - Horizontal Scroll on Mobile, Grid on Web */}
+                <Section paddingVertical="2xl">
+                    <View style={styles.sectionHeader}>
+                        <View>
+                            <Text variant="h2" weight="heavy">Featured Tutors</Text>
+                            <Text variant="bodySmall" color={colors.neutrals.textMuted}>Highly-rated tutors in your area.</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => router.push('/search')} style={styles.viewLink}>
+                            <Text variant="bodySmall" color={colors.primary} weight="heavy">Browse All</Text>
+                            <Ionicons name="arrow-forward" size={16} color={colors.primary} style={{ marginLeft: 4 }} />
                         </TouchableOpacity>
                     </View>
-                </View>
+                    <Spacer size="xl" />
 
-                {isLoadingFeatured ? (
-                    <SkeletonList count={3} />
-                ) : isFeaturedError ? (
-                    <ErrorState
-                        message="Failed to load featured tutors."
-                        onRetry={refetchFeatured}
-                    />
-                ) : featuredTutors.length === 0 ? (
-                    <EmptyState
-                        title="No Featured Tutors"
-                        message="Check back later for top-rated tutors."
-                        icon="people-outline"
-                    />
-                ) : (
-                    <View style={[styles.featuredGrid, isLg && styles.featuredGridDesktop]}>
-                        {featuredTutors.map((tutor) => (
-                            <View key={tutor.id} style={[styles.featuredCardWrapper, isLg && styles.featuredCardWrapperDesktop]}>
-                                <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
-                            </View>
-                        ))}
-                    </View>
-                )}
-            </ScrollView>
-        </View>
-    );
-}
-
-function TrustBadge({ icon, label }: { icon: string; label: string }) {
-    return (
-        <View style={styles.trustBadge}>
-            <Text style={{ fontSize: 16 }}>{icon}</Text>
-            <Text variant="caption" weight="medium" style={{ color: colors.neutrals.textSecondary }}>{label}</Text>
-        </View>
+                    {isLoadingFeatured ? (
+                        <SkeletonList count={isLg ? 4 : 2} variant={isLg ? 'web' : 'mobile'} />
+                    ) : isFeaturedError ? (
+                        <ErrorState onRetry={refetchFeatured} />
+                    ) : (
+                        <View style={styles.tutorGrid}>
+                            {featuredTutors.map((tutor) => (
+                                <View key={tutor.id} style={isLg ? styles.tutorBoxWeb : styles.tutorBoxMobile}>
+                                    {isLg ? (
+                                        <TutorCardWeb tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
+                                    ) : (
+                                        <TutorCard tutor={tutor} onPress={() => router.push(`/tutor/${tutor.id}`)} />
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    )}
+                </Section>
+            </Container>
+            <Spacer size="4xl" />
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: colors.neutrals.background,
+    hero: {
+        backgroundColor: '#fff',
+        overflow: 'hidden',
     },
-    page: {
-        paddingBottom: spacing['4xl'],
-    },
-    desktopNav: {
-        backgroundColor: colors.neutrals.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
-        zIndex: 2000,
-        height: 80,
+    heroWeb: {
+        minHeight: 600,
         justifyContent: 'center',
     },
-    desktopNavInner: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.xl,
-        maxWidth: layout.wideContentMaxWidth,
-        width: '100%',
-        alignSelf: 'center',
-    },
-    brandTitleDesktop: {
-        fontSize: 24,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
-    },
-    desktopActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xl,
-    },
-    navLink: {
-        paddingVertical: spacing.sm,
-    },
-    navLinkText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.neutrals.textSecondary,
-    },
-    navCtaDesktop: {
-        backgroundColor: colors.primary,
-        paddingHorizontal: spacing.xl,
-        paddingVertical: spacing.md,
-        borderRadius: borderRadius.full,
-        ...shadows.sm,
-    },
-    navCtaTextDesktop: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    mobileNav: {
-        backgroundColor: colors.neutrals.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutrals.cardBorder,
-        zIndex: 2000,
-    },
-    navContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        height: 60,
-    },
-    brandRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    logoMini: {
-        width: 32,
-        height: 32,
-        backgroundColor: colors.primary,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    logoMiniText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
-    brandTitle: {
-        fontSize: 20,
-        fontWeight: typography.fontWeight.heavy,
-        color: colors.neutrals.textPrimary,
-        letterSpacing: -0.5,
-    },
-    navActions: {
-        flexDirection: 'row',
+    heroInner: {
         alignItems: 'center',
     },
-    profileCircle: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+    heroText: {
+        alignItems: 'center',
+        maxWidth: 800,
+        marginBottom: spacing['3xl'],
+    },
+    badgeWrapper: {
         backgroundColor: colors.primarySoft,
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: borderRadius.full,
         borderWidth: 1,
         borderColor: colors.primaryLight,
     },
-    loginBtnSmall: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: 8,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.primary,
+    heroLabel: {
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
-    loginBtnText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    heroSection: {
-        paddingVertical: spacing.xl,
-        gap: spacing.xl,
-    },
-    heroSectionDesktop: {
-        paddingVertical: spacing['5xl'],
-        gap: spacing['2xl'],
-    },
-    heroHeader: {
-        alignItems: 'center',
-        gap: 8,
-    },
-    heroPreTitle: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: colors.primaryDark,
-        letterSpacing: 2,
-    },
-    heroMainTitle: {
-        fontSize: 36,
-        fontWeight: typography.fontWeight.heavy,
+    heroTitle: {
         textAlign: 'center',
-        color: colors.neutrals.textPrimary,
-        lineHeight: 44,
+        lineHeight: 48,
+        letterSpacing: -0.5,
     },
-    heroMainTitleDesktop: {
+    heroTitleWeb: {
         fontSize: 64,
         lineHeight: 72,
-        maxWidth: 800,
     },
-    heroHighlight: {
-        color: colors.primary,
-    },
-    heroDesc: {
-        fontSize: 16,
-        color: colors.neutrals.textSecondary,
+    heroSubtitle: {
         textAlign: 'center',
-        lineHeight: 24,
-        paddingHorizontal: spacing.xl,
-    },
-    heroDescDesktop: {
-        fontSize: 20,
-        lineHeight: 32,
-        maxWidth: 700,
+        maxWidth: 650,
+        lineHeight: 28,
+        fontSize: 18,
     },
     searchContainer: {
         width: '100%',
-        maxWidth: 800,
-        zIndex: 500,
-        alignSelf: 'center',
+        maxWidth: 900,
+        zIndex: 10,
     },
-    trustBadges: {
-        flexDirection: 'row',
-        gap: spacing.lg,
-        marginTop: spacing.md,
-        flexWrap: 'wrap',
-        justifyContent: 'center',
+    searchContainerWeb: {
+        maxWidth: 960,
     },
-    trustBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: colors.neutrals.surface,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
+    searchCard: {
+        padding: spacing.sm,
+        borderRadius: 24,
         borderWidth: 1,
-        borderColor: colors.neutrals.cardBorder,
+        borderColor: colors.neutrals.border,
+        ...shadows.floating,
     },
     sectionHeader: {
-        marginTop: spacing.xl,
-        marginBottom: spacing.md,
-    },
-    sectionTitleRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
+        alignItems: 'flex-end',
     },
-    viewAllText: {
-        color: colors.primary,
-        fontWeight: typography.fontWeight.bold,
-        fontSize: typography.fontSize.sm,
-    },
-    categoryScroll: {
-        paddingRight: spacing.xl,
-        gap: spacing.md,
+    viewLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     categoryGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.md,
+        marginHorizontal: -spacing.sm,
     },
-    categoryCard: {
-        width: 120,
-        height: 140,
-        borderRadius: 24,
-        padding: spacing.md,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        ...shadows.sm,
+    categoryBtn: {
+        padding: spacing.sm,
     },
-    categoryCardDesktop: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+    categoryBtnMobile: {
+        width: '50%',
+    },
+    categoryBtnWeb: {
+        width: '20%',
+    },
+    categoryInner: {
+        backgroundColor: colors.neutrals.surface,
         borderRadius: 20,
+        padding: spacing.lg,
+        alignItems: 'center',
         borderWidth: 1,
-        gap: spacing.md,
-        flex: 1,
-        minWidth: 200,
+        borderColor: colors.neutrals.border,
+        ...shadows.sm,
+        ...Platform.select({
+            web: {
+                transition: 'all 0.3s ease',
+                ':hover': {
+                    transform: [{ translateY: -4 }],
+                    borderColor: colors.primary,
+                    ...shadows.md,
+                }
+            } as any
+        })
     },
-    categoryEmojiBg: {
-        width: 54,
-        height: 54,
+    iconBox: {
+        width: 60,
+        height: 60,
         borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: spacing.xs,
-        ...shadows.sm,
+        marginBottom: 4,
     },
-    categoryEmoji: {
-        fontSize: 28,
-    },
-    categoryLabel: {
-        fontSize: 13,
-        textAlign: 'center',
-    },
-    featuredGrid: {
-        marginHorizontal: -spacing.sm,
-    },
-    featuredGridDesktop: {
+    tutorGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginHorizontal: -spacing.md,
+        marginHorizontal: -spacing.sm,
     },
-    featuredCardWrapper: {
-        paddingVertical: spacing.xs,
+    tutorBoxMobile: {
+        width: '100%',
+        padding: spacing.sm,
     },
-    featuredCardWrapperDesktop: {
+    tutorBoxWeb: {
         width: '50%',
         padding: spacing.md,
     },
