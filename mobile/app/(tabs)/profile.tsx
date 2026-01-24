@@ -125,6 +125,14 @@ export default function ProfileScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Dashboard</Text>
                     <View style={styles.sectionCard}>
+                        {user.role === UserRole.Tutor && (
+                            <MenuItem
+                                icon="stats-chart-outline"
+                                label="My Tutor Dashboard"
+                                color={colors.primary}
+                                onPress={() => router.push('/profile/dashboard')}
+                            />
+                        )}
                         <MenuItem
                             icon="calendar-outline"
                             label="Schedule & Bookings"
@@ -138,7 +146,8 @@ export default function ProfileScreen() {
                         <MenuItem
                             icon="notifications-outline"
                             label="Notifications"
-                            onPress={() => { }}
+                            onPress={() => router.push('/profile/notifications')}
+                            isLast
                         />
                     </View>
                 </View>

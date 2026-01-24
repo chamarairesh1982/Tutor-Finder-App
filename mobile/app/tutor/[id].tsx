@@ -94,7 +94,9 @@ export default function TutorDetailScreen() {
                                 <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
                             ) : (
                                 <View style={styles.avatarFallback}>
-                                    <Ionicons name="person" size={48} color={colors.neutrals.textMuted} />
+                                    <Text variant="h1" weight="heavy" color={colors.primary}>
+                                        {tutor.fullName.split(' ').map(n => n[0]).join('')}
+                                    </Text>
                                 </View>
                             )}
                             <View style={styles.onlineStatus} />
@@ -111,9 +113,13 @@ export default function TutorDetailScreen() {
                                 )}
                             </View>
 
-                            <Text variant="bodyLarge" weight="heavy" color={colors.primary} style={styles.topSubject}>
-                                {tutor.subjects?.[0]} Specialist
-                            </Text>
+                            <View style={styles.subjectRow}>
+                                {tutor.subjects?.map((sub) => (
+                                    <View key={sub} style={styles.subjectChip}>
+                                        <Text variant="caption" weight="heavy" color={colors.primary}>{sub}</Text>
+                                    </View>
+                                ))}
+                            </View>
 
                             <View style={styles.metaRow}>
                                 <View style={styles.ratingBox}>
@@ -124,7 +130,14 @@ export default function TutorDetailScreen() {
                                 <View style={styles.dot} />
                                 <View style={styles.locationBox}>
                                     <Ionicons name="location-sharp" size={16} color={colors.neutrals.textSecondary} />
-                                    <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>London, UK</Text>
+                                    <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>
+                                        {tutor.postcode ? `London ${tutor.postcode.substring(0, 3)}` : 'London, UK'}
+                                    </Text>
+                                </View>
+                                <View style={styles.dot} />
+                                <View style={styles.responseBox}>
+                                    <Ionicons name="flash" size={14} color={colors.success} />
+                                    <Text variant="bodySmall" weight="bold" color={colors.success} style={{ marginLeft: 4 }}>Typically responds in 2h</Text>
                                 </View>
                             </View>
                         </View>
@@ -433,6 +446,21 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#A7F3D0',
     },
+    subjectRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginBottom: 16,
+        justifyContent: Platform.OS === 'web' ? 'flex-start' : 'center',
+    },
+    subjectChip: {
+        backgroundColor: colors.primarySoft,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
     topSubject: {
         marginBottom: 12,
         fontSize: 18,
@@ -446,6 +474,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     locationBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    responseBox: {
         flexDirection: 'row',
         alignItems: 'center',
     },

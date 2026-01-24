@@ -15,6 +15,7 @@ export interface SearchFiltersState {
     minRating?: number;
     priceMin?: number;
     priceMax?: number;
+    availabilityDay?: number;
     quickFilters: {
         dbs: boolean;
         weekends: boolean;
@@ -174,6 +175,26 @@ export function FilterSidebar({ filters, onChange, onClose, compact = false }: F
                         })}
                     </View>
                 </View>
+
+                <View style={styles.section}>
+                    <Text variant="label" color={colors.neutrals.textSecondary} weight="heavy">Availability Day</Text>
+                    <Spacer size="sm" />
+                    <View style={styles.dayRow}>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, dIdx) => {
+                            const isActive = filters.availabilityDay === dIdx;
+                            return (
+                                <TouchableOpacity
+                                    key={day}
+                                    style={[styles.dayPill, isActive && styles.dayPillActive]}
+                                    onPress={() => onChange({ ...filters, availabilityDay: isActive ? undefined : dIdx })}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text variant="caption" weight="heavy" color={isActive ? '#fff' : colors.neutrals.textPrimary}>{day}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
             </ScrollView>
 
             <View style={styles.footer}>
@@ -254,6 +275,25 @@ const styles = StyleSheet.create({
         padding: 4,
         borderRadius: 14,
         gap: 4,
+    },
+    dayRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+    },
+    dayPill: {
+        width: 44,
+        height: 44,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
+    },
+    dayPillActive: {
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     modeBtn: {
         flex: 1,

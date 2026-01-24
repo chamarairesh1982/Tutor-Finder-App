@@ -149,9 +149,11 @@ export default function TutorSettingsScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.introBox}>
-                    <Text variant="body" color={colors.neutrals.textSecondary}>
-                        Your profile is your storefront. Tutors with complete bios and qualifications receive 70% more enquiries.
+                <View style={[styles.introBox, { backgroundColor: colors.primarySoft }]}>
+                    <Ionicons name="sparkles" size={24} color={colors.primary} style={{ marginBottom: 8 }} />
+                    <Text variant="h3" weight="heavy" color={colors.primaryDark}>Grow Your Students</Text>
+                    <Text variant="bodySmall" color={colors.primaryDark} style={{ lineHeight: 18, marginTop: 4 }}>
+                        Tutors with complete bios and qualifications receive 3x more enquiries. Use the sections below to showcase your professional credentials.
                     </Text>
                 </View>
 
@@ -266,21 +268,39 @@ export default function TutorSettingsScreen() {
                 </Section>
 
                 <Section paddingVertical="md">
-                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Verification & Badges</Text>
+                    <Text variant="h3" weight="heavy" style={styles.sectionTitle}>Trust & Verification</Text>
+                    <Text variant="caption" color={colors.neutrals.textMuted} style={{ marginBottom: spacing.md }}>
+                        These declarations are shown on your profile as "Self-Declared". Honest disclosure builds long-term trust with parents.
+                    </Text>
+
                     <TouchableOpacity
-                        style={styles.toggleRow}
+                        style={[styles.toggleCard, form.hasDbs && styles.toggleCardActive]}
                         onPress={() => setForm({ ...form, hasDbs: !form.hasDbs })}
+                        activeOpacity={0.8}
                     >
-                        <Ionicons name={form.hasDbs ? "checkbox" : "square-outline"} size={22} color={form.hasDbs ? colors.primary : colors.neutrals.textMuted} />
-                        <Text variant="body">I have a valid DBS certificate</Text>
+                        <View style={[styles.iconBadge, form.hasDbs && styles.iconBadgeActive]}>
+                            <Ionicons name="shield-checkmark" size={20} color={form.hasDbs ? colors.trust.dbs : colors.neutrals.textMuted} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text variant="body" weight="semibold">DBS Checked (Self-Declared)</Text>
+                            <Text variant="caption" color={colors.neutrals.textSecondary}>I hold a valid UK Disclosure and Barring Service certificate.</Text>
+                        </View>
+                        <Ionicons name={form.hasDbs ? "checkmark-circle" : "ellipse-outline"} size={24} color={form.hasDbs ? colors.primary : colors.neutrals.border} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles.toggleRow}
+                        style={[styles.toggleCard, form.hasCertification && styles.toggleCardActive]}
                         onPress={() => setForm({ ...form, hasCertification: !form.hasCertification })}
+                        activeOpacity={0.8}
                     >
-                        <Ionicons name={form.hasCertification ? "checkbox" : "square-outline"} size={22} color={form.hasCertification ? colors.primary : colors.neutrals.textMuted} />
-                        <Text variant="body">I have professional teaching certifications</Text>
+                        <View style={[styles.iconBadge, form.hasCertification && styles.iconBadgeActive]}>
+                            <Ionicons name="ribbon" size={20} color={form.hasCertification ? colors.trust.certified : colors.neutrals.textMuted} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text variant="body" weight="semibold">Qualified Teacher</Text>
+                            <Text variant="caption" color={colors.neutrals.textSecondary}>I have professional teaching status or equivalent certifications.</Text>
+                        </View>
+                        <Ionicons name={form.hasCertification ? "checkmark-circle" : "ellipse-outline"} size={24} color={form.hasCertification ? colors.primary : colors.neutrals.border} />
                     </TouchableOpacity>
                 </Section>
 
@@ -461,11 +481,31 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textSecondary,
         marginBottom: spacing.xs,
     },
-    toggleRow: {
+    toggleCard: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
-        paddingVertical: spacing.sm,
+        padding: spacing.md,
+        borderRadius: borderRadius.lg,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
+        backgroundColor: colors.neutrals.surface,
+        marginBottom: spacing.sm,
+    },
+    toggleCardActive: {
+        borderColor: colors.primary,
+        backgroundColor: colors.primarySoft,
+    },
+    iconBadge: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconBadgeActive: {
+        backgroundColor: '#fff',
     },
     toggleLabel: {
         fontSize: typography.fontSize.base,

@@ -17,6 +17,7 @@ export default function SearchPage() {
     const params = useLocalSearchParams<{
         subject?: string; location?: string; radius?: string; mode?: string;
         rating45?: string; midPrice?: string; dbs?: string; weekends?: string;
+        availabilityDay?: string;
     }>();
     const { isLg } = useBreakpoint();
 
@@ -27,6 +28,7 @@ export default function SearchPage() {
     const [filters, setFilters] = useState<SearchFiltersState>({
         radiusMiles: params.radius ? Number(params.radius) : 25,
         mode: params.mode ? Number(params.mode) as TeachingMode : undefined,
+        availabilityDay: params.availabilityDay ? Number(params.availabilityDay) : undefined,
         quickFilters: {
             dbs: params.dbs === '1',
             weekends: params.weekends === '1',
@@ -50,6 +52,7 @@ export default function SearchPage() {
         minRating: filters.minRating,
         priceMin: filters.priceMin,
         priceMax: filters.priceMax,
+        availabilityDay: filters.availabilityDay,
         page,
         pageSize: 20,
         sortBy,
