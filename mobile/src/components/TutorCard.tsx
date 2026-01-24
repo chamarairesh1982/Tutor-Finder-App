@@ -41,7 +41,15 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
             <View style={styles.content}>
                 {/* Avatar Section */}
                 <View style={styles.avatarSection}>
-                    <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
+                    {tutor.photoUrl ? (
+                        <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
+                    ) : (
+                        <View style={styles.avatarFallback}>
+                            <Text variant="h3" weight="heavy" color={colors.primary}>
+                                {tutor.fullName.split(' ').map(n => n[0]).join('')}
+                            </Text>
+                        </View>
+                    )}
                     {tutor.teachingMode !== 0 && (
                         <View style={styles.onlineBadge}>
                             <View style={styles.onlineDot} />
@@ -83,11 +91,19 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
                                 ({tutor.reviewCount})
                             </Text>
                         </View>
-                        <View style={styles.dot} />
                         <Text variant="caption" color={colors.neutrals.textSecondary}>
                             {tutor.distanceMiles > 0 ? `${tutor.distanceMiles.toFixed(1)} mi` : 'Online'}
                         </Text>
                     </View>
+
+                    {tutor.nextAvailableText && (
+                        <View style={styles.availabilityRow}>
+                            <Ionicons name="calendar-outline" size={12} color={colors.success} />
+                            <Text variant="caption" weight="bold" color={colors.success} style={{ marginLeft: 4 }}>
+                                {tutor.nextAvailableText}
+                            </Text>
+                        </View>
+                    )}
 
                     <View style={styles.priceRow}>
                         <Text variant="bodyLarge" weight="heavy">£{tutor.pricePerHour}<Text variant="caption">/hr</Text></Text>
@@ -130,8 +146,18 @@ const styles = StyleSheet.create({
     avatar: {
         width: 80,
         height: 80,
-        borderRadius: borderRadius.md,
+        borderRadius: 14,
         backgroundColor: colors.neutrals.surfaceAlt,
+    },
+    avatarFallback: {
+        width: 80,
+        height: 80,
+        borderRadius: 14,
+        backgroundColor: colors.neutrals.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
     },
     onlineBadge: {
         position: 'absolute',
@@ -168,7 +194,12 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     subject: {
-        marginBottom: 4,
+        marginBottom: 2,
+    },
+    availabilityRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
     },
     metaRow: {
         flexDirection: 'row',

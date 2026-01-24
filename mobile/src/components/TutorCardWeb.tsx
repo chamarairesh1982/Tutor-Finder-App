@@ -55,7 +55,9 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                         <Image source={{ uri: tutor.photoUrl }} style={styles.avatar} />
                     ) : (
                         <View style={styles.avatarFallback}>
-                            <Ionicons name="person" size={40} color={colors.neutrals.textMuted} />
+                            <Text variant="h3" weight="heavy" color={colors.primary}>
+                                {tutor.fullName.split(' ').map(n => n[0]).join('')}
+                            </Text>
                         </View>
                     )}
                     {tutor.teachingMode !== 0 && (
@@ -107,9 +109,19 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                             <Ionicons name="location-outline" size={14} color={colors.neutrals.textSecondary} />
                             <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>
                                 {modeLabel[tutor.teachingMode ?? TeachingMode.Both]}
+                                {tutor.distanceMiles > 0 && ` (${tutor.distanceMiles.toFixed(1)} mi)`}
                             </Text>
                         </View>
                     </View>
+
+                    {tutor.nextAvailableText && (
+                        <View style={styles.availabilityRow}>
+                            <Ionicons name="calendar-outline" size={14} color={colors.success} />
+                            <Text variant="bodySmall" weight="bold" color={colors.success} style={{ marginLeft: 6 }}>
+                                {tutor.nextAvailableText}
+                            </Text>
+                        </View>
+                    )}
 
                     <Text variant="bodySmall" color={colors.neutrals.textSecondary} numberOfLines={2} style={styles.bio}>
                         {tutor.bio || 'Tutor available for personalised sessions to help you reach your goals.'}
@@ -270,6 +282,11 @@ const styles = StyleSheet.create({
     ratingBlock: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    availabilityRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.md,
     },
     modeBlock: {
         flexDirection: 'row',

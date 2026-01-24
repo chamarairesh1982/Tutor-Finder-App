@@ -320,6 +320,13 @@ export default function BookingDetailScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.messagesContainer}>
+                        <View style={styles.safeguardingNote}>
+                            <Ionicons name="information-circle-outline" size={16} color={colors.neutrals.textMuted} />
+                            <Text style={styles.safeguardingText}>
+                                TutorMatch is a marketplace. We do not verify credentials. Parents and students should conduct their own due diligence.
+                            </Text>
+                        </View>
+
                         {messages.length === 0 ? (
                             <View style={styles.emptyState}>
                                 <Ionicons name="chatbubbles-outline" size={48} color={colors.neutrals.surfaceAlt} />
@@ -530,6 +537,22 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         paddingTop: spacing.lg,
+    },
+    safeguardingNote: {
+        flexDirection: 'row',
+        backgroundColor: colors.neutrals.surfaceAlt,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.xl,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
+    },
+    safeguardingText: {
+        fontSize: 11,
+        color: colors.neutrals.textMuted,
+        flex: 1,
+        lineHeight: 16,
     },
     emptyState: {
         alignItems: 'center',

@@ -49,7 +49,9 @@ export default function BookingsScreen() {
                         <View style={styles.headerInfo}>
                             <Text style={styles.tutorNameText}>{item.tutorName}</Text>
                             <View style={styles.metaRow}>
-                                <Text style={styles.categoryBadge}>Mathematics</Text>
+                                <Text style={styles.categoryBadge} numberOfLines={1}>
+                                    {item.tutorId ? 'Professional Tutor' : 'Tutor'}
+                                </Text>
                                 <Text style={styles.dot}>•</Text>
                                 <Text style={styles.pricePerHour}>£{item.pricePerHour}/hr</Text>
                             </View>
