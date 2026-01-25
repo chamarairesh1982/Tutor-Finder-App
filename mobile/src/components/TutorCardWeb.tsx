@@ -49,6 +49,16 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
     return (
         <Card variant="elevated" onPress={onPress} style={styles.card}>
             <View style={styles.premiumIndicator} />
+            <TouchableOpacity
+                onPress={toggleFavorite}
+                style={styles.favoriteBtnAbsolute}
+            >
+                <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={24}
+                    color={isFavorite ? colors.primary : colors.neutrals.textMuted}
+                />
+            </TouchableOpacity>
             <View style={styles.content}>
                 {/* Left: Avatar Section */}
                 <View style={styles.avatarSection}>
@@ -72,7 +82,7 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                 <View style={styles.detailsSection}>
                     <View style={styles.nameRow}>
                         <View style={styles.nameAndVerify}>
-                            <Text variant="h3" weight="heavy" style={styles.name} numberOfLines={1}>{tutor.fullName}</Text>
+                            <Text variant="h3" weight="heavy" style={styles.name}>{tutor.fullName}</Text>
                             {tutor.hasDbs && (
                                 <View style={styles.verifiedBadge}>
                                     <Ionicons name="shield-checkmark" size={14} color={colors.success} />
@@ -80,21 +90,10 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                                 </View>
                             )}
                         </View>
-                        <TouchableOpacity
-                            onPress={toggleFavorite}
-                            style={styles.favoriteBtn}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
-                            <Ionicons
-                                name={isFavorite ? "heart" : "heart-outline"}
-                                size={22}
-                                color={isFavorite ? colors.primary : colors.neutrals.textMuted}
-                            />
-                        </TouchableOpacity>
                     </View>
 
-                    <Text variant="body" weight="heavy" color={colors.primary} style={styles.subject} numberOfLines={1}>
-                        {tutor.subjects?.slice(0, 3).join(', ') || 'Tutor'}
+                    <Text variant="body" weight="heavy" color={colors.primary} style={styles.subject}>
+                        {tutor.subjects?.slice(0, 8).join(', ') || 'Tutor'}
                     </Text>
 
                     <View style={styles.metaRow}>
@@ -108,12 +107,16 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                         <View style={styles.trustBadges}>
                             {tutor.hasDbs && <Badge label="DBS CHECKED" variant="dbs" size="sm" />}
                             {tutor.hasCertification && <Badge label="QUALIFIED" variant="certified" size="sm" />}
+                            {tutor.badges?.map(badge => (
+                                <Badge key={badge} label={badge.toUpperCase()} variant="neutral" size="sm" />
+                            ))}
                         </View>
                         <View style={styles.modeBlock}>
                             <Ionicons name="location-outline" size={14} color={colors.neutrals.textSecondary} />
                             <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>
                                 {tutor.teachingMode === TeachingMode.Both ? 'In-person & Online' : modeLabel[tutor.teachingMode ?? TeachingMode.Both]}
                                 {tutor.distanceMiles > 0 && ` (${tutor.distanceMiles.toFixed(1)} mi)`}
+                                {tutor.responseTimeText && ` • ${tutor.responseTimeText}`}
                             </Text>
                         </View>
                     </View>
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     },
     avatarSection: {
         position: 'relative',
-        marginRight: spacing.lg,
+        marginRight: spacing.md,
     },
     avatar: {
         width: 110,
@@ -231,10 +234,10 @@ const styles = StyleSheet.create({
         backgroundColor: colors.success,
     },
     detailsSection: {
-        flex: 1,
+        flex: 1.2,
         flexShrink: 1,
         minWidth: 0,
-        marginRight: spacing.lg,
+        marginRight: spacing.md,
     },
     nameRow: {
         flexDirection: 'row',
@@ -246,9 +249,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        flex: 1,
+        flexWrap: 'wrap',
     },
     name: {
         letterSpacing: -0.5,
+        flexShrink: 1,
     },
     verifiedBadge: {
         flexDirection: 'row',
@@ -260,10 +266,14 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#A7F3D0',
     },
-    favoriteBtn: {
-        backgroundColor: colors.neutrals.surface,
+    favoriteBtnAbsolute: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
         padding: 8,
-        borderRadius: 12,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        zIndex: 10,
         ...shadows.sm,
     },
     subject: {
@@ -273,7 +283,9 @@ const styles = StyleSheet.create({
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.lg,
+        flexWrap: 'wrap',
+        gap: spacing.md,
+        rowGap: spacing.sm,
         marginBottom: spacing.md,
     },
     ratingBlock: {
@@ -302,16 +314,15 @@ const styles = StyleSheet.create({
         color: colors.neutrals.textSecondary,
     },
     actionSection: {
-        width: 180,
-        justifyContent: 'space-between',
+        width: 190,
+        justifyContent: 'center',
+        paddingLeft: spacing.lg,
         borderLeftWidth: 1,
         borderLeftColor: colors.neutrals.border,
-        paddingLeft: spacing.lg,
     },
     priceBlock: {
-        alignItems: 'flex-end',
+        alignItems: 'center',
         gap: 2,
-        marginBottom: spacing.md,
     },
     priceHeader: {
         flexDirection: 'row',

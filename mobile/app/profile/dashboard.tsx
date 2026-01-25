@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { useMyTutorStats, useMyTutorProfile } from '../../src/hooks/useTutors';
 import { useNotificationStore } from '../../src/store/notificationStore';
-import { Text, Card, Section } from '../../src/components';
+import { Text, Card, Section, Button } from '../../src/components';
 
 export default function TutorDashboard() {
     const router = useRouter();
@@ -56,6 +56,33 @@ export default function TutorDashboard() {
                         </View>
                     </View>
                 </View>
+
+                {(!profile?.bio || profile.subjects.length === 0) && (
+                    <Card variant="elevated" style={styles.setupCard}>
+                        <View style={styles.setupHeader}>
+                            <View style={styles.setupIcon}>
+                                <Ionicons name="rocket-outline" size={24} color={colors.primary} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text variant="bodyLarge" weight="heavy">Level Up Your Profile</Text>
+                                <Text variant="caption" color={colors.neutrals.textMuted}>Complete your setup to appear in search results.</Text>
+                            </View>
+                        </View>
+                        <View style={styles.progressRow}>
+                            <View style={styles.progressTrack}>
+                                <View style={[styles.progressFill, { width: `${(profile?.bio ? 50 : 20) + (profile?.subjects ? (profile.subjects.length > 0 ? 50 : 0) : 0)}%` as any }]} />
+                            </View>
+                            <Text variant="caption" weight="bold" color={colors.primary}>
+                                {Math.round((profile?.bio ? 50 : 20) + (profile?.subjects?.length ? 50 : 0))}%
+                            </Text>
+                        </View>
+                        <Button
+                            title="Continue Setup"
+                            size="sm"
+                            onPress={() => router.push('/profile/onboarding')}
+                        />
+                    </Card>
+                )}
 
                 {/* Main Stats Grid */}
                 <View style={styles.statsGrid}>
@@ -200,6 +227,44 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+    },
+    setupCard: {
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+        backgroundColor: colors.primarySoft,
+    },
+    setupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        marginBottom: spacing.md,
+    },
+    setupIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    progressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        marginBottom: spacing.lg,
+    },
+    progressTrack: {
+        flex: 1,
+        height: 8,
+        backgroundColor: colors.neutrals.surface,
+        borderRadius: 4,
+        overflow: 'hidden',
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: colors.primary,
     },
     statusBadge: {
         flexDirection: 'row',

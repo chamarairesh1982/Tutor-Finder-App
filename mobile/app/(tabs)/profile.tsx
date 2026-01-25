@@ -7,10 +7,12 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useLogout } from '../../src/hooks/useAuth';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
 import { UserRole } from '../../src/types';
+import { useMyTutorProfile } from '../../src/hooks/useTutors';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const { user, isAuthenticated } = useAuthStore();
+    const { data: profile } = useMyTutorProfile();
     const { mutate: logout } = useLogout();
 
     const handleLogout = () => {
@@ -121,6 +123,25 @@ export default function ProfileScreen() {
                         </View>
                     </View>
                 </View>
+
+                {user.role === UserRole.Tutor && (!profile?.bio || profile.subjects.length === 0) && (
+                    <TouchableOpacity
+                        style={styles.onboardingCard}
+                        onPress={() => router.push('/profile/onboarding')}
+                        activeOpacity={0.9}
+                    >
+                        <View style={styles.onboardingInfo}>
+                            <View style={styles.onboardingIcon}>
+                                <Ionicons name="sparkles" size={24} color="#fff" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.onboardingTitle}>Complete Your Profile</Text>
+                                <Text style={styles.onboardingSubtitle}>Tutors with complete profiles get 300% more bookings.</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                        </View>
+                    </TouchableOpacity>
+                )}
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Dashboard</Text>
@@ -467,5 +488,36 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.heavy,
         color: colors.neutrals.textPrimary,
         letterSpacing: -0.5,
+    },
+    onboardingCard: {
+        backgroundColor: colors.primary,
+        borderRadius: 24,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
+        ...shadows.md,
+    },
+    onboardingInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    onboardingIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    onboardingTitle: {
+        fontSize: 18,
+        fontWeight: typography.fontWeight.bold,
+        color: '#fff',
+        marginBottom: 2,
+    },
+    onboardingSubtitle: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: 18,
     },
 });
