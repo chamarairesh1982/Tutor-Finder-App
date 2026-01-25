@@ -4,12 +4,15 @@ import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../../src/lib/theme';
-import { useMyTutorStats } from '../../src/hooks/useTutors';
+import { useMyTutorStats, useMyTutorProfile } from '../../src/hooks/useTutors';
+import { useNotificationStore } from '../../src/store/notificationStore';
 import { Text, Card, Section } from '../../src/components';
 
 export default function TutorDashboard() {
     const router = useRouter();
     const { data: stats, isLoading, isError, refetch } = useMyTutorStats();
+    const { data: profile } = useMyTutorProfile();
+    const isConnected = useNotificationStore(s => s.isConnected);
 
     if (isLoading) {
         return (
@@ -40,8 +43,18 @@ export default function TutorDashboard() {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.header}>
-                    <Text variant="h1" weight="heavy">Performance</Text>
-                    <Text variant="body" color={colors.neutrals.textSecondary}>Insights for your tutoring business</Text>
+                    <View style={styles.headerTitleRow}>
+                        <View style={{ flex: 1 }}>
+                            <Text variant="h1" weight="heavy">Performance</Text>
+                            <Text variant="body" color={colors.neutrals.textSecondary}>Insights for your tutoring business</Text>
+                        </View>
+                        <View style={[styles.statusBadge, { backgroundColor: isConnected ? colors.success + '10' : colors.warning + '10' }]}>
+                            <View style={[styles.statusDot, { backgroundColor: isConnected ? colors.success : colors.warning }]} />
+                            <Text variant="caption" weight="bold" color={isConnected ? colors.success : colors.warning}>
+                                {isConnected ? 'LIVE' : 'OFFLINE'}
+                            </Text>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Main Stats Grid */}
@@ -113,7 +126,11 @@ export default function TutorDashboard() {
                         <ActionButton
                             label="Public Preview"
                             icon="share-outline"
-                            onPress={() => { }} // Placeholder
+                            onPress={() => {
+                                if (profile?.id) {
+                                    router.push(`/tutor/${profile.id}`);
+                                }
+                            }}
                         />
                     </View>
                 </Section>
@@ -178,6 +195,24 @@ const styles = StyleSheet.create({
     header: {
         marginBottom: spacing.xl,
         marginTop: spacing.md,
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        gap: 6,
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
     },
     statsGrid: {
         flexDirection: 'row',

@@ -30,9 +30,11 @@ const modeOptions: { label: string; value: TeachingMode }[] = [
 export function HomeSearchBar({
     subject,
     location,
+    radius = 10,
     mode,
     onSubjectChange,
     onLocationChange,
+    onRadiusChange,
     onModeChange,
     onSubmit,
     compact = false,
@@ -92,9 +94,9 @@ export function HomeSearchBar({
                 </TouchableOpacity>
             </View>
 
-            {/* Premium Mode Toggle */}
+            {/* Filters Row */}
             {!compact && (
-                <View style={[styles.modeWrapper, isLg && styles.modeWrapperWeb]}>
+                <View style={[styles.filterWrapper, isLg && styles.filterWrapperWeb]}>
                     <View style={styles.modeRow}>
                         {modeOptions.map((opt) => {
                             const isActive = opt.value === mode;
@@ -105,12 +107,27 @@ export function HomeSearchBar({
                                     onPress={() => onModeChange?.(opt.value)}
                                     activeOpacity={0.7}
                                 >
-                                    <Text variant="bodySmall" weight="heavy" color={isActive ? '#fff' : colors.neutrals.textMuted}>
+                                    <Text variant="caption" weight="heavy" color={isActive ? '#fff' : colors.neutrals.textMuted}>
                                         {opt.label}
                                     </Text>
                                 </TouchableOpacity>
                             );
                         })}
+                    </View>
+
+                    <View style={styles.radiusRow}>
+                        <TouchableOpacity
+                            style={styles.radiusPill}
+                            onPress={() => {
+                                const nextRadius = (radius === 50) ? 5 : (radius || 10) + 10;
+                                onRadiusChange?.(nextRadius);
+                            }}
+                        >
+                            <Ionicons name="map-outline" size={14} color={colors.primary} />
+                            <Text variant="caption" weight="heavy" color={colors.neutrals.textSecondary} style={{ marginLeft: 6 }}>
+                                Within {radius || 10} miles
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             )}
@@ -189,12 +206,16 @@ const styles = StyleSheet.create({
         height: 44,
         paddingHorizontal: 0,
     },
-    modeWrapper: {
+    filterWrapper: {
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
+        gap: spacing.md,
         marginTop: spacing.lg,
     },
-    modeWrapperWeb: {
+    filterWrapperWeb: {
         marginTop: spacing.xl,
+        gap: spacing.xl,
     },
     modeRow: {
         flexDirection: 'row',
@@ -205,12 +226,26 @@ const styles = StyleSheet.create({
         borderColor: colors.neutrals.border,
     },
     modePill: {
-        paddingHorizontal: 24,
-        paddingVertical: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
         borderRadius: borderRadius.full,
     },
     modePillActive: {
         backgroundColor: colors.primary,
+        ...shadows.sm,
+    },
+    radiusRow: {
+        flexDirection: 'row',
+    },
+    radiusPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutrals.surface,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.neutrals.border,
         ...shadows.sm,
     },
 });

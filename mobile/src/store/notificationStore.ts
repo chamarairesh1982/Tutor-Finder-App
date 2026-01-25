@@ -34,11 +34,10 @@ function generateId() {
 // Helper to get base URL correctly (dev vs prod vs simulator)
 // In a real app, this should come from strict env vars
 const getHubUrl = () => {
-    // Assuming backend running on localhost:5204 (http)
-    // Android Emulator needs 10.0.2.2
+    // Port 5270 is the primary HTTP port for the API
     if (__DEV__) {
         const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-        return `http://${host}:5204/hubs/notifications`;
+        return `http://${host}:5270/hubs/notifications`;
     }
     return 'https://api.tutorfinder.com/hubs/notifications';
 };

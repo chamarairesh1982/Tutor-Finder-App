@@ -3,6 +3,7 @@ import { View, StyleSheet, Image, ActivityIndicator, Platform, Modal, TouchableO
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTutorProfile } from '../../src/hooks/useTutors';
 import { useCreateBooking, useMyBookings } from '../../src/hooks/useBookings';
+import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../../src/hooks/useFavorites';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import {
@@ -31,6 +32,22 @@ export default function TutorDetailScreen() {
     const [reviewSort, setReviewSort] = useState<'recent' | 'highest'>('recent');
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+    const { data: favoriteData } = useIsFavorite(id!);
+    const addFavorite = useAddFavorite();
+    const removeFavorite = useRemoveFavorite();
+    const isFavorite = favoriteData?.isFavorite ?? false;
+
+    const toggleFavorite = () => {
+        if (!isAuthenticated) {
+            notify({ type: 'info', title: 'Sign in to save', message: 'Create an account to keep track of your favorites.' });
+            return;
+        }
+        if (isFavorite) {
+            removeFavorite.mutate(id!);
+        } else {
+            addFavorite.mutate(id!);
+        }
+    };
 
     const activeBooking = useMemo(() => {
         const list = Array.isArray(myBookings) ? myBookings : [];
@@ -84,7 +101,10 @@ export default function TutorDetailScreen() {
                         </TouchableOpacity>
                         <View style={styles.toolbarActions}>
                             <IconButton icon={<Ionicons name="share-outline" size={20} />} onPress={() => { }} />
-                            <IconButton icon={<Ionicons name="heart-outline" size={20} />} onPress={() => { }} />
+                            <IconButton
+                                icon={<Ionicons name={isFavorite ? "heart" : "heart-outline"} size={20} color={isFavorite ? colors.primary : undefined} />}
+                                onPress={toggleFavorite}
+                            />
                         </View>
                     </View>
 
@@ -106,18 +126,16 @@ export default function TutorDetailScreen() {
                             <View style={styles.nameSection}>
                                 <Text variant="h1" weight="heavy" style={styles.profileName}>{tutor.fullName}</Text>
                                 {tutor.hasDbs && (
-                                    <View style={styles.verifiedChip}>
-                                        <Ionicons name="shield-checkmark" size={14} color={colors.success} />
-                                        <Text variant="caption" weight="heavy" color={colors.success} style={{ marginLeft: 4 }}>DBS Checked</Text>
-                                    </View>
+                                    <Badge label="DBS CHECKED" variant="dbs" size="sm" />
+                                )}
+                                {tutor.hasCertification && (
+                                    <Badge label="QUALIFIED" variant="certified" size="sm" />
                                 )}
                             </View>
 
                             <View style={styles.subjectRow}>
                                 {tutor.subjects?.map((sub) => (
-                                    <View key={sub} style={styles.subjectChip}>
-                                        <Text variant="caption" weight="heavy" color={colors.primary}>{sub}</Text>
-                                    </View>
+                                    <Badge key={sub} label={sub} variant="primary" size="sm" style={{ marginRight: 6, marginBottom: 6 }} />
                                 ))}
                             </View>
 
@@ -436,30 +454,12 @@ const styles = StyleSheet.create({
     profileName: {
         letterSpacing: -1,
     },
-    verifiedChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#ECFDF5',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#A7F3D0',
-    },
     subjectRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
         marginBottom: 16,
         justifyContent: Platform.OS === 'web' ? 'flex-start' : 'center',
-    },
-    subjectChip: {
-        backgroundColor: colors.primarySoft,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
     },
     topSubject: {
         marginBottom: 12,

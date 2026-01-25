@@ -158,12 +158,12 @@ export default function ProfileScreen() {
                         <MenuItem
                             icon="person-outline"
                             label="Edit Profile"
-                            onPress={() => { }}
+                            onPress={() => router.push('/profile/edit-info')}
                         />
                         <MenuItem
-                            icon="card-outline"
-                            label="Payment Methods"
-                            onPress={() => { }}
+                            icon="medical-outline"
+                            label="Change Password"
+                            onPress={() => router.push('/profile/change-password')}
                         />
                         <MenuItem
                             icon="lock-closed-outline"

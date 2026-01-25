@@ -1,25 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/client';
 import { Favorite } from '../types';
+import { useAuthStore } from '../store/authStore';
 
 export function useFavorites() {
+    const { isAuthenticated } = useAuthStore();
     return useQuery<Favorite[], Error>({
         queryKey: ['favorites'],
         queryFn: async () => {
             const response = await apiClient.get<Favorite[]>('/favorites');
             return response.data;
         },
+        enabled: isAuthenticated,
     });
 }
 
 export function useIsFavorite(tutorId: string) {
+    const { isAuthenticated } = useAuthStore();
     return useQuery<{ isFavorite: boolean }, Error>({
         queryKey: ['favorites', 'check', tutorId],
         queryFn: async () => {
             const response = await apiClient.get<{ isFavorite: boolean }>(`/favorites/${tutorId}/check`);
             return response.data;
         },
-        enabled: !!tutorId,
+        enabled: !!tutorId && isAuthenticated,
     });
 }
 

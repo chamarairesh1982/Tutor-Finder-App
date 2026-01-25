@@ -5,6 +5,7 @@ import { TutorSearchResult, TeachingMode } from '../types';
 import { Button } from './Button';
 import { Text } from './Text';
 import { Card } from './Card';
+import { Badge } from './Badge';
 import { useIsFavorite, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -104,11 +105,14 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                                 ({tutor.reviewCount})
                             </Text>
                         </View>
-                        <View style={styles.dot} />
+                        <View style={styles.trustBadges}>
+                            {tutor.hasDbs && <Badge label="DBS CHECKED" variant="dbs" size="sm" />}
+                            {tutor.hasCertification && <Badge label="QUALIFIED" variant="certified" size="sm" />}
+                        </View>
                         <View style={styles.modeBlock}>
                             <Ionicons name="location-outline" size={14} color={colors.neutrals.textSecondary} />
                             <Text variant="bodySmall" color={colors.neutrals.textSecondary} style={{ marginLeft: 4 }}>
-                                {modeLabel[tutor.teachingMode ?? TeachingMode.Both]}
+                                {tutor.teachingMode === TeachingMode.Both ? 'In-person & Online' : modeLabel[tutor.teachingMode ?? TeachingMode.Both]}
                                 {tutor.distanceMiles > 0 && ` (${tutor.distanceMiles.toFixed(1)} mi)`}
                             </Text>
                         </View>
@@ -134,14 +138,6 @@ export function TutorCardWeb({ tutor, onPress, onRequestBooking, onViewProfile }
                         <View style={styles.priceHeader}>
                             <Text variant="h2" weight="heavy">£{tutor.pricePerHour}</Text>
                             <Text variant="bodySmall" color={colors.neutrals.textMuted} style={{ marginLeft: 4, marginBottom: 4 }}>/ hr</Text>
-                        </View>
-                        <View style={styles.trustBadgeRow}>
-                            {tutor.hasDbs && (
-                                <View style={styles.dbsBadge}>
-                                    <Ionicons name="shield-checkmark" size={12} color={colors.trust.dbs} />
-                                    <Text variant="caption" weight="heavy" color={colors.trust.dbs} style={{ marginLeft: 4 }}>DBS</Text>
-                                </View>
-                            )}
                         </View>
                     </View>
 
@@ -277,7 +273,8 @@ const styles = StyleSheet.create({
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: spacing.lg,
+        gap: spacing.lg,
+        marginBottom: spacing.md,
     },
     ratingBlock: {
         flexDirection: 'row',
@@ -320,27 +317,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
     },
-    trustBadgeRow: {
+    trustBadges: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        justifyContent: 'flex-end',
-    },
-    dbsBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.trust.dbsLight,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: borderRadius.full,
-    },
-    certBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.trust.certifiedLight,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: borderRadius.full,
     },
     btnGroup: {
         width: '100%',

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
     FilterSidebar, TutorCard, TutorCardWeb, HomeSearchBar,
@@ -44,6 +44,8 @@ export default function SearchPage() {
     const [page, setPage] = useState(1);
     const [allResults, setAllResults] = useState<TutorSearchResult[]>([]);
 
+    const scrollViewRef = useRef<ScrollView>(null);
+
     const searchParams = useMemo<TutorSearchRequest>(() => ({
         subject: subject || undefined,
         postcode: location || undefined,
@@ -61,12 +63,15 @@ export default function SearchPage() {
     const { data: tutorsPage, isLoading, isError, refetch, isFetching } = useSearchTutors(searchParams);
 
     const results = allResults;
-    const resultsCount = tutorsPage?.total ?? 0;
+    const totalCount = tutorsPage?.total ?? 0;
     const hasMore = tutorsPage ? results.length < tutorsPage.total : false;
 
     useEffect(() => {
         setPage(1);
         setAllResults([]);
+        if (scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({ y: 0, animated: false });
+        }
     }, [subject, location, filters, sortBy]);
 
     useEffect(() => {
@@ -85,6 +90,13 @@ export default function SearchPage() {
         setPage((p) => p + 1);
     };
 
+    const handleScroll = ({ nativeEvent }: any) => {
+        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 400) {
+            handleLoadMore();
+        }
+    };
+
     return (
         <Screen safe={false} backgroundColor={colors.neutrals.surface}>
             {/* World Class Search Header */}
@@ -98,8 +110,12 @@ export default function SearchPage() {
                             <HomeSearchBar
                                 subject={subject}
                                 location={location}
+                                radius={filters.radiusMiles}
+                                mode={filters.mode}
                                 onSubjectChange={setSubject}
                                 onLocationChange={setLocation}
+                                onRadiusChange={(val) => setFilters({ ...filters, radiusMiles: val })}
+                                onModeChange={(val) => setFilters({ ...filters, mode: val })}
                                 onSubmit={refetch}
                                 compact
                             />
@@ -132,21 +148,25 @@ export default function SearchPage() {
                 {/* Column 2: Results Stream */}
                 <View style={[styles.resultsWrapper, (isLg || viewMode === 'list') ? styles.visible : styles.hidden]}>
                     <ScrollView
-                        onScroll={({ nativeEvent }) => {
-                            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-                            if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 400) {
-                                handleLoadMore();
-                            }
-                        }}
-                        scrollEventThrottle={400}
-                        showsVerticalScrollIndicator={false}
+                        ref={scrollViewRef}
+                        style={styles.resultsScroll}
+                        contentContainerStyle={styles.scrollContent}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isLoading && results.length > 0}
+                                onRefresh={refetch}
+                                tintColor={colors.primary}
+                            />
+                        }
                     >
                         <Container padding="lg" fluid>
                             <View style={styles.resultsHeader}>
-                                <View>
+                                <View style={{ flex: 1 }}>
                                     <View style={styles.countBadge}>
                                         <Text variant="label" color={colors.primary} weight="heavy">
-                                            {resultsCount} EXPERTS FOUND
+                                            {totalCount} EXPERTS FOUND
                                         </Text>
                                     </View>
                                     <Text variant="h2" weight="heavy" style={{ marginTop: spacing.sm }}>
@@ -157,12 +177,22 @@ export default function SearchPage() {
                                     </Text>
                                 </View>
 
-                                <TouchableOpacity style={styles.sortToggle} onPress={() => setSortOpen(true)}>
-                                    <View style={styles.sortPill}>
-                                        <Ionicons name="swap-vertical" size={16} color={colors.primary} />
-                                        <Text variant="bodySmall" weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>Sort</Text>
-                                    </View>
-                                </TouchableOpacity>
+                                <View style={styles.headerActions}>
+                                    {!isLg && (
+                                        <TouchableOpacity style={styles.mobileFilterBtn} onPress={() => setFiltersOpen(true)}>
+                                            <View style={styles.filterBadge}>
+                                                <Ionicons name="options-outline" size={20} color={colors.primary} />
+                                                <Text weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>Filters</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+                                    <TouchableOpacity style={styles.sortToggle} onPress={() => setSortOpen(true)}>
+                                        <View style={styles.sortPill}>
+                                            <Ionicons name="swap-vertical" size={16} color={colors.primary} />
+                                            <Text variant="bodySmall" weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>Sort</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
 
                             <Spacer size="lg" />
@@ -341,6 +371,12 @@ const styles = StyleSheet.create({
     resultsWrapper: {
         flex: 2,
     },
+    resultsScroll: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: spacing['5xl'],
+    },
     mapWrapperWeb: {
         flex: 1.5,
         backgroundColor: colors.neutrals.surfaceAlt,
@@ -368,7 +404,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: spacing.md,
+        marginBottom: spacing.xl,
+        gap: spacing.md,
     },
     countBadge: {
         backgroundColor: colors.primarySoft,
@@ -376,6 +413,24 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: borderRadius.full,
         alignSelf: 'flex-start',
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    mobileFilterBtn: {
+        ...shadows.sm,
+    },
+    filterBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primarySoft,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: borderRadius.full,
         borderWidth: 1,
         borderColor: colors.primaryLight,
     },

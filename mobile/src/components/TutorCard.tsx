@@ -8,6 +8,7 @@ import { useNotificationStore } from '../store/notificationStore';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from './Text';
 import { Card } from './Card';
+import { Badge } from './Badge';
 
 interface TutorCardProps {
     tutor: TutorSearchResult;
@@ -109,16 +110,10 @@ export function TutorCard({ tutor, onPress }: TutorCardProps) {
                         <Text variant="bodyLarge" weight="heavy">£{tutor.pricePerHour}<Text variant="caption">/hr</Text></Text>
                         <View style={styles.trustBadges}>
                             {tutor.hasDbs && (
-                                <View style={styles.dbsBadge}>
-                                    <Ionicons name="shield-checkmark" size={12} color={colors.trust.dbs} />
-                                    <Text variant="caption" weight="bold" color={colors.trust.dbs}> DBS</Text>
-                                </View>
+                                <Badge label="DBS" variant="dbs" size="sm" />
                             )}
                             {tutor.hasCertification && (
-                                <View style={styles.certBadge}>
-                                    <Ionicons name="ribbon" size={12} color={colors.trust.certified} />
-                                    <Text variant="caption" weight="bold" color={colors.trust.certified}> Qualified</Text>
-                                </View>
+                                <Badge label="QUALIFIED" variant="certified" size="sm" />
                             )}
                         </View>
                     </View>
@@ -225,22 +220,6 @@ const styles = StyleSheet.create({
     trustBadges: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-    },
-    dbsBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.trust.dbsLight,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: borderRadius.full,
-    },
-    certBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.trust.certifiedLight,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: borderRadius.full,
+        gap: 6,
     },
 });

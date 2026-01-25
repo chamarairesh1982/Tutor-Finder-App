@@ -51,10 +51,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
